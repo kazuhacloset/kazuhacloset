@@ -1,0 +1,155 @@
+@import "tailwindcss";
+
+:root {
+  --background: #ffffff;
+  --foreground: #171717;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0a0a0a;
+    --foreground: #ededed;
+  }
+}
+
+body {
+  background: var(--background);
+  color: var(--foreground);
+  font-family: Arial, Helvetica, sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+/* Enable smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Text css -----------------------------------------------------------------------------------------------------------------------*/
+
+/* Existing glow effect */
+.glow-text {
+  transition: text-shadow 0.3s ease-in-out;
+}
+
+.glow-text:hover {
+  text-shadow: 0 0 8px #ff8c00, 0 0 16px #ffa500, 0 0 24px #ffb347;
+}
+
+/* Fade-in animation for the text */
+.animate-fadeIn {
+  animation: fadeIn 1.5s ease-in-out;
+}
+
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Hover effect for "50% OFF" with a more subtle color */
+.group-hover\:text-indigo-600:hover {
+  text-shadow: 0 0 8px #ff8c00, 0 0 16px #ffa500, 0 0 24px #ffb347;
+}
+
+/* Group hover scale effect */
+.group-hover\:scale-110:hover {
+  transform: scale(1.05);
+}
+
+/* Softer drop-shadow */
+.drop-shadow-lg {
+  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.drop-shadow-2xl {
+  text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25), 0 5px 15px rgba(0, 0, 0, 0.2);
+}
+
+/* Banner images css -----------------------------------------------------------------------------------------------------------------------*/
+
+@keyframes slideUpFade {
+  0% {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-slideUpFade {
+  animation: slideUpFade 1.5s ease-out;
+}
+
+.img-hover-scale {
+  transition: transform 0.3s ease-in-out;
+}
+
+.img-hover-scale:hover {
+  transform: scale(1.05);
+}
+
+img {
+  transition: transform 0.3s ease-in-out;
+}
+
+img, .img-hover-scale {
+  will-change: transform;
+}
+
+@keyframes wiggle {
+  0%, 100% { transform: rotate(0); }
+  25% { transform: rotate(3deg); }
+  75% { transform: rotate(-3deg); }
+}
+
+.animate-wiggle {
+  animation: wiggle 0.6s ease-in-out infinite;
+}
+
+/* about section -----------------------------------------------------------------------------------------------------------------------*/
+@layer utilities {
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(20px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes slide-up {
+    from { opacity: 0; transform: translateY(40px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .animate-fade-in { animation: fade-in 1s ease-out forwards; }
+  .animate-slide-up { animation: slide-up 0.8s ease-out forwards; }
+  .animate-float { animation: float 3s ease-in-out infinite; }
+  .animate-fade-in-slow { animation: fade-in 2s ease-out forwards; }
+}
+
+/* Toast Custom Styling -----------------------------------------------------------------------------------------------------------------------*/
+.custom-toast {
+  background: linear-gradient(to right, #3e3e3e, #7a7a7a);
+  color: #000;
+  font-weight: 500;
+  border-radius: 12px;
+  padding: 12px 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
+}
+
+/* Optional glowing border around image */
+.toast-avatar-glow {
+  box-shadow: 0 0 8px #facc15, 0 0 16px #fde68a;
+  border-radius: 50%;
+}

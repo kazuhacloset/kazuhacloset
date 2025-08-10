@@ -1,0 +1,17 @@
+# Node.js
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Django
+*.pyc
+__pycache__/
+db.sqlite3
+
+# VSCode settings
+.vscode/
+
+# OS files
+.DS_Store
+Thumbs.db
