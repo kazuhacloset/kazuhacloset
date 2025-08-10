@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
+import Image from "next/image";
 import Navbar from "./Landingpage/Navbar";
 import { useRouter } from "next/navigation";
 import {
@@ -96,7 +97,7 @@ export default function CartPage() {
         {cartProducts.length === 0 ? (
           <div className="flex flex-col items-center text-center mt-32">
             <div className="w-40 h-40">
-              <img
+              <Image
                 src="/videos/emptycart.gif"
                 alt="Empty Cart"
                 className="rounded-xl shadow-xl w-full h-full object-contain"
@@ -123,7 +124,7 @@ export default function CartPage() {
               >
                 {/* Image */}
                 <div className="flex-shrink-0 w-28 h-28 sm:w-40 sm:h-40 md:w-52 md:h-52 flex justify-center items-center">
-                  <img
+                  <Image
                     src={item.images[0]?.url || "/fallback.jpg"}
                     alt={item.name}
                     className="rounded-lg object-cover w-full h-full"

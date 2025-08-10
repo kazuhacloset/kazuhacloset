@@ -1,5 +1,6 @@
 // components/All_product.tsx
 "use client";
+import Image from "next/image";
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, Grid, List, Heart, ShoppingCart, Star, Eye, SlidersHorizontal } from "lucide-react";
@@ -161,32 +162,22 @@ export const All_product = () => {
             setSearchTerm(newSearchTerm);
         }
 
-    }, [searchParams]); // Dependency array: only re-run when searchParams object changes
+    }, [searchParams, searchTerm, selectedCategory]);
 
 
     // Function to handle changing the category via buttons
     const handleCategoryButtonClick = (category: string) => {
-        // Update the URL to reflect the new category.
-        // This is crucial because it triggers the useEffect above to re-sync.
         const newUrl = new URL(window.location.href);
         newUrl.searchParams.set('category', category);
         newUrl.searchParams.delete('search'); // Clear search param when selecting a category
         router.push(newUrl.pathname + newUrl.search); // Use push to update the URL
-
-        // Also update the internal state immediately for snappier UI,
-        // although useEffect will eventually sync it anyway.
         setSelectedCategory(category);
         setSearchTerm("");
     };
 
-    // Function to handle search input changes (onKeyDown for Enter, or on form submit)
     const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
         const newSearchTerm = e.target.value;
-        setSearchTerm(newSearchTerm); // Update internal state immediately
-
-        // Don't update URL on every keystroke, wait for submit or use a debounce.
-        // For now, we'll keep the URL update to the handleSearchSubmit for clarity.
-        // If you want live URL updates on type, consider debouncing this `router.push`.
+        setSearchTerm(newSearchTerm); 
     };
 
     const handleSearchSubmit = () => {
@@ -457,7 +448,7 @@ export const All_product = () => {
                                         ? "w-24 h-24 sm:w-56 sm:h-56 flex-shrink-0"
                                         : "w-full h-32 sm:h-48 lg:h-80 mb-2 sm:mb-4 lg:mb-6"
                                 }`}>
-                                    <img
+                                    <Image
                                         src={getImageSrc(product)}
                                         alt={product.name}
                                         width={500} // Add explicit width and height for Next/Image optimization (if using next/image)

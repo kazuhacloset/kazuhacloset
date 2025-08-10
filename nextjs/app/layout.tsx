@@ -8,6 +8,7 @@ import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Loader from '@/components/Loader';
 import FloatingLauncher from '@/components/Landingpage/FloatingLauncher';
+import Image from 'next/image';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -56,19 +57,23 @@ export default function RootLayout({
             duration: 3500,
             success: {
               icon: (
-                <img
+                <Image
                   src="/pass.png"
                   alt="Success"
-                  className="w-8 h-8 rounded-full toast-avatar-glow"
+                  width={32}
+                  height={32}
+                  className="rounded-full toast-avatar-glow"
                 />
               ),
             },
             error: {
               icon: (
-                <img
+                <Image
                   src="/fail.png"
                   alt="Error"
-                  className="w-8 h-8 rounded-full toast-avatar-glow"
+                  width={32}
+                  height={32}
+                  className="rounded-full toast-avatar-glow"
                 />
               ),
             },

@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import { Send, Download } from 'lucide-react';
 import Navbar from './Landingpage/Navbar';
 import { rawCharacterData } from './characterData';
+import Image from "next/image";
 import html2canvas from 'html2canvas';  // npm install html2canvas
 
 
@@ -207,7 +208,7 @@ export default function BirthdayCharacterPage() {
                     flexShrink: 0,
                   }}
                 >
-                  <img
+                  <Image
                     src={character.image}
                     alt={character.name}
                     crossOrigin="anonymous"

@@ -1,4 +1,5 @@
 "use client";
+import Image from "next/image";
 import React, { useState, useEffect } from "react";
 import {
   ShoppingCart,
@@ -126,7 +127,7 @@ export default function ProductPage() {
           {/* Image Section */}
           <div>
             <div className="mx-auto sm:mx-0 w-full sm:w-[550px] h-[500px] border border-white/20 bg-black/40 rounded-2xl overflow-hidden flex items-center justify-center">
-              <img
+              <Image
                 src={mainImage}
                 alt={currentProduct.name}
                 className="w-full h-full object-contain"
@@ -147,7 +148,7 @@ export default function ProductPage() {
                         : "border-white/20 hover:border-white"
                     }`}
                 >
-                  <img
+                  <Image
                     src={img.url}
                     alt={img.alt || `Image ${idx + 1}`}
                     className="w-full h-full object-cover rounded-xl"

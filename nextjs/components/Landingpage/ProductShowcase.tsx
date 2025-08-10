@@ -1,6 +1,7 @@
 import React, { useState, useRef, useEffect } from "react";
 import { ChevronLeft, ChevronRight, Star } from "lucide-react";
 import Link from 'next/link';
+import Image from "next/image";
 import { useRouter } from 'next/navigation';
 
 type Product = {
@@ -182,7 +183,7 @@ const ProductShowcase = () => {
                           }}
                         />
                       ) : (
-                        <img
+                        <Image
                           src={products[currentIndex].media}
                           alt={products[currentIndex].name}
                           className="w-full h-full object-cover"
@@ -264,7 +265,7 @@ const ProductShowcase = () => {
                               }}
                             />
                           ) : (
-                            <img
+                            <Image
                               src={product.media}
                               alt={product.name}
                               className="w-full h-full object-cover"

@@ -21,7 +21,7 @@ export default function Loader() {
 
       return controls.stop;
     }
-  }, []);
+  }, [progressPx]);
 
   const barWidth = useTransform(progressPx, (v) => `${v}px`);
   const narutoX = useTransform(progressPx, (v) => {

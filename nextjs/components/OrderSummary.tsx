@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { useSearchParams } from "next/navigation";
 import Navbar from "../components/Landingpage/Navbar";
-import { getProductDetails, getUserCart, removeFromCart } from "@/utils/api/productUtils";
+import Image from "next/image";
+
 
 type Product = {
   id: string;
@@ -61,28 +61,6 @@ export default function OrderSummary() {
     (sum, item) => sum + cleanPrice(item.price) * item.quantity,
     0
   );
-
-  const handleRemoveItem = async (productId: string) => {
-    // Optimistic UI update
-    setProducts((prev) => prev.filter((item) => item.id !== productId));
-
-    try {
-      await removeFromCart(productId);
-      console.log(`Item ${productId} removed from backend cart`);
-    } catch (error) {
-      console.error("Failed to remove item from backend cart:", error);
-    }
-
-    // Optional localStorage sync
-    const updatedCart = JSON.parse(localStorage.getItem("cart") || "{}");
-    delete updatedCart[productId];
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
-  };
-
-  const handleBuyNow = (productId: string) => {
-    // Navigate to order summary for single product
-    window.location.href = `/order-summary?buyNow=${productId}`;
-  };
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
@@ -175,7 +153,7 @@ export default function OrderSummary() {
         {products.length === 0 ? (
           <div className="flex flex-col items-center text-center mt-16">
             <div className="w-40 h-40">
-              <img
+              <Image
                 src="/videos/emptycart.gif"
                 alt="Empty Cart"
                 className="rounded-xl shadow-xl w-full h-full object-contain"
@@ -198,7 +176,7 @@ export default function OrderSummary() {
               >
                 {/* Image */}
                 <div className="flex-shrink-0 w-28 h-28 sm:w-40 sm:h-40 md:w-52 md:h-52 flex justify-center items-center">
-                  <img
+                  <Image
                     src={item.images[0]?.url || "/fallback.jpg"}
                     alt={item.name}
                     className="rounded-lg object-cover w-full h-full"

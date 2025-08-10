@@ -120,7 +120,7 @@ export default function WallpapersPage() {
     if (selectedCategory !== newCategoryKey) {
       setSelectedCategory(newCategoryKey);
     }
-  }, [searchParams]); // Removed selectedCategory from dependency array
+  }, [searchParams, selectedCategory]); 
 
   const filteredCategories =
     selectedCategory === "all"
