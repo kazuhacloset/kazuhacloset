@@ -20,7 +20,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
     'localhost',
     '127.0.0.1',
-    'kazuhacloset-2.onrender.com'
+    'kazuhacloset-3.onrender.com'
 ]
 
 
