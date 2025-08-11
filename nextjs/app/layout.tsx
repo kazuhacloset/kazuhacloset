@@ -50,35 +50,51 @@ export default function RootLayout({
         </main>
 
         {/* 🔥 Custom Toaster Styling with Avatar Icons */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            className: 'custom-toast',
-            duration: 3500,
-            success: {
-              icon: (
-                <Image
-                  src="/pass.png"
-                  alt="Success"
-                  width={32}
-                  height={32}
-                  className="rounded-full toast-avatar-glow"
-                />
-              ),
-            },
-            error: {
-              icon: (
-                <Image
-                  src="/fail.png"
-                  alt="Error"
-                  width={32}
-                  height={32}
-                  className="rounded-full toast-avatar-glow"
-                />
-              ),
-            },
-          }}
-        />
+            <Toaster
+              position="top-right"
+              toastOptions={{
+                className: 'custom-toast',
+                duration: 3500,
+                style: {
+                  background: '#4a4a4a',
+                  color: '#ffffff',
+                  borderRadius: '16px',
+                  padding: '16px 20px',
+                  minWidth: '280px',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+                },
+                success: {
+                  icon: (
+                    <Image
+                      src="/pass.png"
+                      alt="Success"
+                      width={40}
+                      height={40}
+                      className="toast-avatar rounded-full"
+                    />
+                  ),
+                  style: {
+                    background: '#4a4a4a',
+                    color: '#ffffff',
+                  }
+                },
+                error: {
+                  icon: (
+                    <Image
+                      src="/fail.png"
+                      alt="Error"
+                      width={40}
+                      height={40}
+                      className="toast-avatar rounded-full"
+                    />
+                  ),
+                  style: {
+                    background: '#4a4a4a',
+                    color: '#ffffff',
+                  }
+                },
+              }}
+            />
       </body>
     </html>
   );

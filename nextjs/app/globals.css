@@ -137,19 +137,56 @@ img, .img-hover-scale {
 
 /* Toast Custom Styling -----------------------------------------------------------------------------------------------------------------------*/
 .custom-toast {
-  background: linear-gradient(to right, #3e3e3e, #7a7a7a);
-  color: #000;
+  background: #4a4a4a !important;
+  color: #ffffff !important;
   font-weight: 500;
-  border-radius: 12px;
-  padding: 12px 16px;
+  border-radius: 16px;
+  padding: 16px 20px;
+  display: flex !important;
+  align-items: center;
+  gap: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  border: none;
+  min-width: 280px;
+  font-size: 14px;
+}
+
+/* Success toast styling */
+.custom-toast[data-type="success"] {
+  background: #4a4a4a !important;
+}
+
+/* Error toast styling */
+.custom-toast[data-type="error"] {
+  background: #4a4a4a !important;
+}
+
+/* Remove default toast styling */
+.custom-toast > div {
   display: flex;
   align-items: center;
   gap: 12px;
-  box-shadow: 0 0 10px rgba(255, 255, 255, 0.2);
 }
 
-/* Optional glowing border around image */
-.toast-avatar-glow {
-  box-shadow: 0 0 8px #facc15, 0 0 16px #fde68a;
+/* Avatar styling */
+.toast-avatar {
+  width: 40px;
+  height: 40px;
   border-radius: 50%;
+  flex-shrink: 0;
+  object-fit: cover;
+}
+
+/* Remove glow effect to match the clean design */
+.toast-avatar-glow {
+  box-shadow: none;
+  border-radius: 50%;
+}
+
+/* Text styling */
+.custom-toast .toast-message {
+  flex: 1;
+  font-size: 14px;
+  font-weight: 500;
+  color: #ffffff;
 }
