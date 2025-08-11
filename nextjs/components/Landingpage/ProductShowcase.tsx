@@ -22,7 +22,7 @@ const products: Product[] = [
     subtitle: "Water Hashira",
     price: "₹449",
     type: "image",
-    media: "Productimage/GIYU/1.png",
+    media: "/Productimage/GIYU/1.png",
     description: "Stylish Giyu Tomioka T-shirt",
     rating: 4.8
   },
@@ -32,7 +32,7 @@ const products: Product[] = [
     subtitle: "You are already under my Genjutsu",
     price: "₹429",
     type: "image", 
-    media: "Productimage/ITACHI/1.png",
+    media: "/Productimage/ITACHI/1.png",
     description: "Elegant Itachi Uchiha design tee",
     rating: 4.9
   },
@@ -42,7 +42,7 @@ const products: Product[] = [
     subtitle: "Flame Hashira",
     price: "₹459",
     type: "image",
-    media: "Productimage/RENGOKU/1.png",
+    media: "/Productimage/RENGOKU/1.png",
     description: "Fiery Rengoku Flame Hashira tee",
     rating: 4.7
   },
@@ -186,6 +186,8 @@ const ProductShowcase = () => {
                         <Image
                           src={products[currentIndex].media}
                           alt={products[currentIndex].name}
+                          width={500} // set an actual number
+                          height={500}
                           className="w-full h-full object-cover"
                         />
                       )}
@@ -265,11 +267,14 @@ const ProductShowcase = () => {
                               }}
                             />
                           ) : (
-                            <Image
+                           <Image
                               src={product.media}
                               alt={product.name}
+                              width={500}
+                              height={500}
                               className="w-full h-full object-cover"
                             />
+
                           )}
                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
                           <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-all duration-300"></div>
