@@ -34,9 +34,20 @@ export default function RegisterPage() {
     try {
       setIsSendingOtp(true);
       const res = await sendOtp(form.email);
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
       toast.success(res.message || "OTP sent successfully!");
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || "Failed to send OTP");
+    } catch (err: unknown) {
+      if (typeof err === 'object' && err && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { error?: string } } };
+        toast.error(axiosErr.response?.data?.error || "Failed to send OTP");
+      } else {
+        toast.error("Failed to send OTP");
+      }
     } finally {
       setIsSendingOtp(false);
     }
@@ -57,9 +68,14 @@ export default function RegisterPage() {
         setOtpVerified(false);
         toast.error(res.error || "Invalid OTP");
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       setOtpVerified(false);
-      toast.error(err.response?.data?.error || "OTP verification failed");
+      if (typeof err === 'object' && err && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { error?: string } } };
+        toast.error(axiosErr.response?.data?.error || "OTP verification failed");
+      } else {
+        toast.error("OTP verification failed");
+      }
     } finally {
       setIsVerifyingOtp(false);
     }
@@ -68,15 +84,26 @@ export default function RegisterPage() {
   const handleRegister = async () => {
     try {
       const res = await userRegister(form);
+
+      if (res?.error) {
+        toast.error(res.error);
+        return;
+      }
+
       if (res && res.token) {
         localStorage.setItem('token', res.token);
         toast.success('Registration successful!');
         setTimeout(() => router.push('/'), 1500);
       } else {
-        toast.error(res?.error || 'Registration failed.');
+        toast.error('Registration failed.');
       }
-    } catch (err: any) {
-      toast.error(err.response?.data?.error || 'Something went wrong!');
+    } catch (err: unknown) {
+      if (typeof err === 'object' && err && 'response' in err) {
+        const axiosErr = err as { response?: { data?: { error?: string } } };
+        toast.error(axiosErr.response?.data?.error || 'Something went wrong!');
+      } else {
+        toast.error('Something went wrong!');
+      }
     }
   };
 
