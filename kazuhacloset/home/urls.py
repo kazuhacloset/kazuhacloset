@@ -1,5 +1,9 @@
 from django.urls import path
-from .views import RegisterView, LoginView,UserProfileView,UpdateProfileView,AddToCartView,CartView,Remove_Item
+from .views import (
+    RegisterView, LoginView, UserProfileView, UpdateProfileView,
+    AddToCartView, CartView, Remove_Item,
+    SendOtpView, VerifyOtpView
+)
 
 urlpatterns = [
     path('register/', RegisterView.as_view(), name='register'),
@@ -8,6 +12,9 @@ urlpatterns = [
     path('updateprofile/', UpdateProfileView.as_view(), name='update-profile'),
     path('cart/add/', AddToCartView.as_view(), name='add-to-cart'),
     path('cart/', CartView.as_view(), name='get_cart'),
-    path('cart/remove/<str:id>/', Remove_Item.as_view(), name='remove-from-cart'),  
+    path('cart/remove/<str:id>/', Remove_Item.as_view(), name='remove-from-cart'),
 
+    # OTP routes
+    path('send-otp/', SendOtpView.as_view(), name='send-otp'),
+    path('verify-otp/', VerifyOtpView.as_view(), name='verify-otp'),
 ]
