@@ -74,11 +74,18 @@ const ProductShowcase = () => {
   }, []);
 
   // Navigation function - same as in All_product.tsx
-  const navigateToProduct = (productId: string) => {
-    localStorage.setItem("productid", productId);
-    router.push(`/product_page/`);
-  };
+const navigateToProduct = (productId: string) => {
+  const t = localStorage.getItem("token");
+  console.log(t);
 
+  if (t === null) {
+    router.push("/login");
+    return; // ✅ stop here if no token
+  }
+
+  localStorage.setItem("productid", productId);
+  router.push("/product_page/");
+};
   // Handle card click
   const handleCardClick = (productId: string) => {
     navigateToProduct(productId);

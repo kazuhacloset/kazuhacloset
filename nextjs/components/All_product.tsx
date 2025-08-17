@@ -197,6 +197,13 @@ export const All_product = () => {
 
     // Other navigation functions (remain unchanged)
     const navigateToProduct = (productId: string) => {
+        const t = localStorage.getItem("token");
+        console.log(t);
+
+        if (t === null) {
+            router.push("/login");
+            return; 
+        }
         localStorage.setItem("productid",productId);
         router.push(`/product_page/`);
     };
