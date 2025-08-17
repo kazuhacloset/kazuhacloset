@@ -6,6 +6,8 @@ import { useEffect, useState, useRef } from 'react';
 import { Luckiest_Guy } from 'next/font/google';
 import { getUser } from '@/utils/api/userUtils';
 import SearchBar from './search'; // Import the SearchBar component
+import ProtectedLink from '../ProtectedLink';
+
 
 interface User {
   first_name?: string;
@@ -155,7 +157,7 @@ useEffect(() => {
       {/* Desktop Right Icons */}
       <div className="hidden sm:flex items-center space-x-6 text-white text-xl sm:text-2xl relative">
         {/* Cart */}
-        <Link href="/cart" aria-label="Cart">
+        <ProtectedLink to="/cart" aria-label="Cart">
           <div className="hover:scale-125 transition-transform duration-300 hover:text-yellow-400 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" stroke="currentColor">
               <path
@@ -165,16 +167,16 @@ useEffect(() => {
               />
             </svg>
           </div>
-        </Link>
+        </ProtectedLink>
 
         {/* Orders Icon */}
-        <Link href="/order-summary" aria-label="Orders">
+        <ProtectedLink to="/order-summary" aria-label="Orders">
           <div className="hover:scale-125 transition-transform duration-300 hover:text-green-400 cursor-pointer">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01" />
             </svg>
           </div>
-        </Link>
+      </ProtectedLink>
 
         {/* Profile or Login */}
         {firstLetter ? (
@@ -268,7 +270,7 @@ useEffect(() => {
       {/* Mobile menu dropdown */}
       {menuOpen && (
         <div className="absolute top-full right-4 mt-2 w-52 bg-black/90 backdrop-blur-md rounded-xl shadow-xl p-4 flex flex-col space-y-4 text-white z-50">
-          <Link href="/cart" className="flex items-center gap-3 hover:text-yellow-400 transition">
+          <ProtectedLink to="/cart" className="flex items-center gap-3 hover:text-yellow-400 transition">
             <svg xmlns="http://www.w3.org/2000/svg" className="w-6 h-6 flex-shrink-0" fill="none" stroke="currentColor">
               <path
                 strokeLinecap="round"
@@ -277,7 +279,7 @@ useEffect(() => {
               />
             </svg>
             Cart
-          </Link>
+          </ProtectedLink>
 
          
 

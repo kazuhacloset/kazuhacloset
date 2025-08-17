@@ -49,6 +49,7 @@ def decode_jwt(token):
         return None
 
 # Send OTP
+
 class SendOtpView(APIView):
     def post(self, request):
         serializer = SendOtpSerializer(data=request.data)
@@ -64,9 +65,39 @@ class SendOtpView(APIView):
             try:
                 sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
                 from_email = os.getenv("SENDGRID_FROM_EMAIL")
-                subject = "Your OTP Code"
-                content = f"Your OTP is {otp}. It is valid for 5 minutes."
-                message = Mail(from_email=from_email, to_emails=email, subject=subject, plain_text_content=content)
+                subject = "🔐 Your OTP Code"
+
+                # ✅ HTML template
+                html_content = f"""
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
+                    <h2 style="color: #4CAF50; text-align: center;">Kazuha Closet</h2>
+                    <p>Hi there 👋,</p>
+                    <p>We received a request to verify your email address. Use the OTP below to complete the process:</p>
+                    
+                    <div style="text-align: center; margin: 20px 0;">
+                        <span style="font-size: 24px; font-weight: bold; color: #333; padding: 10px 20px; border: 2px dashed #4CAF50; border-radius: 5px; display: inline-block;">
+                            {otp}
+                        </span>
+                    </div>
+
+                    <p>This OTP is valid for <b>5 minutes</b>. Do not share it with anyone.</p>
+                    <p style="color: #999; font-size: 12px;">If you did not request this, you can safely ignore this email.</p>
+                    <hr>
+                    <p style="text-align: center; font-size: 12px; color: #888;">© 2025 Kazuha Closet</p>
+                </div>
+                """
+
+                # still keep plain text as fallback
+                plain_text_content = f"Your OTP is {otp}. It is valid for 5 minutes."
+
+                message = Mail(
+                    from_email=from_email,
+                    to_emails=email,
+                    subject=subject,
+                    plain_text_content=plain_text_content,
+                    html_content=html_content
+                )
+                
                 sg.send(message)
                 return Response({"message": "OTP sent successfully"}, status=200)
             except Exception as e:
@@ -104,6 +135,10 @@ class RegisterView(APIView):
         if serializer.is_valid():
             email = serializer.validated_data['email']
             otp = serializer.validated_data['otp']
+
+            existing_user=users_collection.find_one({"email":email})
+            if existing_user:
+                return Response({"error": "Email already registered please login"}, status=400)
 
             if email not in otp_store or not otp_store[email]["verified"]:
                 return Response({"error": "Email not verified via OTP"}, status=400)

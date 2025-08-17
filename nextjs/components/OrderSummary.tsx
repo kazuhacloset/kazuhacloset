@@ -156,6 +156,8 @@ export default function OrderSummary() {
               <Image
                 src="/videos/emptycart.gif"
                 alt="Empty Cart"
+                width={160}
+                height={160}
                 className="rounded-xl shadow-xl w-full h-full object-contain"
               />
             </div>
@@ -177,8 +179,10 @@ export default function OrderSummary() {
                 {/* Image */}
                 <div className="flex-shrink-0 w-28 h-28 sm:w-40 sm:h-40 md:w-52 md:h-52 flex justify-center items-center">
                   <Image
-                    src={item.images[0]?.url || "/fallback.jpg"}
+                    src={item.images[0]?.url?.startsWith('/') ? item.images[0].url : `/${item.images[0]?.url}` || "/fallback.jpg"}
                     alt={item.name}
+                    width={208}
+                    height={208}
                     className="rounded-lg object-cover w-full h-full"
                   />
                 </div>
