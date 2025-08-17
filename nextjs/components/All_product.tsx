@@ -34,7 +34,7 @@ export const products: Product[] = [
     originalPrice: "₹799",
     type: "image",
     video: "",
-    thumbnail: "/Productimage/Naruto/front.png",
+    thumbnail: "/Productimage/NARUTO/front.png",
     description: "High-quality Naruto-themed T-shirt with durable print and premium cotton fabric.",
     category: "Naruto",
     rating: 4.8,
