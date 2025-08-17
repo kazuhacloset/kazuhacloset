@@ -14,7 +14,7 @@ import {
 } from "lucide-react";
 import { getProductDetails, addProducttoCart } from "@/utils/api/productUtils";
 import Navbar from "./Landingpage/Navbar";
-import toast from 'react-hot-toast';
+import toast from "react-hot-toast";
 
 type ProductImage = {
   url: string;
@@ -52,7 +52,11 @@ export default function ProductPage() {
           if (data) {
             setCurrentProduct(data);
             if (data.images && data.images.length > 0) {
-              setMainImage(data.images[0].url);
+              // Ensure leading slash for local images
+              const imgUrl = data.images[0].url.startsWith("/")
+                ? data.images[0].url
+                : `/${data.images[0].url}`;
+              setMainImage(imgUrl);
             }
           }
         } catch (error) {
@@ -126,35 +130,43 @@ export default function ProductPage() {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-10">
           {/* Image Section */}
           <div>
-            <div className="mx-auto sm:mx-0 w-full sm:w-[550px] h-[500px] border border-white/20 bg-black/40 rounded-2xl overflow-hidden flex items-center justify-center">
+            <div className="mx-auto sm:mx-0 w-full sm:w-[550px] h-[500px] border border-white/20 bg-black/40 rounded-2xl overflow-hidden relative flex items-center justify-center">
               <Image
                 src={mainImage}
                 alt={currentProduct.name}
+                width={550}
+                height={500}
                 className="w-full h-full object-contain"
+                priority
               />
             </div>
 
             {/* Thumbnails */}
             <div className="flex flex-wrap gap-x-6 gap-y-4 mt-6 justify-center sm:justify-start">
-              {currentProduct.images.map((img, idx) => (
-                <button
-                  key={idx}
-                  onClick={() => setMainImage(img.url)}
-                  className={`rounded-xl overflow-hidden border transition-all duration-200
-                    w-[120px] h-[160px] sm:w-[180px] sm:h-[220px]
-                    ${
-                      mainImage === img.url
-                        ? "border-white scale-105"
-                        : "border-white/20 hover:border-white"
-                    }`}
-                >
-                  <Image
-                    src={img.url}
-                    alt={img.alt || `Image ${idx + 1}`}
-                    className="w-full h-full object-cover rounded-xl"
-                  />
-                </button>
-              ))}
+              {currentProduct.images.map((img, idx) => {
+                const imgUrl = img.url.startsWith("/") ? img.url : `/${img.url}`;
+                return (
+                  <button
+                    key={idx}
+                    onClick={() => setMainImage(imgUrl)}
+                    className={`rounded-xl overflow-hidden border transition-all duration-200 relative
+                      w-[120px] h-[160px] sm:w-[180px] sm:h-[220px]
+                      ${
+                        mainImage === imgUrl
+                          ? "border-white scale-105"
+                          : "border-white/20 hover:border-white"
+                      }`}
+                  >
+                    <Image
+                      src={imgUrl}
+                      alt={img.alt || `Image ${idx + 1}`}
+                      width={180}
+                      height={220}
+                      className="object-cover rounded-xl w-full h-full"
+                    />
+                  </button>
+                );
+              })}
             </div>
           </div>
 
