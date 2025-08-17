@@ -3,7 +3,7 @@
 import React, { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import Image from "next/image";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams, useRouter } from "next/navigation";
 
 // Wallpaper URLs by category
 export const wallpapers = {
@@ -99,33 +99,51 @@ const ScrollSlider = ({ images }: { images: string[] }) => {
 
 export default function WallpapersPage() {
   const searchParams = useSearchParams();
-  const initialCategory = searchParams.get('category');
+  const router = useRouter();
+  const initialCategory = searchParams.get("category") || "";
 
-  // Find the category key that matches the initialCategory from URL
-  const defaultCategoryKey = categories.find(cat =>
-    cat.key.toLowerCase() === (initialCategory?.toLowerCase() || '') ||
-    cat.label.toLowerCase() === (initialCategory?.toLowerCase() || '')
-  )?.key || "all";
+  // Fix category matching
+  const defaultCategoryKey =
+    categories.find(
+      (cat) =>
+        cat.key.toLowerCase() === initialCategory.toLowerCase() ||
+        cat.label.toLowerCase() === initialCategory.toLowerCase()
+    )?.key || "all";
 
-  const [selectedCategory, setSelectedCategory] = useState<keyof typeof wallpapers | "all">(defaultCategoryKey);
+  const [selectedCategory, setSelectedCategory] = useState<
+    keyof typeof wallpapers | "all"
+  >(defaultCategoryKey);
 
   // Update selectedCategory state if URL parameter changes
   useEffect(() => {
-    const currentCategoryParam = searchParams.get('category');
-    const newCategoryKey = categories.find(cat =>
-      cat.key.toLowerCase() === (currentCategoryParam?.toLowerCase() || '') ||
-      cat.label.toLowerCase() === (currentCategoryParam?.toLowerCase() || '')
-    )?.key || "all";
+    const currentCategoryParam = searchParams.get("category") || "";
+    const newCategoryKey =
+      categories.find(
+        (cat) =>
+          cat.key.toLowerCase() === currentCategoryParam.toLowerCase() ||
+          cat.label.toLowerCase() === currentCategoryParam.toLowerCase()
+      )?.key || "all";
 
     if (selectedCategory !== newCategoryKey) {
       setSelectedCategory(newCategoryKey);
     }
-  }, [searchParams, selectedCategory]); 
+  }, [searchParams]);
 
-  const filteredCategories =
+  // ✅ Filter categories safely
+  const filteredCategories: (keyof typeof wallpapers)[] =
     selectedCategory === "all"
       ? (Object.keys(wallpapers) as (keyof typeof wallpapers)[])
-      : [selectedCategory];
+      : [selectedCategory as keyof typeof wallpapers];
+
+  // ✅ Handle button click + update URL
+  const handleCategoryClick = (key: keyof typeof wallpapers | "all") => {
+    setSelectedCategory(key);
+    if (key === "all") {
+      router.push("/wallpapers"); // remove query param
+    } else {
+      router.push(`/wallpapers?category=${key}`);
+    }
+  };
 
   return (
     <>
@@ -160,7 +178,7 @@ export default function WallpapersPage() {
                   ? "bg-white text-black border-white"
                   : "bg-zinc-800 text-white border-white/20 hover:bg-white hover:text-black"
               }`}
-              onClick={() => setSelectedCategory(key)}
+              onClick={() => handleCategoryClick(key)}
             >
               {label}
             </button>

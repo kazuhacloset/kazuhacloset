@@ -2,6 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
+import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { userRegister, sendOtp, verifyOtp } from '@/utils/api/userUtils';
 import { Eye, EyeOff } from 'lucide-react';
@@ -109,10 +110,14 @@ export default function RegisterPage() {
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Video */}
-      <video autoPlay muted loop className="absolute top-0 left-0 w-full h-full object-cover z-0">
-        <source src="/videos/tanjiro.mp4" type="video/mp4" />
-      </video>
+      {/* Background Image */}
+      <Image
+        src="/background.jpg"
+        alt="Background"
+        fill
+        priority
+        className="object-cover z-0"
+      />
 
       {/* Form Content */}
       <div className="relative z-10 bg-black/30 backdrop-blur-md border border-transparent rounded-2xl shadow-xl hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] hover:border-white transition-all duration-500 ease-in-out transform hover:scale-105 w-[95%] sm:w-[90%] md:max-w-md px-3 py-4 sm:px-6 sm:py-8 md:px-8 md:py-10 text-white">

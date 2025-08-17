@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { userLogin } from '@/utils/api/userUtils';
 import { Eye, EyeOff } from 'lucide-react';
 import toast from 'react-hot-toast';
+import Image from 'next/image';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -33,29 +34,26 @@ export default function LoginPage() {
         localStorage.setItem('token', res.token);
         toast.success("Login Successful");
         setTimeout(() => {
-        router.push('/');
-      }, 1500);
-
+          router.push('/');
+        }, 1500);
       } else {
         toast.error('Login failed, please check your credentials');
       }
-    } catch  {
+    } catch {
       toast.error('Something went wrong!');
     }
   };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Video */}
-      <video
-        autoPlay
-        muted
-        loop
-        className="absolute top-0 left-0 w-full h-full object-cover z-0"
-      >
-        <source src="/videos/tanjiro.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
+      {/* Background Image */}
+      <Image
+        src="/background.jpg"   // <-- put your image path here
+        alt="Background"
+        fill
+        priority
+        className="object-cover z-0"
+      />
 
       {/* Login Form */}
       <div className="relative z-10 bg-black/30 backdrop-blur-md border border-transparent 
