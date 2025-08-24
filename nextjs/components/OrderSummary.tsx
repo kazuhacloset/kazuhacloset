@@ -4,7 +4,7 @@ import React, { useEffect, useState } from "react";
 import Navbar from "../components/Landingpage/Navbar";
 import Image from "next/image";
 import { createOrder } from "../utils/api/userUtils"; // ✅ API function
-import type { RazorpayOptions, RazorpayResponse } from "razorpay"; // ✅ use types
+// ❌ REMOVE this: import type { RazorpayOptions, RazorpayResponse } from "razorpay";
 
 type Product = {
   id: string;
@@ -122,9 +122,9 @@ export default function OrderSummary() {
         return;
       }
 
-      // ✅ Open Razorpay modal with correct typing
+      // ✅ Use global Razorpay types from types/razorpay.d.ts
       const options: RazorpayOptions = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string, // ✅ ensure in .env
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string, // ✅ must be in .env
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Your Store Name",
