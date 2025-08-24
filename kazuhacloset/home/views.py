@@ -17,12 +17,28 @@ import random
 from django.core.mail import send_mail
 import sendgrid
 from sendgrid.helpers.mail import Mail
+import razorpay
+import hmac, hashlib
+from django.views.decorators.csrf import csrf_exempt
+from django.utils.decorators import method_decorator
+
+
 
 # Load env variables
 load_dotenv()
+
+razorpay_client = razorpay.Client(auth=(
+    os.getenv("RAZORPAY_KEY_ID"),
+    os.getenv("RAZORPAY_KEY_SECRET")
+))
+
 client = MongoClient(os.getenv('MONGO_URI'))
 db = client["LoginData"]
 users_collection = db["Users"]
+
+
+db = client["Orders"]
+orders_collection=db["order_collections"]
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
@@ -283,3 +299,73 @@ class Remove_Item(APIView):
             {"$unset": {f"cart.{id}": ""}}
         )
         return Response({"message": "Item removed from cart successfully"}, status=200)
+    
+
+
+
+#   PAYMENT PART 
+
+class CreateOrderView(APIView):
+    def post(self,request):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return Response({"error": "Authorization token missing"}, status=401)
+        token = auth_header.split(" ")[1]
+        user_id = decode_jwt(token)
+        if not user_id:
+            return Response({"error": "Invalid or expired token"}, status=401)
+        data=request.data
+        amount=data.get('amount')
+        amount_paise = int(amount) * 100
+        try:
+
+            # BASCIALLY IF ANY PROB HAPPENS I CAN CHECK MY MONGODB AND THE razorpay FOR ANY PAYMENT DISPUTE
+            order = razorpay_client.order.create({
+                "amount": amount_paise,
+                "currency": "INR",
+                "payment_capture": "1"
+            })
+            orders_collection.insert_one({
+                "user_id": user_id,
+                "cart": data.get("cart", {}),
+                "amount": amount,
+                "currency": "INR",
+                "razorpay_order_id": order["id"],
+                "payment_status": "PENDING",
+                "created_at": datetime.utcnow()
+            })
+            return Response(order, status=200)
+        except Exception as e:
+            return Response({"error":str(e)},status=400)
+
+
+@method_decorator(csrf_exempt, name="dispatch")
+class VerifyPaymentView(APIView):
+     def post(self, request):
+        data = request.data
+        order_id = data.get("razorpay_order_id")
+        payment_id = data.get("razorpay_payment_id")
+        signature = data.get("razorpay_signature")
+        try:
+            generated_signature = hmac.new(
+                os.getenv("RAZORPAY_KEY_SECRET").encode(),
+                f"{order_id}|{payment_id}".encode(),
+                hashlib.sha256
+            ).hexdigest()
+
+            if generated_signature == signature:
+                # ✅ Update DB
+                orders_collection.update_one(
+                    {"razorpay_order_id": order_id},
+                    {"$set": {"payment_status": "PAID", "payment_id": payment_id}}
+                )
+                return Response({"status": "Payment verified"}, status=200)
+            else:
+                return Response({"status": "Verification failed"}, status=400)
+
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)
+
+        
+
+
