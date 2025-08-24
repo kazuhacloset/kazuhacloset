@@ -3,13 +3,8 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Landingpage/Navbar";
 import Image from "next/image";
-import { createOrder } from "../utils/api/userUtils"; // ✅ import your API function
-
-declare global {
-  interface Window {
-    Razorpay: any;
-  }
-}
+import { createOrder } from "../utils/api/userUtils"; // ✅ API function
+// ❌ REMOVE this: import type { RazorpayOptions, RazorpayResponse } from "razorpay";
 
 type Product = {
   id: string;
@@ -74,7 +69,7 @@ export default function OrderSummary() {
     }
   };
 
-  // ✅ Load Razorpay script
+  // ✅ Load Razorpay script dynamically
   const loadRazorpay = () => {
     return new Promise<boolean>((resolve) => {
       if (document.getElementById("razorpay-script")) {
@@ -127,16 +122,16 @@ export default function OrderSummary() {
         return;
       }
 
-      // ✅ Open Razorpay modal
-      const options = {
-        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // add this in .env
+      // ✅ Use global Razorpay types from types/razorpay.d.ts
+      const options: RazorpayOptions = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string, // ✅ must be in .env
         amount: orderData.amount,
         currency: orderData.currency,
         name: "Your Store Name",
         description: "Order Payment",
         order_id: orderData.id,
         prefill: {
-          name: "Customer", // you can replace with logged-in user name
+          name: "Customer",
           email: "customer@example.com",
           contact: phone,
         },
@@ -146,8 +141,7 @@ export default function OrderSummary() {
         theme: {
           color: "#FBBF24",
         },
-        handler: function (response: any) {
-          // ✅ Payment success callback
+        handler: function (response: RazorpayResponse) {
           console.log("Payment successful:", response);
           alert("Payment Successful!");
         },
@@ -172,8 +166,7 @@ export default function OrderSummary() {
   return (
     <main className="bg-black text-white min-h-screen px-4 py-6">
       <Navbar />
- 
-{/* Changed from pt-24 to pt-16 to reduce space between navbar and heading */}
+
       <div className="max-w-5xl mx-auto w-full pt-16">
         <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
@@ -196,7 +189,7 @@ export default function OrderSummary() {
               onChange={(e) => setAddress(e.target.value)}
             />
           </div>
-          
+
           <div>
             <label className="block text-xs sm:text-sm font-medium mb-1 sm:mb-2 text-gray-300">
               Phone No.
@@ -228,16 +221,14 @@ export default function OrderSummary() {
                 className="rounded-xl shadow-xl w-full h-full object-contain"
               />
             </div>
-            <h1 className="text-2xl font-bold mt-6">
-              No Items in Order
-            </h1>
+            <h1 className="text-2xl font-bold mt-6">No Items in Order</h1>
             <p className="text-gray-400 text-base mt-2 max-w-sm">
               Looks like there are no items to checkout. Go back to your cart!
             </p>
           </div>
         ) : (
           <>
-            {/* Product Cards - Same Design as Cart */}
+            {/* Product Cards */}
             {products.map((item) => (
               <div
                 key={item.id}
@@ -246,7 +237,11 @@ export default function OrderSummary() {
                 {/* Image */}
                 <div className="flex-shrink-0 w-28 h-28 sm:w-40 sm:h-40 md:w-52 md:h-52 flex justify-center items-center">
                   <Image
-                    src={item.images[0]?.url?.startsWith('/') ? item.images[0].url : `/${item.images[0]?.url}` || "/fallback.jpg"}
+                    src={
+                      item.images[0]?.url?.startsWith("/")
+                        ? item.images[0].url
+                        : `/${item.images[0]?.url}` || "/fallback.jpg"
+                    }
                     alt={item.name}
                     width={208}
                     height={208}
@@ -280,16 +275,16 @@ export default function OrderSummary() {
               </div>
             ))}
 
-            {/* Total and Proceed to Checkout - Same Design as Cart */}
+            {/* Total and Proceed to Checkout */}
             <div className="bg-[#1e1e1e] mt-6 sm:mt-10 p-4 sm:p-6 rounded-xl flex flex-col md:flex-row justify-between items-center shadow-inner">
               <h3 className="text-base sm:text-lg md:text-2xl font-bold text-white mb-2 md:mb-0">
                 Total: <span className="text-yellow-400">₹{total}</span>
               </h3>
             </div>
 
-            {/* Payment Button - Centered */}
+            {/* Payment Button */}
             <div className="flex justify-center mt-6 sm:mt-8 mb-6 sm:mb-8">
-              <button 
+              <button
                 onClick={handleProceedToCheckout}
                 disabled={!address.trim() || phone.length !== 10}
                 className="bg-yellow-400 text-black font-bold px-6 sm:px-8 md:px-12 py-2.5 sm:py-3 md:py-4 rounded-xl hover:bg-yellow-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition text-sm sm:text-base md:text-lg w-full max-w-xs sm:max-w-none sm:w-auto"
