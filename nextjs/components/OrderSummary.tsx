@@ -3,7 +3,13 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Landingpage/Navbar";
 import Image from "next/image";
+import { createOrder } from "../utils/api/userUtils"; // ✅ import your API function
 
+declare global {
+  interface Window {
+    Razorpay: any;
+  }
+}
 
 type Product = {
   id: string;
@@ -31,28 +37,27 @@ export default function OrderSummary() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);
-  
+
   useEffect(() => {
-      const fetchProducts = async () => {
-        setLoading(true);
-        try {
-          const items = localStorage.getItem("checkoutItems");
-          if (items) {
-            const parsed = JSON.parse(items);
-            setProducts(parsed);
-          } else {
-            setProducts([]);
-          }
-        } catch (error) {
-          console.error("Error loading checkout items:", error);
-        } finally {
-          setLoading(false);
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const items = localStorage.getItem("checkoutItems");
+        if (items) {
+          const parsed = JSON.parse(items);
+          setProducts(parsed);
+        } else {
+          setProducts([]);
         }
-      };
+      } catch (error) {
+        console.error("Error loading checkout items:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
 
-      fetchProducts();
-    }, []);
-
+    fetchProducts();
+  }, []);
 
   const cleanPrice = (price: string) =>
     parseFloat(price.replace(/[^0-9.]/g, ""));
@@ -63,35 +68,97 @@ export default function OrderSummary() {
   );
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ''); // Remove non-digits
+    const value = e.target.value.replace(/\D/g, ""); // Remove non-digits
     if (value.length <= 10) {
       setPhone(value);
     }
   };
 
-  const handleProceedToCheckout = () => {
+  // ✅ Load Razorpay script
+  const loadRazorpay = () => {
+    return new Promise<boolean>((resolve) => {
+      if (document.getElementById("razorpay-script")) {
+        resolve(true);
+        return;
+      }
+      const script = document.createElement("script");
+      script.id = "razorpay-script";
+      script.src = "https://checkout.razorpay.com/v1/checkout.js";
+      script.onload = () => resolve(true);
+      script.onerror = () => resolve(false);
+      document.body.appendChild(script);
+    });
+  };
+
+  const handleProceedToCheckout = async () => {
     if (!address.trim()) {
       alert("Please enter your delivery address");
       return;
     }
-    
+
     if (!phone.trim()) {
       alert("Please enter your phone number");
       return;
     }
-    
+
     if (phone.length !== 10) {
       alert("Please enter a valid 10-digit phone number");
       return;
     }
-    
-    // Handle payment logic here
-    console.log("Processing payment for:", {
-      products,
-      address,
-      phone,
-      total,
-    });
+
+    // ✅ Load Razorpay SDK
+    const res = await loadRazorpay();
+    if (!res) {
+      alert("Failed to load Razorpay SDK.");
+      return;
+    }
+
+    try {
+      // ✅ Create order in backend
+      const orderData = await createOrder({
+        amount: total,
+        cart: { items: products },
+        address,
+        phone,
+      });
+
+      if (!orderData.id) {
+        alert("Order creation failed!");
+        return;
+      }
+
+      // ✅ Open Razorpay modal
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // add this in .env
+        amount: orderData.amount,
+        currency: orderData.currency,
+        name: "Your Store Name",
+        description: "Order Payment",
+        order_id: orderData.id,
+        prefill: {
+          name: "Customer", // you can replace with logged-in user name
+          email: "customer@example.com",
+          contact: phone,
+        },
+        notes: {
+          address: address,
+        },
+        theme: {
+          color: "#FBBF24",
+        },
+        handler: function (response: any) {
+          // ✅ Payment success callback
+          console.log("Payment successful:", response);
+          alert("Payment Successful!");
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+    } catch (error) {
+      console.error("Error during payment:", error);
+      alert("Something went wrong. Please try again.");
+    }
   };
 
   if (loading) {
@@ -105,8 +172,8 @@ export default function OrderSummary() {
   return (
     <main className="bg-black text-white min-h-screen px-4 py-6">
       <Navbar />
-      
-      {/* Changed from pt-24 to pt-16 to reduce space between navbar and heading */}
+ 
+{/* Changed from pt-24 to pt-16 to reduce space between navbar and heading */}
       <div className="max-w-5xl mx-auto w-full pt-16">
         <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
