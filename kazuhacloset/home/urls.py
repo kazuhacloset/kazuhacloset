@@ -2,7 +2,7 @@ from django.urls import path
 from .views import (
     RegisterView, LoginView, UserProfileView, UpdateProfileView,
     AddToCartView, CartView, Remove_Item,
-    SendOtpView, VerifyOtpView
+    SendOtpView, VerifyOtpView,CreateOrderView,VerifyPaymentView
 )
 
 urlpatterns = [
@@ -17,4 +17,10 @@ urlpatterns = [
     # OTP routes
     path('send-otp/', SendOtpView.as_view(), name='send-otp'),
     path('verify-otp/', VerifyOtpView.as_view(), name='verify-otp'),
+
+    # PAYMENT ROUTES
+
+    path("create-order/", CreateOrderView.as_view(), name="create-order"),
+    path("verify-payment/", VerifyPaymentView.as_view(), name="verify-payment"),
+
 ]
