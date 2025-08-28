@@ -138,7 +138,7 @@ export default function OrderSummary() {
               razorpay_signature: response.razorpay_signature,
             });
 
-            if (verifyRes.success) {
+            if (verifyRes.status==="Payment verified") {
               alert("✅ Payment verified successfully!");
               // TODO: redirect to success page / clear cart
             } else {
