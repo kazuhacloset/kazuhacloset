@@ -137,11 +137,11 @@ img, .img-hover-scale {
 
 /* Toast Custom Styling -----------------------------------------------------------------------------------------------------------------------*/
 .custom-toast {
-  background: #4a4a4a !important;
+  background: linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff) !important; 
   color: #ffffff !important;
   font-weight: 500;
   border-radius: 16px;
-  padding: 16px 20px;
+  padding: 12px 18px; /* ✅ reduced so bigger avatar doesn’t stretch card */
   display: flex !important;
   align-items: center;
   gap: 12px;
@@ -149,16 +149,17 @@ img, .img-hover-scale {
   border: none;
   min-width: 280px;
   font-size: 14px;
+  animation: toast-slide-in 0.4s ease-out; /* ✅ smooth entry animation */
 }
 
 /* Success toast styling */
 .custom-toast[data-type="success"] {
-  background: #4a4a4a !important;
+  background: linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff) !important;
 }
 
 /* Error toast styling */
 .custom-toast[data-type="error"] {
-  background: #4a4a4a !important;
+  background: linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff) !important;
 }
 
 /* Remove default toast styling */
@@ -170,17 +171,11 @@ img, .img-hover-scale {
 
 /* Avatar styling */
 .toast-avatar {
-  width: 40px;
-  height: 40px;
+  width: 52px;  /* ✅ bigger avatar */
+  height: 52px;
   border-radius: 50%;
   flex-shrink: 0;
   object-fit: cover;
-}
-
-/* Remove glow effect to match the clean design */
-.toast-avatar-glow {
-  box-shadow: none;
-  border-radius: 50%;
 }
 
 /* Text styling */
@@ -189,4 +184,16 @@ img, .img-hover-scale {
   font-size: 14px;
   font-weight: 500;
   color: #ffffff;
+}
+
+/* 🔥 Toast slide-in animation */
+@keyframes toast-slide-in {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
 }

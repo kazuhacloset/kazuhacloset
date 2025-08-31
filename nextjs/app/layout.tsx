@@ -9,7 +9,7 @@ import { usePathname } from 'next/navigation';
 import Loader from '@/components/Loader';
 import FloatingLauncher from '@/components/Landingpage/FloatingLauncher';
 import Image from 'next/image';
-import Footer from '@/components/Footer'; // ✅ import Footer
+import Footer from '@/components/Footer';
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -39,61 +39,65 @@ export default function RootLayout({
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`bg-[#1b1b1d] ${poppins.className}`}>
-        <main className="relative min-h-screen overflow-x-hidden flex flex-col">
+        <main className="relative bg-gradient-to-bl from-black via-zinc-800 to-zinc-300 min-h-screen scroll-smooth overflow-x-hidden flex flex-col">
           {loading ? (
             <Loader />
           ) : (
             <>
               <div className="flex-grow">{children}</div>
               <FloatingLauncher />
-              <Footer /> {/* ✅ Footer added here */}
+              <Footer />
             </>
           )}
         </main>
 
-        {/* 🔥 Custom Toaster Styling with Avatar Icons */}
+        {/* 🔥 Toaster with Yellow Gradient Glow */}
         <Toaster
           position="top-right"
           toastOptions={{
             className: 'custom-toast',
             duration: 3500,
             style: {
-              background: '#4a4a4a',
-              color: '#ffffff',
-              borderRadius: '16px',
-              padding: '16px 20px',
+              background:
+                'linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff)',
+              borderRadius: '8px',
+              padding: '12px 18px',
               minWidth: '280px',
               boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+
+              // 🌟 Yellow Gradient Text Glow
+              color: 'transparent',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              backgroundImage:
+                 'linear-gradient(90deg, #ca8a04, #eab308, #f59e0b)',
+              textShadow:
+                '0 0 4px rgba(202, 138, 4, 0.7), 0 0 8px rgba(234, 179, 8, 0.5)',
+              fontWeight: 600,
             },
             success: {
               icon: (
                 <Image
                   src="/pass.png"
                   alt="Success"
-                  width={40}
-                  height={40}
-                  className="toast-avatar rounded-full"
+                  width={52}
+                  height={52}
+                  className="toast-avatar rounded-full object-cover"
                 />
               ),
-              style: {
-                background: '#4a4a4a',
-                color: '#ffffff',
-              },
             },
             error: {
               icon: (
                 <Image
                   src="/fail.png"
                   alt="Error"
-                  width={40}
-                  height={40}
-                  className="toast-avatar rounded-full"
+                  width={52}
+                  height={52}
+                  className="toast-avatar rounded-full object-cover"
                 />
               ),
-              style: {
-                background: '#4a4a4a',
-                color: '#ffffff',
-              },
             },
           }}
         />
