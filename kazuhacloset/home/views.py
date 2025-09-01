@@ -21,6 +21,9 @@ import razorpay
 import hmac, hashlib
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
+import json
+from bson.json_util import dumps
+
 
 
 
@@ -39,6 +42,9 @@ users_collection = db["Users"]
 
 db = client["Orders"]
 orders_collection=db["order_collections"]
+
+db=client["History"]
+order_history_collection= db["order_history"]
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
@@ -341,11 +347,12 @@ class CreateOrderView(APIView):
 
 @method_decorator(csrf_exempt, name="dispatch")
 class VerifyPaymentView(APIView):
-     def post(self, request):
+    def post(self, request):
         data = request.data
         order_id = data.get("razorpay_order_id")
         payment_id = data.get("razorpay_payment_id")
         signature = data.get("razorpay_signature")
+
         try:
             generated_signature = hmac.new(
                 os.getenv("RAZORPAY_KEY_SECRET").encode(),
@@ -353,19 +360,50 @@ class VerifyPaymentView(APIView):
                 hashlib.sha256
             ).hexdigest()
 
-            if generated_signature == signature:
-                # ✅ Update DB
-                orders_collection.update_one(
-                    {"razorpay_order_id": order_id},
-                    {"$set": {"payment_status": "PAID", "payment_id": payment_id}}
-                )
-                return Response({"status": "Payment verified"}, status=200)
-            else:
+            if generated_signature != signature:
                 return Response({"status": "Verification failed"}, status=400)
+
+            order = orders_collection.find_one({"razorpay_order_id": order_id})
+
+            if not order:
+                return Response({"error": "Order not found"}, status=404)
+
+            order["payment_status"] = "PAID"
+            order["payment_id"] = payment_id
+            order["verified_at"] = datetime.utcnow()
+
+            order_history_collection.insert_one(order)
+
+            orders_collection.delete_one({"razorpay_order_id": order_id})
+
+            return Response({"status": "Payment verified"}, status=200)
 
         except Exception as e:
             return Response({"error": str(e)}, status=400)
 
+
         
 
+@method_decorator(csrf_exempt, name='dispatch')
+class OrderHistoryView(APIView):
+    def get(self, request):
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return Response({"error": "Authorization token missing"}, status=401)
 
+        token = auth_header.split(" ")[1]
+
+        try:
+            user_id = decode_jwt(token)  
+            if not user_id:
+                return Response({"error": "Invalid token"}, status=401)
+
+            # Fetch all orders for this user from order_history_collection
+            orders_cursor = order_history_collection.find({"user_id": user_id})
+
+            # Convert Mongo cursor to list and serialize to JSON-compatible dicts
+            orders_list = json.loads(dumps(orders_cursor))
+
+            return Response(orders_list, status=200)
+        except Exception as e:
+            return Response({"error": str(e)}, status=400)

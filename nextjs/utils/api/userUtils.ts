@@ -51,12 +51,21 @@ export const createOrder = async (data: {
   return res.data; // will include order_id, amount, currency
 };
 
+
 // Verify Razorpay payment (HMAC signature check on backend)
+
+
 export const verifyPayment = async (data: {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
 }) => {
   const res = await userConnection.post("api/verify-payment/", data);
-  return res.data; // expect { success: true/false, ... }
+  return res.data; 
+};
+
+
+export const fetchOrderHistory = async () => {
+  const res = await userConnection.get("api/order-history/");
+  return res.data;
 };

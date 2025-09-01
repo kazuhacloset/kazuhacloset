@@ -21,3 +21,5 @@ export const removeFromCart = async (productId: string) => {
   const res = await userConnection.delete(`/api/cart/remove/${productId}/`);
   return res.data;
 };
+
+
