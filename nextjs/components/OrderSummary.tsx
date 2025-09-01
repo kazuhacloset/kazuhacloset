@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Navbar from "../components/Landingpage/Navbar";
 import Image from "next/image";
-import { createOrder, verifyPayment } from "../utils/api/userUtils";
+import { createOrder, verifyPayment, fetchOrderHistory } from "../utils/api/userUtils"; // ⬅️ make sure this util exists
 
 type Product = {
   id: string;
@@ -32,6 +32,10 @@ export default function OrderSummary() {
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);
 
+  // 🔹 state for history
+  const [orders, setOrders] = useState<any[]>([]);
+  const [loadingHistory, setLoadingHistory] = useState(false);
+
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -51,7 +55,25 @@ export default function OrderSummary() {
     };
 
     fetchProducts();
+
+    // auto-load history
+    loadOrderHistory();
   }, []);
+
+  const loadOrderHistory = async () => {
+    setLoadingHistory(true);
+    try {
+      const data = await fetchOrderHistory();
+      setOrders(data);
+    } catch (err) {
+      console.error("Failed to fetch order history:", err);
+    } finally {
+      setLoadingHistory(false);
+    }
+  };
+
+
+
 
   const cleanPrice = (price: string) =>
     parseFloat(price.replace(/[^0-9.]/g, ""));
@@ -138,9 +160,12 @@ export default function OrderSummary() {
               razorpay_signature: response.razorpay_signature,
             });
 
-            if (verifyRes.status==="Payment verified") {
-              alert("✅ Payment verified successfully!");
-              // TODO: redirect to success page / clear cart
+            if (verifyRes.status === "Payment verified") {
+              // ✅ clear checkout items
+              localStorage.removeItem("checkoutItems");
+
+              // ✅ reload order history
+              loadOrderHistory();
             } else {
               alert("⚠️ Payment verification failed.");
             }
@@ -151,7 +176,7 @@ export default function OrderSummary() {
         },
       };
 
-      const rzp = new window.Razorpay(options);
+      const rzp = new (window as any).Razorpay(options);
       rzp.on("payment.failed", (resp: RazorpayErrorResponse) => {
         alert("Payment failed: " + resp.error.description);
       });
@@ -288,6 +313,33 @@ export default function OrderSummary() {
               >
                 Payment
               </button>
+            </div>
+
+            {/* 🔹 Order History Section */}
+            <div className="mt-10">
+              <h2 className="text-xl font-semibold mb-4">Order History</h2>
+
+              {loadingHistory ? (
+                <p className="text-gray-400">Loading...</p>
+              ) : orders.length === 0 ? (
+                <p className="text-gray-500">No past orders yet.</p>
+              ) : (
+                <div className="space-y-4">
+                  {orders.map((order, idx) => (
+                    <div
+                      key={idx}
+                      className="bg-[#1e1e1e] rounded-xl p-4 shadow-md"
+                    >
+                      <p className="text-yellow-400 font-semibold">
+                        Order ID: {order.razorpay_order_id}
+                      </p>
+                      <p>Status: {order.payment_status}</p>
+                      <p>Paid At: {new Date(order.verified_at).toLocaleString()}</p>
+                      <p>Payment ID: {order.payment_id}</p>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </>
         )}
