@@ -3,8 +3,13 @@
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Navbar from "./Landingpage/Navbar";
-import { createOrder, verifyPayment, fetchOrderHistory } from "../utils/api/userUtils";
+import {
+  createOrder,
+  verifyPayment,
+  fetchOrderHistory,
+} from "../utils/api/userUtils";
 
+// ---------------- Types ----------------
 type Product = {
   id: string;
   name: string;
@@ -26,12 +31,24 @@ type OrderItem = Product & {
   size: string;
 };
 
+type Order = {
+  razorpay_order_id: string;
+  payment_status: string;
+  verified_at: string;
+  payment_id: string;
+  amount: number;
+  cart: {
+    items: OrderItem[];
+  };
+};
+
+// ---------------- Component ----------------
 export default function OrderSummary() {
   const [products, setProducts] = useState<OrderItem[]>([]);
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);
-  const [orders, setOrders] = useState<any[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
   useEffect(() => {
@@ -40,7 +57,7 @@ export default function OrderSummary() {
       try {
         const items = localStorage.getItem("checkoutItems");
         if (items) {
-          const parsed = JSON.parse(items);
+          const parsed: OrderItem[] = JSON.parse(items);
           setProducts(parsed);
         } else {
           setProducts([]);
@@ -59,8 +76,7 @@ export default function OrderSummary() {
   const loadOrderHistory = async () => {
     setLoadingHistory(true);
     try {
-      const data = await fetchOrderHistory();
-      console.log("Order history data:", data); // Debug log
+      const data: Order[] = await fetchOrderHistory();
       setOrders(data);
     } catch (err) {
       console.error("Failed to fetch order history:", err);
@@ -116,7 +132,7 @@ export default function OrderSummary() {
     try {
       const orderData = await createOrder({
         amount: total,
-        cart: { items: products }, // Send full product details
+        cart: { items: products },
         address,
         phone,
       });
@@ -126,7 +142,7 @@ export default function OrderSummary() {
         return;
       }
 
-      const options: any = {
+      const options: RazorpayOptions = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
         amount: orderData.amount,
         currency: orderData.currency,
@@ -140,7 +156,7 @@ export default function OrderSummary() {
         },
         notes: { address },
         theme: { color: "#FBBF24" },
-        handler: async function (response: any) {
+        handler: async function (response: RazorpayResponse) {
           try {
             const verifyRes = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
@@ -149,13 +165,9 @@ export default function OrderSummary() {
             });
 
             if (verifyRes.status === "Payment verified") {
-              // Clear checkout items and current order
               localStorage.removeItem("checkoutItems");
-              setProducts([]); // Clear current order display
-              
-              // Reload order history to show the new order
+              setProducts([]);
               await loadOrderHistory();
-              
               alert("Payment successful! Order placed.");
             } else {
               alert("Payment verification failed.");
@@ -167,8 +179,8 @@ export default function OrderSummary() {
         },
       };
 
-      const rzp = new (window as any).Razorpay(options);
-      rzp.on("payment.failed", (resp: any) => {
+      const rzp = new window.Razorpay(options);
+      rzp.on("payment.failed", (resp: RazorpayErrorResponse) => {
         alert("Payment failed: " + resp.error.description);
       });
       rzp.open();
@@ -190,7 +202,7 @@ export default function OrderSummary() {
   return (
     <main className="bg-black text-white min-h-screen px-4 py-6">
       <Navbar />
-      
+
       <div className="max-w-5xl mx-auto w-full pt-16">
         <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
@@ -313,8 +325,7 @@ export default function OrderSummary() {
                   className="bg-[#1e1e1e] rounded-xl p-4 shadow-md"
                 >
                   <div className="flex gap-4">
-                    {/* Product Image - safely access */}
-                    {order.cart?.items?.[0]?.images?.[0]?.url && (
+                    {order.cart.items[0]?.images?.[0]?.url && (
                       <div className="w-16 h-16 flex-shrink-0">
                         <Image
                           src={
@@ -332,30 +343,35 @@ export default function OrderSummary() {
                         />
                       </div>
                     )}
-                    
+
                     <div className="flex-1">
                       <p className="text-yellow-400 font-semibold">
                         Order ID: {order.razorpay_order_id}
                       </p>
-                      
-                      {/* Product Names - safely access */}
-                      {order.cart?.items?.length > 0 ? (
-                        order.cart.items.map((item: any, i: number) => (
+
+                      {order.cart.items.length > 0 ? (
+                        order.cart.items.map((item, i) => (
                           <p key={i} className="text-white font-medium">
-                            {item.name || "Product"} 
+                            {item.name || "Product"}
                             {item.size && ` (Size: ${item.size})`}
                             {item.quantity && `, Qty: ${item.quantity}`}
                           </p>
                         ))
                       ) : (
-                        <p className="text-gray-400">Order details not available</p>
+                        <p className="text-gray-400">
+                          Order details not available
+                        </p>
                       )}
-                      
-                      <p className="text-gray-300">Status: {order.payment_status}</p>
+
+                      <p className="text-gray-300">
+                        Status: {order.payment_status}
+                      </p>
                       <p className="text-gray-300">
                         Paid At: {new Date(order.verified_at).toLocaleString()}
                       </p>
-                      <p className="text-gray-300">Payment ID: {order.payment_id}</p>
+                      <p className="text-gray-300">
+                        Payment ID: {order.payment_id}
+                      </p>
                       <p className="text-green-400 font-semibold">
                         Total: ₹{order.amount}
                       </p>
