@@ -1,15 +1,10 @@
-'use client';
-
 import './globals.css';
 import 'aos/dist/aos.css';
 import { Poppins } from 'next/font/google';
 import { Toaster } from 'react-hot-toast';
-import { useEffect, useState } from 'react';
-import { usePathname } from 'next/navigation';
-import Loader from '@/components/Loader';
-import FloatingLauncher from '@/components/Landingpage/FloatingLauncher';
-import Image from 'next/image';
-import Footer from '@/components/Footer';
+import LayoutClient from './LayoutClient';
+import type { Metadata } from "next";
+
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -17,90 +12,41 @@ const poppins = Poppins({
   display: 'swap',
 });
 
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  const [loading, setLoading] = useState(true);
-  const pathname = usePathname();
+// ✅ SEO metadata only works in server components
+export const metadata: Metadata = {
+  title: "Kazuhacloset | Fashion & Lifestyle",
+  description: "Discover trendy fashion, curated collections, and stylish outfits at Kazuhacloset. Elevate your wardrobe with us.",
+  keywords: ["fashion", "clothing", "style", "trendy outfits", "Kazuhacloset", "wardrobe", "lifestyle"],
+  openGraph: {
+    title: "Kazuhacloset | Fashion & Lifestyle",
+    description: "Trendy fashion and stylish outfits for every occasion.",
+    url: "https://www.kazuhacloset.com/",
+    siteName: "Kazuhacloset",
+    images: [
+      {
+        url: "/opengraph-image.png", // place your fashion banner here
+        width: 1200,
+        height: 630,
+        alt: "Kazuhacloset Fashion Banner",
+      },
+    ],
+    locale: "en_US",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Kazuhacloset | Fashion & Lifestyle",
+    description: "Discover the latest fashion trends with Kazuhacloset.",
+    images: ["/opengraph-image.png"],
+  },
+};
 
-  useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
-    return () => clearTimeout(timer);
-  }, []);
-
-  useEffect(() => {
-    setLoading(true);
-    const timer = setTimeout(() => setLoading(false), 1800);
-    return () => clearTimeout(timer);
-  }, [pathname]);
-
+export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`bg-[#1b1b1d] ${poppins.className}`}>
-        <main className="relative bg-gradient-to-bl from-black via-zinc-800 to-zinc-300 min-h-screen scroll-smooth overflow-x-hidden flex flex-col">
-          {loading ? (
-            <Loader />
-          ) : (
-            <>
-              <div className="flex-grow">{children}</div>
-              <FloatingLauncher />
-              <Footer />
-            </>
-          )}
-        </main>
-
-        {/* 🔥 Toaster with Yellow Gradient Glow */}
-        <Toaster
-          position="top-right"
-          toastOptions={{
-            className: 'custom-toast',
-            duration: 3500,
-            style: {
-              background:
-                'linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff)',
-              borderRadius: '8px',
-              padding: '12px 18px',
-              minWidth: '280px',
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-              display: 'flex',
-              alignItems: 'center',
-
-              // 🌟 Yellow Gradient Text Glow
-              color: 'transparent',
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
-              backgroundImage:
-                 'linear-gradient(90deg, #ca8a04, #eab308, #f59e0b)',
-              textShadow:
-                '0 0 4px rgba(202, 138, 4, 0.7), 0 0 8px rgba(234, 179, 8, 0.5)',
-              fontWeight: 600,
-            },
-            success: {
-              icon: (
-                <Image
-                  src="/pass.png"
-                  alt="Success"
-                  width={52}
-                  height={52}
-                  className="toast-avatar rounded-full object-cover"
-                />
-              ),
-            },
-            error: {
-              icon: (
-                <Image
-                  src="/fail.png"
-                  alt="Error"
-                  width={52}
-                  height={52}
-                  className="toast-avatar rounded-full object-cover"
-                />
-              ),
-            },
-          }}
-        />
+        <LayoutClient>{children}</LayoutClient>
+        <Toaster position="top-right" />
       </body>
     </html>
   );
