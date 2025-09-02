@@ -8,6 +8,7 @@ import {
   verifyPayment,
   fetchOrderHistory,
 } from "../utils/api/userUtils";
+import toast from "react-hot-toast";
 
 // ---------------- Types ----------------
 type Product = {
@@ -115,17 +116,17 @@ export default function OrderSummary() {
 
   const handleProceedToCheckout = async () => {
     if (!address.trim()) {
-      alert("Please enter your delivery address");
+      toast.error("Please enter your delivery address");
       return;
     }
     if (!phone.trim() || phone.length !== 10) {
-      alert("Please enter a valid 10-digit phone number");
+      toast.error("Please enter a valid 10-digit phone number");
       return;
     }
 
     const res = await loadRazorpay();
     if (!res) {
-      alert("Failed to load Razorpay SDK.");
+      toast.error("Failed to load Razorpay SDK.");
       return;
     }
 
@@ -138,7 +139,7 @@ export default function OrderSummary() {
       });
 
       if (!orderData.id) {
-        alert("Order creation failed!");
+        toast.error("Order creation failed!");
         return;
       }
 
@@ -168,25 +169,25 @@ export default function OrderSummary() {
               localStorage.removeItem("checkoutItems");
               setProducts([]);
               await loadOrderHistory();
-              alert("Payment successful! Order placed.");
+              toast.success("Payment successful! Order placed.");
             } else {
-              alert("Payment verification failed.");
+              toast.error("Payment verification failed.");
             }
           } catch (err) {
             console.error(err);
-            alert("Error verifying payment.");
+            toast.error("Error verifying payment.");
           }
         },
       };
 
       const rzp = new window.Razorpay(options);
       rzp.on("payment.failed", (resp: RazorpayErrorResponse) => {
-        alert("Payment failed: " + resp.error.description);
+        toast.error("Payment failed: " + resp.error.description);
       });
       rzp.open();
     } catch (error) {
       console.error("Error during payment:", error);
-      alert("Something went wrong. Please try again.");
+      toast.error("Something went wrong. Please try again.");
     }
   };
 
