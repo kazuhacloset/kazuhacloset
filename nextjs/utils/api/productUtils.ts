@@ -16,10 +16,7 @@ export const getUserCart = async () => {
 };
 
 
-export const removeFromCart = async (productId: string) => {
-  console.log(productId);
-  const res = await userConnection.delete(`/api/cart/remove/${productId}/`);
+export const removeFromCart = async (cartKey: string) => {
+  const res = await userConnection.delete(`/api/cart/remove/${cartKey}/`);
   return res.data;
 };
-
-

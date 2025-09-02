@@ -173,7 +173,7 @@ class RegisterView(APIView):
                 "last_name": serializer.validated_data['last_name'],
                 "email": email,
                 "password": make_password(serializer.validated_data['password']),
-                "cart": {}
+                "cart": []
             }
             result = users_collection.insert_one(user_data)
             user_id = result.inserted_id
@@ -208,22 +208,55 @@ class AddToCartView(APIView):
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return Response({"error": "Authorization token missing"}, status=401)
+
         token = auth_header.split(" ")[1]
         user_id = decode_jwt(token)
         if not user_id:
             return Response({"error": "Invalid or expired token"}, status=401)
+
         serializer = AddToCartSerializer(data=request.data)
         if serializer.is_valid():
             data = serializer.validated_data
-            result = users_collection.update_one(
-                {"_id": ObjectId(user_id)},
-                {"$set": {f"cart.{data['product_id']}": [data['quantity'], data['size']]}}
+            product_id = str(data['product_id'])
+            size = str(data['size']).upper()
+            quantity = int(data['quantity'])
+
+            # ✅ Create cart_key = product_id-size
+            cart_key = f"{product_id}-{size}"
+            users_collection.update_many(
+                {"cart": {"$type": "array"}},
+                {"$set": {"cart": {}}}
             )
-            if result.modified_count == 1:
-                return Response({"message": "Item added to cart"}, status=200)
+
+            user = users_collection.find_one({"_id": ObjectId(user_id)})
+            if not user:
+                return Response({"error": "User not found"}, status=404)
+
+            # ✅ If item exists → increment quantity
+            if f"cart.{cart_key}" in user.get("cart", {}):
+                users_collection.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$inc": {f"cart.{cart_key}.quantity": quantity}}
+                )
             else:
-                return Response({"error": "User not found or cart not updated"}, status=404)
+                # ✅ Otherwise create new entry
+                users_collection.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$set": {
+                        f"cart.{cart_key}": {
+                            "product_id": product_id,
+                            "size": size,
+                            "quantity": quantity
+                        }
+                    }}
+                )
+
+            return Response({"message": "Item added to cart"}, status=200)
+
         return Response(serializer.errors, status=400)
+
+
+
 
 # Cart view
 class CartView(APIView):
@@ -286,25 +319,35 @@ class UpdateProfileView(APIView):
 
 # Remove cart item
 class Remove_Item(APIView):
-    def delete(self, request, id):
+    def delete(self, request, cart_key):
+        # ✅ Check JWT auth
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return Response({"error": "Authorization token missing"}, status=401)
+
         token = auth_header.split(" ")[1]
         user_id = decode_jwt(token)
         if not user_id:
             return Response({"error": "Invalid or expired token"}, status=401)
+
+        # ✅ Find user
         user = users_collection.find_one({"_id": ObjectId(user_id)})
         if not user:
             return Response({"error": "User not found"}, status=404)
+
+        # ✅ Get cart (stored as dict)
         cart = user.get("cart", {})
-        if id not in cart:
+
+        if cart_key not in cart:
             return Response({"error": "Item not found in cart"}, status=404)
+
+        # ✅ Remove item from cart
         users_collection.update_one(
             {"_id": ObjectId(user_id)},
-            {"$unset": {f"cart.{id}": ""}}
+            {"$unset": {f"cart.{cart_key}": ""}}
         )
-        return Response({"message": "Item removed from cart successfully"}, status=200)
+
+        return Response({"message": f"Item {cart_key} removed successfully"}, status=200)
     
 
 
