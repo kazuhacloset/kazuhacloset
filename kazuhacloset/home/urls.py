@@ -2,7 +2,8 @@ from django.urls import path
 from .views import (
     RegisterView, LoginView, UserProfileView, UpdateProfileView,
     AddToCartView, CartView, Remove_Item,
-    SendOtpView, VerifyOtpView,CreateOrderView,VerifyPaymentView
+    SendOtpView, VerifyOtpView, CreateOrderView, VerifyPaymentView,
+    OrderHistoryView  # Add this import
 )
 
 urlpatterns = [
@@ -19,8 +20,8 @@ urlpatterns = [
     path('verify-otp/', VerifyOtpView.as_view(), name='verify-otp'),
 
     # PAYMENT ROUTES
-
     path("create-order/", CreateOrderView.as_view(), name="create-order"),
     path("verify-payment/", VerifyPaymentView.as_view(), name="verify-payment"),
+    path("order-history/", OrderHistoryView.as_view(), name="order-history"),  # Add this line
 
 ]

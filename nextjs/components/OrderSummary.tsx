@@ -1,9 +1,9 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import Navbar from "../components/Landingpage/Navbar";
 import Image from "next/image";
-import { createOrder, verifyPayment, fetchOrderHistory } from "../utils/api/userUtils"; // ⬅️ make sure this util exists
+import Navbar from "./Landingpage/Navbar";
+import { createOrder, verifyPayment, fetchOrderHistory } from "../utils/api/userUtils";
 
 type Product = {
   id: string;
@@ -31,8 +31,6 @@ export default function OrderSummary() {
   const [address, setAddress] = useState("");
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(true);
-
-  // 🔹 state for history
   const [orders, setOrders] = useState<any[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
 
@@ -55,8 +53,6 @@ export default function OrderSummary() {
     };
 
     fetchProducts();
-
-    // auto-load history
     loadOrderHistory();
   }, []);
 
@@ -64,6 +60,7 @@ export default function OrderSummary() {
     setLoadingHistory(true);
     try {
       const data = await fetchOrderHistory();
+      console.log("Order history data:", data); // Debug log
       setOrders(data);
     } catch (err) {
       console.error("Failed to fetch order history:", err);
@@ -71,9 +68,6 @@ export default function OrderSummary() {
       setLoadingHistory(false);
     }
   };
-
-
-
 
   const cleanPrice = (price: string) =>
     parseFloat(price.replace(/[^0-9.]/g, ""));
@@ -84,11 +78,10 @@ export default function OrderSummary() {
   );
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const value = e.target.value.replace(/\D/g, ""); // digits only
+    const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 10) setPhone(value);
   };
 
-  // ✅ Load Razorpay script dynamically
   const loadRazorpay = () => {
     return new Promise<boolean>((resolve) => {
       if (document.getElementById("razorpay-script")) {
@@ -121,10 +114,9 @@ export default function OrderSummary() {
     }
 
     try {
-      // ✅ Create order on backend
       const orderData = await createOrder({
         amount: total,
-        cart: { items: products },
+        cart: { items: products }, // Send full product details
         address,
         phone,
       });
@@ -134,9 +126,9 @@ export default function OrderSummary() {
         return;
       }
 
-      const options: RazorpayOptions = {
+      const options: any = {
         key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID as string,
-        amount: orderData.amount, // in paise
+        amount: orderData.amount,
         currency: orderData.currency,
         name: "Kazuha Closet",
         description: "Order Payment",
@@ -146,13 +138,9 @@ export default function OrderSummary() {
           email: "customer@example.com",
           contact: phone,
         },
-        notes: {
-          address,
-        },
-        theme: {
-          color: "#FBBF24",
-        },
-        handler: async function (response: RazorpayResponse) {
+        notes: { address },
+        theme: { color: "#FBBF24" },
+        handler: async function (response: any) {
           try {
             const verifyRes = await verifyPayment({
               razorpay_order_id: response.razorpay_order_id,
@@ -161,23 +149,26 @@ export default function OrderSummary() {
             });
 
             if (verifyRes.status === "Payment verified") {
-              // ✅ clear checkout items
+              // Clear checkout items and current order
               localStorage.removeItem("checkoutItems");
-
-              // ✅ reload order history
-              loadOrderHistory();
+              setProducts([]); // Clear current order display
+              
+              // Reload order history to show the new order
+              await loadOrderHistory();
+              
+              alert("Payment successful! Order placed.");
             } else {
-              alert("⚠️ Payment verification failed.");
+              alert("Payment verification failed.");
             }
           } catch (err) {
             console.error(err);
-            alert("❌ Error verifying payment.");
+            alert("Error verifying payment.");
           }
         },
       };
 
       const rzp = new (window as any).Razorpay(options);
-      rzp.on("payment.failed", (resp: RazorpayErrorResponse) => {
+      rzp.on("payment.failed", (resp: any) => {
         alert("Payment failed: " + resp.error.description);
       });
       rzp.open();
@@ -191,6 +182,7 @@ export default function OrderSummary() {
     return (
       <main className="bg-black text-white min-h-screen px-4 py-6">
         <Navbar />
+        <div className="max-w-5xl mx-auto pt-16">Loading...</div>
       </main>
     );
   }
@@ -198,6 +190,7 @@ export default function OrderSummary() {
   return (
     <main className="bg-black text-white min-h-screen px-4 py-6">
       <Navbar />
+      
       <div className="max-w-5xl mx-auto w-full pt-16">
         <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
@@ -206,57 +199,44 @@ export default function OrderSummary() {
           <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 mx-auto rounded-full"></div>
         </div>
 
-        {/* Address & Phone inputs */}
-        <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
-          <div>
-            <label className="block text-xs sm:text-sm font-medium mb-1 text-gray-300">
-              Address
-            </label>
-            <input
-              type="text"
-              placeholder="Enter your delivery address"
-              className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none text-sm sm:text-base"
-              value={address}
-              onChange={(e) => setAddress(e.target.value)}
-            />
-          </div>
-
-          <div>
-            <label className="block text-xs sm:text-sm font-medium mb-1 text-gray-300">
-              Phone No.
-            </label>
-            <input
-              type="tel"
-              placeholder="Enter your 10-digit phone number"
-              className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none text-sm sm:text-base"
-              value={phone}
-              onChange={handlePhoneChange}
-              maxLength={10}
-            />
-            {phone && phone.length < 10 && (
-              <p className="text-red-400 text-xs mt-1">
-                Phone number must be 10 digits ({phone.length}/10)
-              </p>
-            )}
-          </div>
-        </div>
-
-        {products.length === 0 ? (
-          <div className="flex flex-col items-center text-center mt-16">
-            <Image
-              src="/videos/emptycart.gif"
-              alt="Empty Cart"
-              width={160}
-              height={160}
-              className="rounded-xl shadow-xl object-contain"
-            />
-            <h1 className="text-2xl font-bold mt-6">No Items in Order</h1>
-            <p className="text-gray-400 text-base mt-2 max-w-sm">
-              Looks like there are no items to checkout. Go back to your cart!
-            </p>
-          </div>
-        ) : (
+        {products.length > 0 && (
           <>
+            {/* Address & Phone inputs */}
+            <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1 text-gray-300">
+                  Address
+                </label>
+                <input
+                  type="text"
+                  placeholder="Enter your delivery address"
+                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none text-sm sm:text-base"
+                  value={address}
+                  onChange={(e) => setAddress(e.target.value)}
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs sm:text-sm font-medium mb-1 text-gray-300">
+                  Phone No.
+                </label>
+                <input
+                  type="tel"
+                  placeholder="Enter your 10-digit phone number"
+                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none text-sm sm:text-base"
+                  value={phone}
+                  onChange={handlePhoneChange}
+                  maxLength={10}
+                />
+                {phone && phone.length < 10 && (
+                  <p className="text-red-400 text-xs mt-1">
+                    Phone number must be 10 digits ({phone.length}/10)
+                  </p>
+                )}
+              </div>
+            </div>
+
+            {/* Current Order Items */}
             {products.map((item) => (
               <div
                 key={item.id}
@@ -314,34 +294,93 @@ export default function OrderSummary() {
                 Payment
               </button>
             </div>
+          </>
+        )}
 
-            {/* 🔹 Order History Section */}
-            <div className="mt-10">
-              <h2 className="text-xl font-semibold mb-4">Order History</h2>
+        {/* Order History Section */}
+        <div className="mt-10">
+          <h2 className="text-xl font-semibold mb-4">Order History</h2>
 
-              {loadingHistory ? (
-                <p className="text-gray-400">Loading...</p>
-              ) : orders.length === 0 ? (
-                <p className="text-gray-500">No past orders yet.</p>
-              ) : (
-                <div className="space-y-4">
-                  {orders.map((order, idx) => (
-                    <div
-                      key={idx}
-                      className="bg-[#1e1e1e] rounded-xl p-4 shadow-md"
-                    >
+          {loadingHistory ? (
+            <p className="text-gray-400">Loading...</p>
+          ) : orders.length === 0 ? (
+            <p className="text-gray-500">No past orders yet.</p>
+          ) : (
+            <div className="space-y-4">
+              {orders.map((order, idx) => (
+                <div
+                  key={idx}
+                  className="bg-[#1e1e1e] rounded-xl p-4 shadow-md"
+                >
+                  <div className="flex gap-4">
+                    {/* Product Image - safely access */}
+                    {order.cart?.items?.[0]?.images?.[0]?.url && (
+                      <div className="w-16 h-16 flex-shrink-0">
+                        <Image
+                          src={
+                            order.cart.items[0].images[0].url.startsWith("/")
+                              ? order.cart.items[0].images[0].url
+                              : `/${order.cart.items[0].images[0].url}`
+                          }
+                          alt={order.cart.items[0].name || "Product"}
+                          width={64}
+                          height={64}
+                          className="rounded-lg object-cover w-full h-full"
+                          onError={(e) => {
+                            e.currentTarget.src = "/fallback.jpg";
+                          }}
+                        />
+                      </div>
+                    )}
+                    
+                    <div className="flex-1">
                       <p className="text-yellow-400 font-semibold">
                         Order ID: {order.razorpay_order_id}
                       </p>
-                      <p>Status: {order.payment_status}</p>
-                      <p>Paid At: {new Date(order.verified_at).toLocaleString()}</p>
-                      <p>Payment ID: {order.payment_id}</p>
+                      
+                      {/* Product Names - safely access */}
+                      {order.cart?.items?.length > 0 ? (
+                        order.cart.items.map((item: any, i: number) => (
+                          <p key={i} className="text-white font-medium">
+                            {item.name || "Product"} 
+                            {item.size && ` (Size: ${item.size})`}
+                            {item.quantity && `, Qty: ${item.quantity}`}
+                          </p>
+                        ))
+                      ) : (
+                        <p className="text-gray-400">Order details not available</p>
+                      )}
+                      
+                      <p className="text-gray-300">Status: {order.payment_status}</p>
+                      <p className="text-gray-300">
+                        Paid At: {new Date(order.verified_at).toLocaleString()}
+                      </p>
+                      <p className="text-gray-300">Payment ID: {order.payment_id}</p>
+                      <p className="text-green-400 font-semibold">
+                        Total: ₹{order.amount}
+                      </p>
                     </div>
-                  ))}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
-          </>
+          )}
+        </div>
+
+        {products.length === 0 && orders.length === 0 && (
+          <div className="flex flex-col items-center text-center mt-16">
+            <Image
+              src="/videos/emptycart.gif"
+              alt="Empty Cart"
+              width={160}
+              height={160}
+              className="rounded-xl shadow-xl object-contain"
+            />
+            <h1 className="text-2xl font-bold mt-6">No Orders</h1>
+            <p className="text-gray-400 text-base mt-2 max-w-sm">
+              No current orders or order history found.
+            </p>
+          </div>
         )}
       </div>
     </main>

@@ -355,7 +355,7 @@ class Remove_Item(APIView):
 #   PAYMENT PART 
 
 class CreateOrderView(APIView):
-    def post(self,request):
+    def post(self, request):
         auth_header = request.headers.get("Authorization")
         if not auth_header or not auth_header.startswith("Bearer "):
             return Response({"error": "Authorization token missing"}, status=401)
@@ -363,29 +363,34 @@ class CreateOrderView(APIView):
         user_id = decode_jwt(token)
         if not user_id:
             return Response({"error": "Invalid or expired token"}, status=401)
-        data=request.data
-        amount=data.get('amount')
+            
+        data = request.data
+        amount = data.get('amount')
         amount_paise = int(amount) * 100
+        
         try:
-
-            # BASCIALLY IF ANY PROB HAPPENS I CAN CHECK MY MONGODB AND THE razorpay FOR ANY PAYMENT DISPUTE
             order = razorpay_client.order.create({
                 "amount": amount_paise,
                 "currency": "INR",
                 "payment_capture": "1"
             })
+            
+            # ✅ Store complete order details including product info
             orders_collection.insert_one({
                 "user_id": user_id,
-                "cart": data.get("cart", {}),
+                "cart": data.get("cart", {}),  # This should contain full product details
                 "amount": amount,
                 "currency": "INR",
                 "razorpay_order_id": order["id"],
                 "payment_status": "PENDING",
+                "address": data.get("address", ""),
+                "phone": data.get("phone", ""),
                 "created_at": datetime.utcnow()
             })
+            
             return Response(order, status=200)
         except Exception as e:
-            return Response({"error":str(e)},status=400)
+            return Response({"error": str(e)}, status=400)
 
 
 @method_decorator(csrf_exempt, name="dispatch")
@@ -415,16 +420,22 @@ class VerifyPaymentView(APIView):
             order["payment_id"] = payment_id
             order["verified_at"] = datetime.utcnow()
 
+            # Move to order history
             order_history_collection.insert_one(order)
 
+            # Remove from pending orders
             orders_collection.delete_one({"razorpay_order_id": order_id})
+
+            # ✅ Clear user's cart after successful payment
+            users_collection.update_one(
+                {"_id": ObjectId(order["user_id"])},
+                {"$set": {"cart": {}}}
+            )
 
             return Response({"status": "Payment verified"}, status=200)
 
         except Exception as e:
             return Response({"error": str(e)}, status=400)
-
-
         
 
 @method_decorator(csrf_exempt, name='dispatch')
