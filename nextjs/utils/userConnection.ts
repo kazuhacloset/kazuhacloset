@@ -13,7 +13,6 @@ userConnection.interceptors.request.use((config) => {
     // Skip token attachment for auth endpoints
     const excludedPaths = ['/api/login/', '/api/register/'];
     const isExcluded = excludedPaths.some((path) => config.url?.includes(path));
-    console.log(token)
     if (token && !isExcluded) {
       config.headers.Authorization = `Bearer ${token}`;
     }

@@ -91,8 +91,12 @@ export default function CartPage() {
     }
 
     // LocalStorage sync
-    const updatedCart = JSON.parse(localStorage.getItem("cart") || "[]");
-    const newCart = updatedCart.filter((item: any) => item.cartKey !== cartKey);
+    const updatedCart: CartProduct[] = JSON.parse(
+      localStorage.getItem("cart") || "[]"
+    );
+    const newCart = updatedCart.filter(
+      (item: CartProduct) => item.cartKey !== cartKey
+    );
     localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
