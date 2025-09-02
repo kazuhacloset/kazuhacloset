@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "next lint"
+    "lint": "next lint",
+    "postbuild": "next-sitemap"
   },
   "dependencies": {
     "aos": "^2.3.4",
@@ -18,6 +19,7 @@
     "lucide-react": "^0.511.0",
     "motion": "^12.19.1",
     "next": "^15.3.0",
+    "next-sitemap": "^4.2.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
     "react-hot-toast": "^2.5.2"
