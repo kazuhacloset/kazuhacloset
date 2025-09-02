@@ -12,7 +12,7 @@ urlpatterns = [
     path('updateprofile/', UpdateProfileView.as_view(), name='update-profile'),
     path('cart/add/', AddToCartView.as_view(), name='add-to-cart'),
     path('cart/', CartView.as_view(), name='get_cart'),
-    path('cart/remove/<str:id>/', Remove_Item.as_view(), name='remove-from-cart'),
+    path("cart/remove/<str:cart_key>/", Remove_Item.as_view(), name="remove_from_cart"),
 
     # OTP routes
     path('send-otp/', SendOtpView.as_view(), name='send-otp'),

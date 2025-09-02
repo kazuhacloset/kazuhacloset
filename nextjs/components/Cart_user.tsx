@@ -26,14 +26,17 @@ type Product = {
   images: { url: string; alt: string }[];
 };
 
-type CartItem = Product & {
-  quantity: number;
+type CartItem = {
+  product_id: string;
   size: string;
+  quantity: number;
 };
+
+type CartProduct = Product & CartItem & { cartKey: string };
 
 export default function CartPage() {
   const router = useRouter();
-  const [cartProducts, setCartProducts] = useState<CartItem[]>([]);
+  const [cartProducts, setCartProducts] = useState<CartProduct[]>([]);
 
   useEffect(() => {
     const fetchCartData = async () => {
@@ -42,24 +45,28 @@ export default function CartPage() {
 
       try {
         const cartData = await getUserCart();
-        const cart = cartData.cart;
+        const cart = cartData.cart || {};
 
+        // ✅ Convert dict → array of [cartKey, cartItem]
         const cartItems = await Promise.all(
-          Object.entries(cart).map(async ([productId, value]) => {
-            const [quantity, size] = value as [number, string];
-            const product = await getProductDetails(productId);
+          Object.entries(cart).map(async ([cartKey, cartItem]) => {
+            const item = cartItem as CartItem;
+            const product = await getProductDetails(item.product_id);
             return {
               ...product,
-              quantity,
-              size,
-            };
+              quantity: item.quantity,
+              size: item.size,
+              cartKey,
+            } as CartProduct;
           })
         );
+
         setCartProducts(cartItems);
       } catch (error) {
         console.error("Failed to fetch cart products:", error);
       }
     };
+
     fetchCartData();
   }, []);
 
@@ -72,21 +79,21 @@ export default function CartPage() {
     return acc + price * qty;
   }, 0);
 
-  const handleRemoveItem = async (productId: string) => {
+  const handleRemoveItem = async (cartKey: string) => {
     // Optimistic UI update
-    setCartProducts((prev) => prev.filter((item) => item.id !== productId));
+    setCartProducts((prev) => prev.filter((item) => item.cartKey !== cartKey));
 
     try {
-      await removeFromCart(productId);
-      console.log(`Item ${productId} removed from backend cart`);
+      await removeFromCart(cartKey);
+      console.log(`Item ${cartKey} removed from backend cart`);
     } catch (error) {
       console.error("Failed to remove item from backend cart:", error);
     }
 
-    // Optional localStorage sync (if you're using it somewhere else)
-    const updatedCart = JSON.parse(localStorage.getItem("cart") || "{}");
-    delete updatedCart[productId];
-    localStorage.setItem("cart", JSON.stringify(updatedCart));
+    // LocalStorage sync
+    const updatedCart = JSON.parse(localStorage.getItem("cart") || "[]");
+    const newCart = updatedCart.filter((item: any) => item.cartKey !== cartKey);
+    localStorage.setItem("cart", JSON.stringify(newCart));
   };
 
   return (
@@ -109,8 +116,8 @@ export default function CartPage() {
               Your Cart is Feeling Lonely
             </h1>
             <p className="text-gray-400 text-base mt-2 max-w-sm">
-              Looks like you haven&apos;t added anything yet. Start shopping and let
-              the magic begin!
+              Looks like you haven&apos;t added anything yet. Start shopping and
+              let the magic begin!
             </p>
           </div>
         ) : (
@@ -127,7 +134,11 @@ export default function CartPage() {
                 {/* Image */}
                 <div className="flex-shrink-0 w-28 h-28 sm:w-40 sm:h-40 md:w-52 md:h-52 flex justify-center items-center">
                   <Image
-                    src={item.images[0]?.url.startsWith('/') ? item.images[0].url : `/${item.images[0]?.url}`}
+                    src={
+                      item.images[0]?.url.startsWith("/")
+                        ? item.images[0].url
+                        : `/${item.images[0]?.url}`
+                    }
                     alt={item.name}
                     width={208}
                     height={208}
@@ -160,29 +171,31 @@ export default function CartPage() {
 
                   {/* Buttons */}
                   <div className="mt-2 flex gap-2 flex-wrap">
-                      <button
-                          onClick={() => {
-                            const productToBuy = {
-                              ...item,
-                              quantity: item.quantity,
-                              size: item.size,
-                            };
-                            localStorage.setItem("checkoutItems", JSON.stringify([productToBuy]));
-                            // no need to use ?buyNow anymore
-                            router.push("/order-summary");
-                          }}
-                          className="bg-white text-black text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded hover:bg-gray-200"
-                        >
-                          Buy Now
-                        </button>
+                    <button
+                      onClick={() => {
+                        const productToBuy = {
+                          ...item,
+                          quantity: item.quantity,
+                          size: item.size,
+                        };
+                        localStorage.setItem(
+                          "checkoutItems",
+                          JSON.stringify([productToBuy])
+                        );
+                        router.push("/order-summary");
+                      }}
+                      className="bg-white text-black text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded hover:bg-gray-200"
+                    >
+                      Buy Now
+                    </button>
 
-                      <button
-                        onClick={() => handleRemoveItem(item.id)}
-                        className="bg-red-600 text-white text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded hover:bg-red-700"
-                      >
-                        Remove
-                      </button>
-                    </div>
+                    <button
+                      onClick={() => handleRemoveItem(item.cartKey)}
+                      className="bg-red-600 text-white text-xs sm:text-sm font-semibold px-2 sm:px-3 py-1 rounded hover:bg-red-700"
+                    >
+                      Remove
+                    </button>
+                  </div>
                 </div>
               </div>
             ))}
@@ -194,7 +207,10 @@ export default function CartPage() {
 
               <button
                 onClick={() => {
-                  localStorage.setItem("checkoutItems", JSON.stringify(cartProducts));
+                  localStorage.setItem(
+                    "checkoutItems",
+                    JSON.stringify(cartProducts)
+                  );
                   router.push("/order-summary");
                 }}
                 className="bg-yellow-400 text-black font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-yellow-500 transition text-xs sm:text-base"
