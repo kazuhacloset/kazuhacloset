@@ -48,7 +48,7 @@ export default function LoginPage() {
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
       {/* Background Image */}
       <Image
-        src="/background.jpg"   // <-- put your image path here
+        src="/background.jpg"
         alt="Background"
         fill
         priority
@@ -80,7 +80,7 @@ export default function LoginPage() {
           </div>
 
           {/* Password Input */}
-          <div className="mb-4 sm:mb-6 relative">
+          <div className="mb-2 sm:mb-3 relative">
             <label htmlFor="password" className="block text-xs sm:text-sm font-medium mb-1">Password</label>
             <input
               type={showPassword ? 'text' : 'password'}
@@ -99,6 +99,13 @@ export default function LoginPage() {
             >
               {showPassword ? <EyeOff size={18} /> : <Eye size={18} />}
             </button>
+          </div>
+
+          {/* Forgot Password Link */}
+          <div className="text-right mb-4">
+            <Link href="/forgot-password" className="text-yellow-400 hover:underline text-xs sm:text-sm">
+              Forgot Password?
+            </Link>
           </div>
 
           {/* Submit Button */}

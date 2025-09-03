@@ -4,8 +4,8 @@ class RegisterSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=255)
     last_name = serializers.CharField(max_length=255)
     email = serializers.EmailField()
-    otp = serializers.CharField(max_length=6)  # Instead of phone
-    password = serializers.CharField(write_only=True)  
+    otp = serializers.CharField(max_length=6)  # OTP for registration
+    password = serializers.CharField(write_only=True)
 
 class AddToCartSerializer(serializers.Serializer):
     product_id = serializers.CharField()
@@ -28,10 +28,24 @@ class UpdateProfileSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6, required=False)
 
-# New serializers for OTP process
+# ---------------- OTP Serializers ----------------
+
 class SendOtpSerializer(serializers.Serializer):
     email = serializers.EmailField()
 
 class VerifyOtpSerializer(serializers.Serializer):
     email = serializers.EmailField()
     otp = serializers.CharField(max_length=6)
+
+# ---------------- Forgot Password OTP Serializers ----------------
+
+class ForgotPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+
+class VerifyForgotOtpSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    otp = serializers.CharField(max_length=6)
+
+class ResetPasswordSerializer(serializers.Serializer):
+    email = serializers.EmailField()
+    new_password = serializers.CharField(min_length=6, write_only=True)

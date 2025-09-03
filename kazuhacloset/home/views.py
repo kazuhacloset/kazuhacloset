@@ -7,7 +7,7 @@ from rest_framework import status
 from .serializers import (
     RegisterSerializer, LoginSerializer, ProfileSerializer,
     UpdateProfileSerializer, AddToCartSerializer,
-    SendOtpSerializer, VerifyOtpSerializer
+    SendOtpSerializer, VerifyOtpSerializer, ForgotPasswordSerializer, VerifyForgotOtpSerializer, ResetPasswordSerializer
 )
 from django.contrib.auth.hashers import make_password, check_password
 from bson.objectid import ObjectId
@@ -201,6 +201,104 @@ class LoginView(APIView):
                 }, status=200)
             return Response({"error": "Invalid credentials"}, status=401)
         return Response(serializer.errors, status=400)
+
+# FORGET POSSWORD VIEW
+class ForgotPasswordOtpView(APIView):
+    def post(self, request):
+        serializer = ForgotPasswordSerializer(data=request.data)  # ✅ use serializer
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        email = serializer.validated_data["email"]
+
+        user = users_collection.find_one({"email": email})
+        if not user:
+            return Response({"error": "No account found with this email"}, status=404)
+
+        otp = str(random.randint(100000, 999999))
+        otp_store[email] = {
+            "otp": otp,
+            "expiry": datetime.utcnow() + timedelta(minutes=5),
+            "verified": False,
+            "purpose": "forgot_password"
+        }
+
+        try:
+            sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
+            from_email = os.getenv("SENDGRID_FROM_EMAIL")
+            subject = "🔐 Password Reset OTP"
+
+            html_content = f"""
+                <h2>Kazuha Closet</h2>
+                <p>We received a request to reset your password.</p>
+                <p>Your OTP is:</p>
+                <h3>{otp}</h3>
+                <p>This OTP is valid for 5 minutes. If you didn’t request it, ignore this email.</p>
+            """
+
+            message = Mail(
+                from_email=from_email,
+                to_emails=email,
+                subject=subject,
+                html_content=html_content
+            )
+            sg.send(message)
+
+            return Response({"message": "OTP sent for password reset"}, status=200)
+
+        except Exception as e:
+            return Response({"error": f"Failed to send OTP: {str(e)}"}, status=500)
+
+
+class VerifyForgotPasswordOtpView(APIView):
+    def post(self, request):
+        serializer = VerifyForgotOtpSerializer(data=request.data)  # ✅ use serializer
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        email = serializer.validated_data["email"]
+        otp = serializer.validated_data["otp"]
+
+        if email not in otp_store:
+            return Response({"error": "No OTP found for this email"}, status=404)
+
+        data = otp_store[email]
+        if datetime.utcnow() > data["expiry"]:
+            return Response({"error": "OTP expired"}, status=400)
+
+        if data["otp"] != otp:
+            return Response({"error": "Invalid OTP"}, status=400)
+
+        if data.get("purpose") != "forgot_password":
+            return Response({"error": "OTP not for password reset"}, status=400)
+
+        otp_store[email]["verified"] = True
+        return Response({"verified": True, "message": "OTP verified, proceed to reset password"}, status=200)
+
+
+class ResetPasswordView(APIView):
+    def post(self, request):
+        serializer = ResetPasswordSerializer(data=request.data)  # ✅ use serializer
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        email = serializer.validated_data["email"]
+        new_password = serializer.validated_data["new_password"]
+
+        if email not in otp_store or not otp_store[email]["verified"]:
+            return Response({"error": "OTP not verified for this email"}, status=400)
+
+        user = users_collection.find_one({"email": email})
+        if not user:
+            return Response({"error": "User not found"}, status=404)
+
+        hashed_password = make_password(new_password)
+        users_collection.update_one({"email": email}, {"$set": {"password": hashed_password}})
+
+        # ✅ Clear OTP after success
+        del otp_store[email]
+
+        return Response({"message": "Password reset successful"}, status=200)
 
 # Cart add
 class AddToCartView(APIView):

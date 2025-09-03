@@ -2,7 +2,7 @@ import userConnection from "../userConnection";
 
 // ---------------- AUTH & USER ---------------- //
 
-// Send OTP to email
+// Send OTP to email (for registration)
 export const sendOtp = async (email: string) => {
   const res = await userConnection.post("api/send-otp/", { email });
   return res.data;
@@ -38,6 +38,29 @@ export const updateUser = async (data: any) => {
   return res.data;
 };
 
+// ---------------- FORGOT PASSWORD OTP ---------------- //
+
+// 1. Send OTP for forgot password
+export const sendForgotOtp = async (email: string) => {
+  const res = await userConnection.post("api/forgot-password/", { email });
+  return res.data;
+};
+
+// 2. Verify OTP for forgot password
+export const verifyForgotOtp = async (email: string, otp: string) => {
+  const res = await userConnection.post("api/verify-forgot-otp/", { email, otp });
+  return res.data;
+};
+
+// 3. Reset password (after OTP verified)
+export const resetPassword = async (email: string, new_password: string) => {
+  const res = await userConnection.post("api/reset-password/", {
+    email,
+    new_password,
+  });
+  return res.data;
+};
+
 // ---------------- RAZORPAY ---------------- //
 
 // Create Razorpay order (with JWT token via userConnection)
@@ -51,20 +74,17 @@ export const createOrder = async (data: {
   return res.data; // will include order_id, amount, currency
 };
 
-
 // Verify Razorpay payment (HMAC signature check on backend)
-
-
 export const verifyPayment = async (data: {
   razorpay_order_id: string;
   razorpay_payment_id: string;
   razorpay_signature: string;
 }) => {
   const res = await userConnection.post("api/verify-payment/", data);
-  return res.data; 
+  return res.data;
 };
 
-
+// Fetch order history
 export const fetchOrderHistory = async () => {
   const res = await userConnection.get("api/order-history/");
   return res.data;

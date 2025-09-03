@@ -1,9 +1,9 @@
 import './globals.css';
 import 'aos/dist/aos.css';
 import { Poppins } from 'next/font/google';
-import { Toaster } from 'react-hot-toast';
 import LayoutClient from './LayoutClient';
 import type { Metadata } from "next";
+
 
 
 const poppins = Poppins({
@@ -46,7 +46,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
     <html lang="en" suppressHydrationWarning={true}>
       <body className={`bg-[#1b1b1d] ${poppins.className}`}>
         <LayoutClient>{children}</LayoutClient>
-        <Toaster position="top-right" />
       </body>
     </html>
   );
