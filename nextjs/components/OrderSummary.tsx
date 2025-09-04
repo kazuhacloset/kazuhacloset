@@ -1,14 +1,25 @@
 "use client";
 
-import React, { useEffect, useState } from "react";
+import React, {  useEffect, useState } from "react";
 import Image from "next/image";
 import Navbar from "./Landingpage/Navbar";
 import {
   createOrder,
   verifyPayment,
   fetchOrderHistory,
+  getUser,
 } from "../utils/api/userUtils";
 import toast from "react-hot-toast";
+
+
+
+interface User {
+  first_name: string;
+  last_name: string;
+  email: string;
+}
+
+
 
 // ---------------- Types ----------------
 type Product = {
@@ -32,6 +43,9 @@ type OrderItem = Product & {
   size: string;
 };
 
+
+
+
 type Order = {
   razorpay_order_id: string;
   payment_status: string;
@@ -43,6 +57,9 @@ type Order = {
   };
 };
 
+
+
+
 // ---------------- Component ----------------
 export default function OrderSummary() {
   const [products, setProducts] = useState<OrderItem[]>([]);
@@ -51,6 +68,26 @@ export default function OrderSummary() {
   const [loading, setLoading] = useState(true);
   const [orders, setOrders] = useState<Order[]>([]);
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [user, setUser] = useState<User | null>(null);
+
+// FETCH USER DATA
+  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+
+  useEffect(() => {
+    const fetchUser = async () => {
+      if (!token) return;
+
+      try {
+        const fetcheduser = await getUser();
+        setUser(fetcheduser)
+      } catch (error) {
+        console.error("Failed to fetch user:", error);
+      }
+    };
+
+    fetchUser();
+  }, [token]);
+
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -151,8 +188,8 @@ export default function OrderSummary() {
         description: "Order Payment",
         order_id: orderData.id,
         prefill: {
-          name: "Customer",
-          email: "customer@example.com",
+          name: user ? `${user.first_name} ${user.last_name}` : "Guest",
+          email: user?.email || "customer@example.com",
           contact: phone,
         },
         notes: { address },
@@ -347,7 +384,7 @@ export default function OrderSummary() {
 
                     <div className="flex-1">
                       <p className="text-yellow-400 font-semibold">
-                        Order ID: {order.razorpay_order_id}
+                        Payment ID: {order.payment_id}
                       </p>
 
                       {order.cart.items.length > 0 ? (
@@ -369,9 +406,6 @@ export default function OrderSummary() {
                       </p>
                       <p className="text-gray-300">
                         Paid At: {new Date(order.verified_at).toLocaleString()}
-                      </p>
-                      <p className="text-gray-300">
-                        Payment ID: {order.payment_id}
                       </p>
                       <p className="text-green-400 font-semibold">
                         Total: ₹{order.amount}
