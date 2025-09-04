@@ -1,14 +1,6 @@
-# *
 User-agent: *
 Allow: /
-
-# *
-User-agent: *
 Disallow: /cart
 Disallow: /profile
 
-# Host
-Host: https://www.kazuhacloset.com
-
-# Sitemaps
 Sitemap: https://www.kazuhacloset.com/sitemap.xml
