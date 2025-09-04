@@ -14,9 +14,22 @@ const poppins = Poppins({
 
 // ✅ SEO metadata only works in server components
 export const metadata: Metadata = {
+  metadataBase: new URL("https://www.kazuhacloset.com"),
   title: "Kazuhacloset | Fashion & Lifestyle",
-  description: "Discover trendy fashion, curated collections, and stylish outfits at Kazuhacloset. Elevate your wardrobe with us.",
-  keywords: ["fashion", "clothing", "style", "trendy outfits", "Kazuhacloset", "wardrobe", "lifestyle"],
+  description:
+    "Discover trendy fashion, curated collections, and stylish outfits at Kazuhacloset. Elevate your wardrobe with us.",
+  keywords: [
+    "fashion",
+    "clothing",
+    "style",
+    "trendy outfits",
+    "Kazuhacloset",
+    "wardrobe",
+    "lifestyle",
+  ],
+  alternates: {
+    canonical: "https://www.kazuhacloset.com", // ✅ canonical URL
+  },
   openGraph: {
     title: "Kazuhacloset | Fashion & Lifestyle",
     description: "Trendy fashion and stylish outfits for every occasion.",
@@ -24,7 +37,7 @@ export const metadata: Metadata = {
     siteName: "Kazuhacloset",
     images: [
       {
-        url: "/opengraph-image.png", // place your fashion banner here
+        url: "/opengraph-image.png",
         width: 1200,
         height: 630,
         alt: "Kazuhacloset Fashion Banner",
@@ -40,6 +53,7 @@ export const metadata: Metadata = {
     images: ["/opengraph-image.png"],
   },
 };
+
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

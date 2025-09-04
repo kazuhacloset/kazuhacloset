@@ -127,7 +127,7 @@ export default function WallpapersPage() {
     if (selectedCategory !== newCategoryKey) {
       setSelectedCategory(newCategoryKey);
     }
-  }, [searchParams]);
+  }, [searchParams, selectedCategory]);
 
   // ✅ Filter categories safely
   const filteredCategories: (keyof typeof wallpapers)[] =
