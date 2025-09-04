@@ -41,6 +41,7 @@ export default function ForgotPasswordPage() {
 
       toast.success(res.message || "OTP sent successfully!");
     } catch (err: unknown) {
+      console.error(err); // log error in console
       toast.error("Failed to send OTP");
     } finally {
       setIsSendingOtp(false);
