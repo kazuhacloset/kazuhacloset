@@ -467,22 +467,24 @@ class CreateOrderView(APIView):
         amount_paise = int(amount) * 100
         
         try:
+            user = users_collection.find_one({"_id": ObjectId(user_id)})
             order = razorpay_client.order.create({
                 "amount": amount_paise,
                 "currency": "INR",
                 "payment_capture": "1"
             })
-            
             # ✅ Store complete order details including product info
             orders_collection.insert_one({
                 "user_id": user_id,
-                "cart": data.get("cart", {}),  # This should contain full product details
+                "cart": data.get("cart", {}),
                 "amount": amount,
                 "currency": "INR",
                 "razorpay_order_id": order["id"],
                 "payment_status": "PENDING",
                 "address": data.get("address", ""),
                 "phone": data.get("phone", ""),
+                "name": user.get("name", ""),     
+                "email": user.get("email", ""),   
                 "created_at": datetime.utcnow()
             })
             
@@ -550,11 +552,23 @@ class OrderHistoryView(APIView):
             if not user_id:
                 return Response({"error": "Invalid token"}, status=401)
 
-            # Fetch all orders for this user from order_history_collection
+            # Fetch all orders for this user
             orders_cursor = order_history_collection.find({"user_id": user_id})
 
-            # Convert Mongo cursor to list and serialize to JSON-compatible dicts
-            orders_list = json.loads(dumps(orders_cursor))
+            orders_list = []
+            for order in orders_cursor:
+                # Convert ObjectId to string
+                order["_id"] = str(order["_id"])
+
+                # Format created_at
+                if "created_at" in order and isinstance(order["created_at"], datetime):
+                    order["created_at"] = order["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+
+                # Format paid_at if it exists
+                if "paid_at" in order and isinstance(order["paid_at"], datetime):
+                    order["paid_at"] = order["paid_at"].strftime("%Y-%m-%d %H:%M:%S")
+
+                orders_list.append(order)
 
             return Response(orders_list, status=200)
         except Exception as e:
