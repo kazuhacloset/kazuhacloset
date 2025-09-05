@@ -532,6 +532,111 @@ class VerifyPaymentView(APIView):
                 {"$set": {"cart": {}}}
             )
 
+            # ✅ Send Payment Confirmation Email (via SendGrid)
+            user = users_collection.find_one({"_id": ObjectId(order["user_id"])})
+            if user and "email" in user:
+                try:
+                    sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
+                    from_email = os.getenv("SENDGRID_FROM_EMAIL")
+                    subject = "🧾 Invoice - Order Confirmation"
+
+                    html_content = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <head>
+                    <meta charset="UTF-8" />
+                    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+                    </head>
+                    <body style="font-family: Arial, sans-serif; margin:0; padding:0; background:#f9f9f9;">
+                    <div style="max-width:600px; margin:20px auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                        
+                        <!-- Header -->
+                        <div style="background:#2c3e50; padding:20px; text-align:center; color:#fff;">
+                        <h2 style="margin:0;">Kazuha Closet</h2>
+                        <p style="margin:5px 0;">Order Invoice</p>
+                        </div>
+
+                        <!-- Body -->
+                        <div style="padding:20px; color:#333;">
+                        <p>Hi {user.get("name", "Customer")},</p>
+                        <p>Thank you for your purchase! 🎉<br>Here are your order details:</p>
+
+                        <!-- Order Info -->
+                        <table style="width:100%; margin:15px 0; border-collapse: collapse;">
+                            <tr>
+                            <td><strong>Order ID:</strong></td>
+                            <td>{order_id}</td>
+                            </tr>
+                            <tr>
+                            <td><strong>Payment ID:</strong></td>
+                            <td>{payment_id}</td>
+                            </tr>
+                            <tr>
+                            <td><strong>Date:</strong></td>
+                            <td>{datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")}</td>
+                            </tr>
+                        </table>
+
+                        <!-- Items Table -->
+                        <h3 style="margin-top:20px;">Order Summary</h3>
+                        <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                            <thead>
+                            <tr style="background:#f2f2f2;">
+                                <th style="padding:10px; border:1px solid #ddd; text-align:left;">Item</th>
+                                <th style="padding:10px; border:1px solid #ddd; text-align:center;">Qty</th>
+                                <th style="padding:10px; border:1px solid #ddd; text-align:right;">Price</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                    """
+
+                    # ✅ Loop through items in the order
+                    for item in order.get("items", []):
+                        product_name = item.get("name", "Product")
+                        qty = item.get("quantity", 1)
+                        price = item.get("price", 0)
+                        html_content += f"""
+                            <tr>
+                                <td style="padding:10px; border:1px solid #ddd;">{product_name}</td>
+                                <td style="padding:10px; border:1px solid #ddd; text-align:center;">{qty}</td>
+                                <td style="padding:10px; border:1px solid #ddd; text-align:right;">₹{price}</td>
+                            </tr>
+                        """
+
+                    # ✅ Add total
+                    total_price = order.get("total", 0)
+                    html_content += f"""
+                            </tbody>
+                        </table>
+
+                        <!-- Total -->
+                        <h2 style="text-align:right; margin:20px 0;">Grand Total: ₹{total_price}</h2>
+
+                        <p>Your order is now being processed. You’ll receive another update when it ships 🚚</p>
+                        </div>
+
+                        <!-- Footer -->
+                        <div style="background:#f2f2f2; padding:15px; text-align:center; font-size:12px; color:#555;">
+                        <p>If you have any questions, contact us at <a href="mailto:support@kazuhacloset.com">support@kazuhacloset.com</a></p>
+                        <p>© {datetime.utcnow().year} Kazuha Closet. All rights reserved.</p>
+                        </div>
+                    </div>
+                    </body>
+                    </html>
+                    """
+
+                    message = Mail(
+                        from_email=from_email,
+                        to_emails=user["email"],
+                        subject=subject,
+                        html_content=html_content
+                    )
+                    sg.send(message)
+
+                except Exception as e:
+                    # Don’t block success just because email failed
+                    print(f"Email sending failed: {str(e)}")
+
             return Response({"status": "Payment verified"}, status=200)
 
         except Exception as e:
