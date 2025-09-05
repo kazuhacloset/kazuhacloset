@@ -512,7 +512,6 @@ class VerifyPaymentView(APIView):
                 return Response({"status": "Verification failed"}, status=400)
 
             order = orders_collection.find_one({"razorpay_order_id": order_id})
-
             if not order:
                 return Response({"error": "Order not found"}, status=404)
 
@@ -520,7 +519,7 @@ class VerifyPaymentView(APIView):
             order["payment_id"] = payment_id
             order["verified_at"] = datetime.utcnow()
 
-            # Move to order history
+            # ✅ Move to order history
             order_history_collection.insert_one(order)
 
             # Remove from pending orders
@@ -532,9 +531,15 @@ class VerifyPaymentView(APIView):
                 {"$set": {"cart": {}}}
             )
 
+            # ✅ Fetch the latest order for invoice (from order_history)
+            latest_order = order_history_collection.find_one(
+                {"user_id": order["user_id"]},
+                sort=[("created_at", -1)]
+            )
+
             # ✅ Send Payment Confirmation Email (via SendGrid)
             user = users_collection.find_one({"_id": ObjectId(order["user_id"])})
-            if user and "email" in user:
+            if user and "email" in user and latest_order:
                 try:
                     sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
                     from_email = os.getenv("SENDGRID_FROM_EMAIL")
@@ -558,22 +563,22 @@ class VerifyPaymentView(APIView):
 
                         <!-- Body -->
                         <div style="padding:20px; color:#333;">
-                        <p>Hi {user.get("name", "Customer")},</p>
+                        <p>Hi {user.get("first_name", "Customer")},</p>
                         <p>Thank you for your purchase! 🎉<br>Here are your order details:</p>
 
                         <!-- Order Info -->
                         <table style="width:100%; margin:15px 0; border-collapse: collapse;">
                             <tr>
                             <td><strong>Order ID:</strong></td>
-                            <td>{order_id}</td>
+                            <td>{latest_order.get("razorpay_order_id", order_id)}</td>
                             </tr>
                             <tr>
                             <td><strong>Payment ID:</strong></td>
-                            <td>{payment_id}</td>
+                            <td>{latest_order.get("payment_id", payment_id)}</td>
                             </tr>
                             <tr>
                             <td><strong>Date:</strong></td>
-                            <td>{datetime.utcnow().strftime("%Y-%m-%d %H:%M:%S")}</td>
+                            <td>{latest_order.get("created_at", datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")}</td>
                             </tr>
                         </table>
 
@@ -590,8 +595,8 @@ class VerifyPaymentView(APIView):
                             <tbody>
                     """
 
-                    # ✅ Loop through items in the order
-                    for item in order.get("items", []):
+                    # ✅ Loop through items in latest order
+                    for item in latest_order.get("cart", []):
                         product_name = item.get("name", "Product")
                         qty = item.get("quantity", 1)
                         price = item.get("price", 0)
@@ -603,8 +608,10 @@ class VerifyPaymentView(APIView):
                             </tr>
                         """
 
-                    # ✅ Add total
-                    total_price = order.get("total", 0)
+                    # ✅ Add total (qty * price)
+                    total_price = sum(
+                        item.get("price", 0) * item.get("quantity", 1) for item in latest_order.get("cart", [])
+                    )
                     html_content += f"""
                             </tbody>
                         </table>
@@ -634,14 +641,13 @@ class VerifyPaymentView(APIView):
                     sg.send(message)
 
                 except Exception as e:
-                    # Don’t block success just because email failed
                     print(f"Email sending failed: {str(e)}")
 
             return Response({"status": "Payment verified"}, status=200)
 
         except Exception as e:
             return Response({"error": str(e)}, status=400)
-        
+
 
 @method_decorator(csrf_exempt, name='dispatch')
 class OrderHistoryView(APIView):
