@@ -1,0 +1,9 @@
+# *
+User-agent: *
+Allow: /
+
+# Host
+Host: https://www.kazuhacloset.com
+
+# Sitemaps
+Sitemap: https://www.kazuhacloset.com/sitemap.xml
