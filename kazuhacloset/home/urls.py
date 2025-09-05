@@ -5,7 +5,7 @@ from .views import (
     SendOtpView, VerifyOtpView, CreateOrderView, VerifyPaymentView,
     OrderHistoryView,
     # New forgot password imports
-    ForgotPasswordOtpView, VerifyForgotPasswordOtpView, ResetPasswordView
+    ForgotPasswordOtpView, VerifyForgotPasswordOtpView, ResetPasswordView,ContactSupportView
 )
 
 urlpatterns = [
@@ -33,4 +33,5 @@ urlpatterns = [
     path("forgot-password/", ForgotPasswordOtpView.as_view(), name="forgot-password"),
     path("verify-forgot-otp/", VerifyForgotPasswordOtpView.as_view(), name="verify-forgot-otp"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
+    path("contact/", ContactSupportView.as_view(), name="contact-support"),
 ]

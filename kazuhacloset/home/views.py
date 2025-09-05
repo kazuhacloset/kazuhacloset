@@ -7,7 +7,7 @@ from rest_framework import status
 from .serializers import (
     RegisterSerializer, LoginSerializer, ProfileSerializer,
     UpdateProfileSerializer, AddToCartSerializer,
-    SendOtpSerializer, VerifyOtpSerializer, ForgotPasswordSerializer, VerifyForgotOtpSerializer, ResetPasswordSerializer
+    SendOtpSerializer, VerifyOtpSerializer, ForgotPasswordSerializer, VerifyForgotOtpSerializer, ResetPasswordSerializer,ContactSupportSerializer
 )
 from django.contrib.auth.hashers import make_password, check_password
 from bson.objectid import ObjectId
@@ -149,6 +149,61 @@ class VerifyOtpView(APIView):
             return Response({"verified": True, "message": "OTP verified successfully"}, status=200)
 
         return Response(serializer.errors, status=400)
+
+#contact info
+class ContactSupportView(APIView):
+    def post(self, request):
+        serializer = ContactSupportSerializer(data=request.data)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+
+        name = serializer.validated_data["name"]
+        email = serializer.validated_data["email"]
+        message = serializer.validated_data["message"]
+
+        try:
+            sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
+            from_email = os.getenv("SENDGRID_FROM_EMAIL")  # noreply@kazuhacloset.com
+            support_email = os.getenv("SUPPORT_EMAIL", "kazuhastore8@gmail.com")  # your inbox
+
+            subject = f"📩 Support Request from {name}"
+
+            # ✅ Send support request details to YOU (admin/support inbox)
+            support_msg = Mail(
+                from_email=from_email,
+                to_emails=support_email,
+                subject=subject,
+                html_content=f"""
+                <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px; border:1px solid #eee; border-radius:8px;">
+                    <h2 style="color:#4CAF50; text-align:center;">Kazuha Closet Support</h2>
+                    <p><b>Name:</b> {name}</p>
+                    <p><b>Email:</b> {email}</p>
+                    <p><b>Message:</b></p>
+                    <p style="white-space:pre-line;">{message}</p>
+                </div>
+                """
+            )
+            sg.send(support_msg)
+
+            # ✅ Auto reply to user
+            auto_reply = Mail(
+                from_email=from_email,
+                to_emails=email,
+                subject="✅ We received your support request",
+                html_content=f"""
+                    <p>Hi {name},</p>
+                    <p>Thanks for reaching out to <b>Kazuha Closet</b>! 🎉</p>
+                    <p>We received your message and will get back to you soon.</p>
+                    <br/>
+                    <p>– Kazuha Closet Support Team</p>
+                """
+            )
+            sg.send(auto_reply)
+
+            return Response({"message": "Support request sent successfully"}, status=200)
+
+        except Exception as e:
+            return Response({"error": f"Failed to send message: {str(e)}"}, status=500)
 
 # Register with OTP check
 class RegisterView(APIView):

@@ -89,3 +89,11 @@ export const fetchOrderHistory = async () => {
   const res = await userConnection.get("api/order-history/");
   return res.data;
 };
+
+// ---------------- CONTACT SUPPORT ---------------- //
+
+// Send contact form message
+export const sendContact = async (data: { name: string; email: string; message: string }) => {
+  const res = await userConnection.post("api/contact/", data);
+  return res.data;
+};

@@ -1,8 +1,10 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { Poppins } from 'next/font/google';
 import { motion } from 'framer-motion';
+import toast from 'react-hot-toast';
+import { sendContact } from '@/utils/api/userUtils'; // ✅ new util API
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -20,6 +22,32 @@ const fadeInRight = {
 };
 
 const ContactSection = () => {
+  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [loading, setLoading] = useState(false);
+
+  const handleChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      const res = await sendContact(form); // ✅ use util API
+      toast.success(res.message || 'Message sent successfully 📩');
+      setForm({ name: '', email: '', message: '' });
+    } catch (error: any) {
+      toast.error(
+        error?.response?.data?.error || 'Failed to send message. Try again.'
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
     <section
       id="contact"
@@ -47,7 +75,7 @@ const ContactSection = () => {
           <div className="space-y-1 sm:space-y-2 text-center lg:text-left">
             <h4 className="text-lg sm:text-2xl font-semibold">Email</h4>
             <p className="text-sm sm:text-lg text-gray-300 break-all sm:break-normal">
-              kazuhastore8@gmail.com
+              support@kazuhacloset.com
             </p>
           </div>
 
@@ -59,61 +87,64 @@ const ContactSection = () => {
 
         {/* Right Form */}
         <motion.form
+          onSubmit={handleSubmit}
           variants={fadeInRight}
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
           className="bg-white/10 backdrop-blur-md text-white p-4 sm:p-8 lg:p-10 rounded-xl sm:rounded-3xl shadow-2xl transform transition-all duration-300 hover:scale-[1.01] sm:hover:scale-105 hover:shadow-3xl space-y-3 sm:space-y-6 border border-white/20 order-1 lg:order-2"
-          action="https://formsubmit.co/kazuhastore8@gmail.com"
-          method="POST"
         >
-          {/* Hidden inputs for formsubmit */}
-          <input type="hidden" name="_captcha" value="false" />
-          <input type="hidden" name="_template" value="box" />
-          <input
-            type="hidden"
-            name="_autoresponse"
-            value="Thanks for reaching out! We'll get back to you soon."
-          />
-
           <div>
-            <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Name</label>
+            <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">
+              Name
+            </label>
             <input
               type="text"
               name="name"
+              value={form.name}
+              onChange={handleChange}
               required
               placeholder="Your name"
-              className="w-full p-2.5 sm:p-4 bg-white/20 placeholder-white/70 text-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-white transition text-sm sm:text-base"
+              className="w-full p-2.5 sm:p-4 bg-white/20 placeholder-white/70 text-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition text-sm sm:text-base"
             />
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Email</label>
+            <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">
+              Email
+            </label>
             <input
               type="email"
               name="email"
+              value={form.email}
+              onChange={handleChange}
               required
               placeholder="you@example.com"
-              className="w-full p-2.5 sm:p-4 bg-white/20 placeholder-white/70 text-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-white transition text-sm sm:text-base"
+              className="w-full p-2.5 sm:p-4 bg-white/20 placeholder-white/70 text-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition text-sm sm:text-base"
             />
           </div>
 
           <div>
-            <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">Message</label>
+            <label className="block text-xs sm:text-sm font-semibold mb-1 sm:mb-2">
+              Message
+            </label>
             <textarea
               name="message"
+              value={form.message}
+              onChange={handleChange}
               required
               placeholder="Type your message..."
               rows={3}
-              className="w-full p-2.5 sm:p-4 bg-white/20 placeholder-white/70 text-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-white transition resize-none text-sm sm:text-base"
+              className="w-full p-2.5 sm:p-4 bg-white/20 placeholder-white/70 text-white border border-gray-400 rounded-lg focus:outline-none focus:ring-2 focus:ring-yellow-400 transition resize-none text-sm sm:text-base"
             ></textarea>
           </div>
 
           <button
             type="submit"
-            className="block w-full bg-black text-white py-2.5 sm:py-4 rounded-lg text-sm sm:text-lg font-semibold text-center hover:bg-gray-800 transition-colors duration-200 active:scale-95"
+            disabled={loading}
+            className="block w-full bg-yellow-400 text-black py-2.5 sm:py-4 rounded-lg text-sm sm:text-lg font-semibold text-center hover:bg-yellow-300 transition-colors duration-200 active:scale-95 disabled:opacity-50"
           >
-            Send Message
+            {loading ? 'Sending...' : 'Send Message'}
           </button>
         </motion.form>
       </div>
