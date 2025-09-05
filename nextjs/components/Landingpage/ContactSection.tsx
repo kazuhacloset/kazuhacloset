@@ -39,10 +39,12 @@ const ContactSection = () => {
       const res = await sendContact(form); // ✅ use util API
       toast.success(res.message || 'Message sent successfully 📩');
       setForm({ name: '', email: '', message: '' });
-    } catch (error: any) {
-      toast.error(
-        error?.response?.data?.error || 'Failed to send message. Try again.'
-      );
+    } catch (error: unknown) {
+      if (error instanceof Error) {
+        toast.error(error.message || 'Something went wrong');
+      } else {
+        toast.error('Failed to send message. Try again.');
+      }
     } finally {
       setLoading(false);
     }
