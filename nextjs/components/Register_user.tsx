@@ -5,7 +5,7 @@ import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { userRegister, sendOtp, verifyOtp } from '@/utils/api/userUtils';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react'; // 👈 Loader2 for spinner
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
@@ -21,6 +21,7 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
+  const [isRegistering, setIsRegistering] = useState(false); // 👈 for register button
   const [otpVerified, setOtpVerified] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -84,6 +85,7 @@ export default function RegisterPage() {
 
   const handleRegister = async () => {
     try {
+      setIsRegistering(true); // 👈 start roller
       const res = await userRegister(form);
 
       if (res?.error) {
@@ -105,6 +107,8 @@ export default function RegisterPage() {
       } else {
         toast.error('Something went wrong!');
       }
+    } finally {
+      setIsRegistering(false); // 👈 stop roller
     }
   };
 
@@ -165,9 +169,9 @@ export default function RegisterPage() {
               type="button"
               onClick={handleSendOtp}
               disabled={isSendingOtp}
-              className="bg-yellow-400 text-black px-3 sm:px-4 rounded-lg hover:bg-yellow-300 transition text-sm py-2 sm:py-3"
+              className="bg-yellow-400 text-black px-3 sm:px-4 rounded-lg hover:bg-yellow-300 transition text-sm py-2 sm:py-3 flex items-center justify-center"
             >
-              {isSendingOtp ? "Sending..." : "Send OTP"}
+              {isSendingOtp ? <Loader2 className="animate-spin" size={18} /> : "Send OTP"}
             </button>
           </div>
         </div>
@@ -188,13 +192,17 @@ export default function RegisterPage() {
               type="button"
               onClick={handleVerifyOtp}
               disabled={isVerifyingOtp}
-              className={`px-3 sm:px-4 rounded-lg text-sm py-2 sm:py-3 transition ${
+              className={`px-3 sm:px-4 rounded-lg text-sm py-2 sm:py-3 transition flex items-center justify-center ${
                 otpVerified
                   ? "bg-green-500 text-white"
                   : "bg-blue-400 text-black hover:bg-blue-300"
               }`}
             >
-              {otpVerified ? "Verified" : isVerifyingOtp ? "Verifying..." : "Verify"}
+              {otpVerified
+                ? "Verified"
+                : isVerifyingOtp
+                ? <Loader2 className="animate-spin" size={18} />
+                : "Verify"}
             </button>
           </div>
         </div>
@@ -222,14 +230,14 @@ export default function RegisterPage() {
         {/* Submit Button */}
         <button
           onClick={handleRegister}
-          disabled={!otpVerified}
-          className={`w-full font-semibold py-2.5 sm:py-3 text-sm rounded-lg transition-all duration-300 ${
+          disabled={!otpVerified || isRegistering}
+          className={`w-full font-semibold py-2.5 sm:py-3 text-sm rounded-lg transition-all duration-300 flex items-center justify-center ${
             otpVerified
               ? "bg-yellow-400 text-black hover:bg-yellow-300"
               : "bg-gray-500 text-gray-300 cursor-not-allowed"
           }`}
         >
-          Register
+          {isRegistering ? <Loader2 className="animate-spin" size={18} /> : "Register"}
         </button>
 
         {/* Login link */}

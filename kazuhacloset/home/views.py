@@ -25,7 +25,7 @@ import json
 from bson.json_util import dumps
 import pytz
 from datetime import datetime, timedelta
-
+from pytz import timezone
 
 
 
@@ -153,6 +153,8 @@ class VerifyOtpView(APIView):
         return Response(serializer.errors, status=400)
 
 #contact info
+
+
 class ContactSupportView(APIView):
     def post(self, request):
         serializer = ContactSupportSerializer(data=request.data)
@@ -170,6 +172,10 @@ class ContactSupportView(APIView):
 
             subject = f"📩 Support Request from {name}"
 
+            # ✅ Current IST time
+            ist = timezone("Asia/Kolkata")
+            now_ist = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
+
             # ✅ Send support request details to YOU (admin/support inbox)
             support_msg = Mail(
                 from_email=from_email,
@@ -180,6 +186,7 @@ class ContactSupportView(APIView):
                     <h2 style="color:#4CAF50; text-align:center;">Kazuha Closet Support</h2>
                     <p><b>Name:</b> {name}</p>
                     <p><b>Email:</b> {email}</p>
+                    <p><b>Time:</b> {now_ist} (IST)</p>
                     <p><b>Message:</b></p>
                     <p style="white-space:pre-line;">{message}</p>
                 </div>
@@ -195,7 +202,7 @@ class ContactSupportView(APIView):
                 html_content=f"""
                     <p>Hi {name},</p>
                     <p>Thanks for reaching out to <b>Kazuha Closet</b>! 🎉</p>
-                    <p>We received your message and will get back to you soon.</p>
+                    <p>We received your message at <b>{now_ist} (IST)</b> and will get back to you soon.</p>
                     <br/>
                     <p>– Kazuha Closet Support Team</p>
                 """
@@ -206,6 +213,7 @@ class ContactSupportView(APIView):
 
         except Exception as e:
             return Response({"error": f"Failed to send message: {str(e)}"}, status=500)
+
 
 # Register with OTP check
 class RegisterView(APIView):
@@ -602,15 +610,16 @@ class VerifyPaymentView(APIView):
                     from_email = os.getenv("SENDGRID_FROM_EMAIL")
                     subject = "🧾 Invoice - Order Confirmation"
 
+                    ist = timezone("Asia/Kolkata")
+                    order_time = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
+
                     # ✅ FIXED: Handle cart structure properly
                     cart_data = latest_order.get("cart", {})
                     cart_items = []
-                    
-                    # Handle different cart structures
                     if isinstance(cart_data, dict) and "items" in cart_data:
-                        cart_items = cart_data["items"]  # Frontend format: {items: [...]}
+                        cart_items = cart_data["items"]
                     elif isinstance(cart_data, list):
-                        cart_items = cart_data  # Direct array format
+                        cart_items = cart_data
                     else:
                         print(f"Warning: Unexpected cart format: {cart_data}")
                         cart_items = []
@@ -648,11 +657,13 @@ class VerifyPaymentView(APIView):
                             </tr>
                             <tr>
                             <td><strong>Date:</strong></td>
-                            <td>{latest_order.get("created_at", datetime.utcnow()).strftime("%Y-%m-%d %H:%M:%S")}</td>
+                            <td>{order_time}</td>
                             </tr>
                         </table>
+                    """
 
-                        <!-- Items Table -->
+                    # ✅ Items Table
+                    html_content += """
                         <h3 style="margin-top:20px;">Order Summary</h3>
                         <table style="width:100%; border-collapse: collapse; margin-top:10px;">
                             <thead>
@@ -667,21 +678,15 @@ class VerifyPaymentView(APIView):
                             <tbody>
                     """
 
-                    # ✅ FIXED: Loop through items correctly
                     total_price = 0
                     for item in cart_items:
                         product_name = item.get("name", "Product")
                         qty = item.get("quantity", 1)
                         size = item.get("size", "N/A")
-                        
-                        # ✅ FIXED: Handle price cleaning
                         price_str = str(item.get("price", 0))
-                        # Remove currency symbols and non-numeric chars except decimal
                         clean_price = float(''.join(c for c in price_str if c.isdigit() or c == '.') or '0')
-                        
                         subtotal = clean_price * qty
                         total_price += subtotal
-                        
                         html_content += f"""
                             <tr>
                                 <td style="padding:10px; border:1px solid #ddd;">{product_name}</td>
@@ -733,7 +738,6 @@ class VerifyPaymentView(APIView):
 
                 except Exception as e:
                     print(f"❌ Email sending failed: {str(e)}")
-                    # Log more details for debugging
                     print(f"Cart data structure: {latest_order.get('cart', {})}")
 
             return Response({"status": "Payment verified"}, status=200)

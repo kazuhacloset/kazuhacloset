@@ -4,7 +4,7 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { userLogin } from '@/utils/api/userUtils';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Loader2 } from 'lucide-react'; // 👈 Loader2 for spinner
 import toast from 'react-hot-toast';
 import Image from 'next/image';
 
@@ -15,6 +15,7 @@ export default function LoginPage() {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
+  const [loading, setLoading] = useState(false); // 👈 loading state
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -28,6 +29,7 @@ export default function LoginPage() {
       return;
     }
 
+    setLoading(true); // 👈 start spinner
     try {
       const res = await userLogin(form);
       if (res && res.token) {
@@ -41,6 +43,8 @@ export default function LoginPage() {
       }
     } catch {
       toast.error('Something went wrong!');
+    } finally {
+      setLoading(false); // 👈 stop spinner
     }
   };
 
@@ -111,9 +115,15 @@ export default function LoginPage() {
           {/* Submit Button */}
           <button
             type="submit"
-            className="w-full bg-yellow-400 text-black font-semibold py-2.5 sm:py-3 text-sm rounded-lg hover:bg-yellow-300 transition-all duration-300"
+            disabled={loading}
+            className="w-full bg-yellow-400 text-black font-semibold py-2.5 sm:py-3 text-sm rounded-lg 
+              hover:bg-yellow-300 transition-all duration-300 flex items-center justify-center"
           >
-            Login
+            {loading ? (
+              <Loader2 className="animate-spin" size={18} /> // 👈 spinner here
+            ) : (
+              "Login"
+            )}
           </button>
         </form>
 
