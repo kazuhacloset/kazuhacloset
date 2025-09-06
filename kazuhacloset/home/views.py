@@ -23,6 +23,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
 import json
 from bson.json_util import dumps
+import pytz
+from datetime import datetime, timedelta
 
 
 
@@ -600,6 +602,19 @@ class VerifyPaymentView(APIView):
                     from_email = os.getenv("SENDGRID_FROM_EMAIL")
                     subject = "🧾 Invoice - Order Confirmation"
 
+                    # ✅ FIXED: Handle cart structure properly
+                    cart_data = latest_order.get("cart", {})
+                    cart_items = []
+                    
+                    # Handle different cart structures
+                    if isinstance(cart_data, dict) and "items" in cart_data:
+                        cart_items = cart_data["items"]  # Frontend format: {items: [...]}
+                    elif isinstance(cart_data, list):
+                        cart_items = cart_data  # Direct array format
+                    else:
+                        print(f"Warning: Unexpected cart format: {cart_data}")
+                        cart_items = []
+
                     html_content = f"""
                     <!DOCTYPE html>
                     <html>
@@ -643,43 +658,63 @@ class VerifyPaymentView(APIView):
                             <thead>
                             <tr style="background:#f2f2f2;">
                                 <th style="padding:10px; border:1px solid #ddd; text-align:left;">Item</th>
+                                <th style="padding:10px; border:1px solid #ddd; text-align:center;">Size</th>
                                 <th style="padding:10px; border:1px solid #ddd; text-align:center;">Qty</th>
                                 <th style="padding:10px; border:1px solid #ddd; text-align:right;">Price</th>
+                                <th style="padding:10px; border:1px solid #ddd; text-align:right;">Subtotal</th>
                             </tr>
                             </thead>
                             <tbody>
                     """
 
-                    # ✅ Loop through items in latest order
-                    for item in latest_order.get("cart", []):
+                    # ✅ FIXED: Loop through items correctly
+                    total_price = 0
+                    for item in cart_items:
                         product_name = item.get("name", "Product")
                         qty = item.get("quantity", 1)
-                        price = item.get("price", 0)
+                        size = item.get("size", "N/A")
+                        
+                        # ✅ FIXED: Handle price cleaning
+                        price_str = str(item.get("price", 0))
+                        # Remove currency symbols and non-numeric chars except decimal
+                        clean_price = float(''.join(c for c in price_str if c.isdigit() or c == '.') or '0')
+                        
+                        subtotal = clean_price * qty
+                        total_price += subtotal
+                        
                         html_content += f"""
                             <tr>
                                 <td style="padding:10px; border:1px solid #ddd;">{product_name}</td>
+                                <td style="padding:10px; border:1px solid #ddd; text-align:center;">{size}</td>
                                 <td style="padding:10px; border:1px solid #ddd; text-align:center;">{qty}</td>
-                                <td style="padding:10px; border:1px solid #ddd; text-align:right;">₹{price}</td>
+                                <td style="padding:10px; border:1px solid #ddd; text-align:right;">₹{clean_price:.2f}</td>
+                                <td style="padding:10px; border:1px solid #ddd; text-align:right;">₹{subtotal:.2f}</td>
                             </tr>
                         """
 
-                    # ✅ Add total (qty * price)
-                    total_price = sum(
-                        item.get("price", 0) * item.get("quantity", 1) for item in latest_order.get("cart", [])
-                    )
                     html_content += f"""
                             </tbody>
+                            <tfoot>
+                                <tr style="background:#f8f9fa; font-weight:bold;">
+                                    <td colspan="4" style="padding:10px; border:1px solid #ddd; text-align:right;">Grand Total:</td>
+                                    <td style="padding:10px; border:1px solid #ddd; text-align:right; color:#28a745;">₹{total_price:.2f}</td>
+                                </tr>
+                            </tfoot>
                         </table>
 
-                        <!-- Total -->
-                        <h2 style="text-align:right; margin:20px 0;">Grand Total: ₹{total_price}</h2>
+                        <!-- Shipping Address -->
+                        <div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:5px;">
+                            <h4 style="margin:0 0 10px 0; color:#333;">Shipping Address:</h4>
+                            <p style="margin:0; color:#666;">{latest_order.get('address', 'Address not provided')}</p>
+                            <p style="margin:5px 0 0 0; color:#666;"><strong>Phone:</strong> {latest_order.get('phone', 'Phone not provided')}</p>
+                        </div>
 
-                        <p>Your order is now being processed. You’ll receive another update when it ships 🚚</p>
+                        <p style="margin-top:20px;">Your order is now being processed. You'll receive another update when it ships 🚚</p>
                         </div>
 
                         <!-- Footer -->
                         <div style="background:#f2f2f2; padding:15px; text-align:center; font-size:12px; color:#555;">
-                        <p>If you have any questions, contact us at <a href="mailto:support@kazuhacloset.com">support@kazuhacloset.com</a></p>
+                        <p>If you have any questions, contact us at <a href="mailto:kazuhastore8@gmail.com">support@kazuhacloset.com</a></p>
                         <p>© {datetime.utcnow().year} Kazuha Closet. All rights reserved.</p>
                         </div>
                     </div>
@@ -694,13 +729,17 @@ class VerifyPaymentView(APIView):
                         html_content=html_content
                     )
                     sg.send(message)
+                    print(f"✅ Invoice sent successfully to {user['email']}")
 
                 except Exception as e:
-                    print(f"Email sending failed: {str(e)}")
+                    print(f"❌ Email sending failed: {str(e)}")
+                    # Log more details for debugging
+                    print(f"Cart data structure: {latest_order.get('cart', {})}")
 
             return Response({"status": "Payment verified"}, status=200)
 
         except Exception as e:
+            print(f"❌ Payment verification error: {str(e)}")
             return Response({"error": str(e)}, status=400)
 
 

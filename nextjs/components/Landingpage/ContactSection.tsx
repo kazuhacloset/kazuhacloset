@@ -77,7 +77,7 @@ const ContactSection = () => {
           <div className="space-y-1 sm:space-y-2 text-center lg:text-left">
             <h4 className="text-lg sm:text-2xl font-semibold">Email</h4>
             <p className="text-sm sm:text-lg text-gray-300 break-all sm:break-normal">
-              support@kazuhacloset.com
+              kazuhastore8@gmail.com
             </p>
           </div>
 

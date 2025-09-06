@@ -2,8 +2,8 @@ import axios  from "axios";
 
 
 const userConnection=axios.create({
-        // baseURL:'http://localhost:8000'
-        baseURL: "https://kazuhacloset-web.onrender.com"
+        baseURL:'http://localhost:8000'
+        // baseURL: "https://kazuhacloset-web.onrender.com"
 });
 
 userConnection.interceptors.request.use((config) => {
