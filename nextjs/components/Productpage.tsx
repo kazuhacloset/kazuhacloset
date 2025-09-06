@@ -1,6 +1,7 @@
 "use client";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
+import { useRouter } from "next/navigation"; // Added for navigation
 import {
   ShoppingCart,
   Star,
@@ -38,6 +39,7 @@ type Product = {
 };
 
 export default function ProductPage() {
+  const router = useRouter(); // Added router for navigation
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
@@ -82,8 +84,32 @@ export default function ProductPage() {
     else if (type === "decrease" && quantity > 1) setQuantity((prev) => prev - 1);
   };
 
+  // Updated handleBuyNow function with same functionality as cart
   const handleBuyNow = () => {
-    console.log("Proceeding to Buy Now", { product: currentProduct, quantity });
+    if (!selectedSize) {
+      toast.error("Please select a size before buying.");
+      return;
+    }
+
+    if (!currentProduct) {
+      toast.error("Product data not available.");
+      return;
+    }
+
+    // Create the product object to buy
+    const productToBuy = {
+      ...currentProduct,
+      quantity: quantity,
+      size: selectedSize,
+    };
+
+    // Store in localStorage for checkout
+    localStorage.setItem("checkoutItems", JSON.stringify([productToBuy]));
+    
+    // Navigate to order summary page
+    router.push("/order-summary");
+    
+    console.log("Proceeding to Buy Now", { product: currentProduct, quantity, size: selectedSize });
   };
 
   const handleAddToCart = async () => {
