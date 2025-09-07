@@ -4,15 +4,12 @@ import { Poppins } from 'next/font/google';
 import LayoutClient from './LayoutClient';
 import type { Metadata } from "next";
 
-
-
 const poppins = Poppins({
   subsets: ['latin'],
   weight: ['300', '400', '600'],
   display: 'swap',
 });
 
-// ✅ SEO metadata only works in server components
 export const metadata: Metadata = {
   metadataBase: new URL("https://www.kazuhacloset.com"),
   title: "Kazuhacloset | Fashion & Lifestyle",
@@ -28,7 +25,7 @@ export const metadata: Metadata = {
     "lifestyle",
   ],
   alternates: {
-    canonical: "https://www.kazuhacloset.com", // ✅ canonical URL
+    canonical: "https://www.kazuhacloset.com",
   },
   openGraph: {
     title: "Kazuhacloset | Fashion & Lifestyle",
@@ -52,8 +49,13 @@ export const metadata: Metadata = {
     description: "Discover the latest fashion trends with Kazuhacloset.",
     images: ["/opengraph-image.png"],
   },
+  // ✅ Add favicon here
+  icons: {
+    icon: "/favicon.ico",
+    shortcut: "/favicon.ico",
+    apple: "/apple-touch-icon.png", // optional but good for iOS
+  },
 };
-
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (

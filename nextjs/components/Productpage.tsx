@@ -1,7 +1,7 @@
 "use client";
 import Image from "next/image";
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/navigation"; // Added for navigation
+import { useRouter } from "next/navigation"; 
 import {
   ShoppingCart,
   Star,
@@ -39,11 +39,17 @@ type Product = {
 };
 
 export default function ProductPage() {
-  const router = useRouter(); // Added router for navigation
+  const router = useRouter(); 
   const [currentProduct, setCurrentProduct] = useState<Product | null>(null);
   const [quantity, setQuantity] = useState(1);
   const [selectedSize, setSelectedSize] = useState("");
   const [mainImage, setMainImage] = useState("");
+
+  // ✅ check login
+  const isLoggedIn = () => {
+    const token = localStorage.getItem("token"); // adjust key if different
+    return !!token;
+  };
 
   useEffect(() => {
     const fetchData = async () => {
@@ -54,7 +60,6 @@ export default function ProductPage() {
           if (data) {
             setCurrentProduct(data);
             if (data.images && data.images.length > 0) {
-              // Ensure leading slash for local images
               const imgUrl = data.images[0].url.startsWith("/")
                 ? data.images[0].url
                 : `/${data.images[0].url}`;
@@ -84,8 +89,13 @@ export default function ProductPage() {
     else if (type === "decrease" && quantity > 1) setQuantity((prev) => prev - 1);
   };
 
-  // Updated handleBuyNow function with same functionality as cart
+  // ✅ Buy Now
   const handleBuyNow = () => {
+    if (!isLoggedIn()) {
+      router.push("/login");
+      return;
+    }
+
     if (!selectedSize) {
       toast.error("Please select a size before buying.");
       return;
@@ -96,30 +106,29 @@ export default function ProductPage() {
       return;
     }
 
-    // Create the product object to buy
     const productToBuy = {
       ...currentProduct,
       quantity: quantity,
       size: selectedSize,
     };
 
-    // Store in localStorage for checkout
     localStorage.setItem("checkoutItems", JSON.stringify([productToBuy]));
-    
-    // Navigate to order summary page
     router.push("/order-summary");
-    
-    console.log("Proceeding to Buy Now", { product: currentProduct, quantity, size: selectedSize });
   };
 
+  // ✅ Add to Cart
   const handleAddToCart = async () => {
+    if (!isLoggedIn()) {
+      router.push("/login");
+      return;
+    }
+
     if (!selectedSize) {
       toast.error("Please select a size before adding to cart.");
       return;
     }
 
     const productId = currentProduct?.id;
-
     if (!productId) {
       toast.error("User or product data missing.");
       return;
