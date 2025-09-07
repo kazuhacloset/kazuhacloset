@@ -3,7 +3,7 @@
 'use client';
 
 import Link from 'next/link';
-import { Facebook, Instagram, Twitter } from 'lucide-react';
+import { Facebook, Instagram } from 'lucide-react';
 
 export default function Footer() {
   return (
@@ -26,13 +26,22 @@ export default function Footer() {
 
       {/* 🌐 Social Media Links */}
       <div className="flex justify-center gap-6 mb-4">
-        <Link href="https://www.facebook.com/profile.php?id=61573468100133" target="_blank" rel="noopener noreferrer">
+        <Link
+          href="https://www.facebook.com/profile.php?id=61573468100133"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           <Facebook className="w-5 h-5 hover:text-blue-500 transition-colors" />
         </Link>
         <Link href="https://instagram.com" target="_blank" rel="noopener noreferrer">
           <Instagram className="w-5 h-5 hover:text-pink-500 transition-colors" />
         </Link>
-        <Link href="https://x.com/Kazuha_Closet?t=iTKAm5siUQKB4qF84hknsg&s=09" target="_blank" rel="noopener noreferrer">
+        <Link
+          href="https://x.com/Kazuha_Closet?t=iTKAm5siUQKB4qF84hknsg&s=09"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          {/* X (Twitter) logo */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
             viewBox="0 0 1200 1227"
@@ -48,7 +57,11 @@ export default function Footer() {
               685.6z" />
           </svg>
         </Link>
-        <Link href="https://www.threads.com/@kazuha__closet" target="_blank" rel="noopener noreferrer">
+        <Link
+          href="https://www.threads.com/@kazuha__closet"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
           {/* Threads SVG icon */}
           <svg
             xmlns="http://www.w3.org/2000/svg"
