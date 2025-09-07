@@ -747,6 +747,7 @@ class VerifyPaymentView(APIView):
             return Response({"error": str(e)}, status=400)
 
 
+
 @method_decorator(csrf_exempt, name='dispatch')
 class OrderHistoryView(APIView):
     def get(self, request):
@@ -765,17 +766,29 @@ class OrderHistoryView(APIView):
             orders_cursor = order_history_collection.find({"user_id": user_id})
 
             orders_list = []
+            ist = timezone("Asia/Kolkata")
+
             for order in orders_cursor:
                 # Convert ObjectId to string
                 order["_id"] = str(order["_id"])
 
-                # Format created_at
+                # Convert created_at → IST
                 if "created_at" in order and isinstance(order["created_at"], datetime):
-                    order["created_at"] = order["created_at"].strftime("%Y-%m-%d %H:%M:%S")
+                    order["created_at"] = order["created_at"].replace(
+                        tzinfo=pytz.utc
+                    ).astimezone(ist).strftime("%Y-%m-%d %H:%M:%S")
 
-                # Format paid_at if it exists
+                # Convert paid_at → IST
                 if "paid_at" in order and isinstance(order["paid_at"], datetime):
-                    order["paid_at"] = order["paid_at"].strftime("%Y-%m-%d %H:%M:%S")
+                    order["paid_at"] = order["paid_at"].replace(
+                        tzinfo=pytz.utc
+                    ).astimezone(ist).strftime("%Y-%m-%d %H:%M:%S")
+
+                # Convert verified_at → IST
+                if "verified_at" in order and isinstance(order["verified_at"], datetime):
+                    order["verified_at"] = order["verified_at"].replace(
+                        tzinfo=pytz.utc
+                    ).astimezone(ist).strftime("%Y-%m-%d %H:%M:%S")
 
                 orders_list.append(order)
 
