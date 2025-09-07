@@ -33,7 +33,20 @@ export default function Footer() {
           <Instagram className="w-5 h-5 hover:text-pink-500 transition-colors" />
         </Link>
         <Link href="https://x.com/Kazuha_Closet?t=iTKAm5siUQKB4qF84hknsg&s=09" target="_blank" rel="noopener noreferrer">
-          <Twitter className="w-5 h-5 hover:text-sky-400 transition-colors" />
+          <svg
+            xmlns="http://www.w3.org/2000/svg"
+            viewBox="0 0 1200 1227"
+            fill="currentColor"
+            className="w-5 h-5 hover:text-gray-200 transition-colors"
+          >
+            <path d="M714.2 519.8L1160 0H1055.5L667.7 
+              450.9 356.1 0H0l463.2 681.6L0 
+              1227h104.5l407.1-476.9L843.9 
+              1227H1200L714.2 519.8zM566.1 
+              685.6l-47.2-67.7L142.1 79h162.6l305.7 
+              438.2 47.2 67.7 400.1 574.1H895.1L566.1 
+              685.6z" />
+          </svg>
         </Link>
         <Link href="https://www.threads.com/@kazuha__closet" target="_blank" rel="noopener noreferrer">
           {/* Threads SVG icon */}
