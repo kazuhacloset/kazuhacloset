@@ -3,7 +3,6 @@ import os
 from dotenv import load_dotenv
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework import status
 from .serializers import (
     RegisterSerializer, LoginSerializer, ProfileSerializer,
     UpdateProfileSerializer, AddToCartSerializer,
@@ -14,18 +13,19 @@ from bson.objectid import ObjectId
 import jwt
 from datetime import datetime, timedelta
 import random
-from django.core.mail import send_mail
 import sendgrid
 from sendgrid.helpers.mail import Mail
 import razorpay
 import hmac, hashlib
 from django.views.decorators.csrf import csrf_exempt
 from django.utils.decorators import method_decorator
-import json
-from bson.json_util import dumps
 import pytz
 from datetime import datetime, timedelta
 from pytz import timezone
+from utils.otp_utils import create_otp
+from utils.email_utils import send_email_async
+from utils.otp_utils import verify_otp
+from django.template.loader import render_to_string
 
 
 
@@ -51,8 +51,6 @@ order_history_collection= db["order_history"]
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
 
-# Temporary OTP store { email: {"otp": "123456", "expiry": datetime, "verified": bool} }
-otp_store = {}
 
 # JWT helpers
 def create_jwt(user_id):
@@ -77,80 +75,33 @@ def decode_jwt(token):
 class SendOtpView(APIView):
     def post(self, request):
         serializer = SendOtpSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            otp = str(random.randint(100000, 999999))
-            otp_store[email] = {
-                "otp": otp,
-                "expiry": datetime.utcnow() + timedelta(minutes=5),
-                "verified": False
-            }
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-            try:
-                sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
-                from_email = os.getenv("SENDGRID_FROM_EMAIL")
-                subject = "🔐 Your OTP Code"
+        email = serializer.validated_data['email']
+        otp = create_otp(email)
 
-                # ✅ HTML template
-                html_content = f"""
-                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: auto; padding: 20px; border: 1px solid #eaeaea; border-radius: 8px;">
-                    <h2 style="color: #4CAF50; text-align: center;">Kazuha Closet</h2>
-                    <p>Hi there 👋,</p>
-                    <p>We received a request to verify your email address. Use the OTP below to complete the process:</p>
-                    
-                    <div style="text-align: center; margin: 20px 0;">
-                        <span style="font-size: 24px; font-weight: bold; color: #333; padding: 10px 20px; border: 2px dashed #4CAF50; border-radius: 5px; display: inline-block;">
-                            {otp}
-                        </span>
-                    </div>
+        html_content = render_to_string("emails/otp_email.html", {"otp": otp})
+        plain_text_content = f"Your OTP is {otp}. Valid for 5 minutes."
 
-                    <p>This OTP is valid for <b>5 minutes</b>. Do not share it with anyone.</p>
-                    <p style="color: #999; font-size: 12px;">If you did not request this, you can safely ignore this email.</p>
-                    <hr>
-                    <p style="text-align: center; font-size: 12px; color: #888;">© 2025 Kazuha Closet</p>
-                </div>
-                """
-
-                # still keep plain text as fallback
-                plain_text_content = f"Your OTP is {otp}. It is valid for 5 minutes."
-
-                message = Mail(
-                    from_email=from_email,
-                    to_emails=email,
-                    subject=subject,
-                    plain_text_content=plain_text_content,
-                    html_content=html_content
-                )
-                
-                sg.send(message)
-                return Response({"message": "OTP sent successfully"}, status=200)
-            except Exception as e:
-                return Response({"error": f"Failed to send OTP: {str(e)}"}, status=500)
-
-        return Response(serializer.errors, status=400)
-
+        send_email_async(email, "Your OTP Code", html_content, plain_text_content)
+        return Response({"message": "OTP sent successfully"}, status=200)
+        
+        
 # Verify OTP
 class VerifyOtpView(APIView):
     def post(self, request):
         serializer = VerifyOtpSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            otp = serializer.validated_data['otp']
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-            if email not in otp_store:
-                return Response({"error": "No OTP found for this email"}, status=404)
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
 
-            data = otp_store[email]
-            if datetime.utcnow() > data["expiry"]:
-                return Response({"error": "OTP expired"}, status=400)
-
-            if data["otp"] != otp:
-                return Response({"error": "Invalid OTP"}, status=400)
-
-            otp_store[email]["verified"] = True
-            return Response({"verified": True, "message": "OTP verified successfully"}, status=200)
-
-        return Response(serializer.errors, status=400)
+        is_valid, message = verify_otp(email, otp)
+        if is_valid:
+            return Response({"verified": True, "message": message}, status=200)
+        return Response({"verified": False, "message": message}, status=400)
 
 #contact info
 
@@ -219,34 +170,35 @@ class ContactSupportView(APIView):
 class RegisterView(APIView):
     def post(self, request):
         serializer = RegisterSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            otp = serializer.validated_data['otp']
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
 
-            existing_user=users_collection.find_one({"email":email})
-            if existing_user:
-                return Response({"error": "Email already registered please login"}, status=400)
+        email = serializer.validated_data['email']
+        otp = serializer.validated_data['otp']
 
-            if email not in otp_store or not otp_store[email]["verified"]:
-                return Response({"error": "Email not verified via OTP"}, status=400)
+        # Check if user already exists
+        if users_collection.find_one({"email": email}):
+            return Response({"error": "Email already registered, please login"}, status=400)
 
-            if otp_store[email]["otp"] != otp:
-                return Response({"error": "OTP mismatch"}, status=400)
+        # Verify OTP
+        is_valid, message = verify_otp(email, otp)
+        if not is_valid:
+            return Response({"error": message}, status=400)
 
-            user_data = {
-                "first_name": serializer.validated_data['first_name'],
-                "last_name": serializer.validated_data['last_name'],
-                "email": email,
-                "password": make_password(serializer.validated_data['password']),
-                "cart": []
-            }
-            result = users_collection.insert_one(user_data)
-            user_id = result.inserted_id
-            token = create_jwt(user_id)
+        # Create user
+        user_data = {
+            "first_name": serializer.validated_data['first_name'],
+            "last_name": serializer.validated_data['last_name'],
+            "email": email,
+            "password": make_password(serializer.validated_data['password']),
+            "cart": []
+        }
+        result = users_collection.insert_one(user_data)
+        user_id = result.inserted_id
+        token = create_jwt(user_id)
 
-            del otp_store[email]  # clear OTP after registration
-            return Response({"message": "User registered successfully", "token": token}, status=201)
-        return Response(serializer.errors, status=400)
+        return Response({"message": "User registered successfully", "token": token}, status=201)
+
 
 # Login
 class LoginView(APIView):
