@@ -3,8 +3,8 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation"; // Import useRouter
-import { products } from '../All_product'; // Assuming components is a direct sibling to search.tsx, or adjust to '@/components/All_product' if using aliases
-import { wallpapers as rawWallpapers } from '../Wallpaper_details'; // Assuming Wallpaper_details.tsx is still a sibling
+import { products } from '../product/All_product'; // Assuming components is a direct sibling to search.tsx, or adjust to '@/components/All_product' if using aliases
+import { wallpapers as rawWallpapers } from '../product/Wallpaper_details'; // Assuming Wallpaper_details.tsx is still a sibling
 
 // Define a unified interface for items that can be searched across products and wallpapers
 interface SearchItem {

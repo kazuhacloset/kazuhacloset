@@ -2,13 +2,13 @@
 
 import React, {  useEffect, useState } from "react";
 import Image from "next/image";
-import Navbar from "./Landingpage/Navbar";
+import Navbar from "@/components/common/navbar/Navbar";
 import {
   createOrder,
   verifyPayment,
   fetchOrderHistory,
   getUser,
-} from "../utils/api/userUtils";
+} from "../../utils/api/userUtils";
 import toast from "react-hot-toast";
 
 

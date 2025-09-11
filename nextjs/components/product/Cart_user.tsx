@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Navbar from "./Landingpage/Navbar";
+import Navbar from "@/components/common/navbar/Navbar";
 import { useRouter } from "next/navigation";
 import {
   getUserCart,

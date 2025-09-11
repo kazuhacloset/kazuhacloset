@@ -1,4 +1,4 @@
-import OrderSummary from '@/components/OrderSummary';
+import OrderSummary from '@/components/product/OrderSummary';
 import React from 'react';
 
 const page = () => {

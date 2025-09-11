@@ -3,7 +3,7 @@
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { Search, Grid, List, Heart, Star, Eye, SlidersHorizontal } from "lucide-react";
-import Navbar from "./Landingpage/Navbar";
+import Navbar from "../common/navbar/Navbar";
 import Image from "next/image";
 
 export type Product = {

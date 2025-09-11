@@ -1,4 +1,4 @@
-import RegisterPage from '@/components/Register_user'
+import RegisterPage from '@/components/profilepage/Register_user'
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
 

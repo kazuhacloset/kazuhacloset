@@ -3,9 +3,9 @@
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import Image from 'next/image';
-import Loader from '@/components/Loader';
+import Loader from '@/components/common/Loader';
 import FloatingLauncher from '@/components/Landingpage/FloatingLauncher';
-import Footer from '@/components/Footer';
+import Footer from '@/components/common/Footer';
 import { Toaster } from 'react-hot-toast';
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {

@@ -14,7 +14,7 @@ import {
   Ruler,
 } from "lucide-react";
 import { getProductDetails, addProducttoCart } from "@/utils/api/productUtils";
-import Navbar from "./Landingpage/Navbar";
+import Navbar from "@/components/common/navbar/Navbar";
 import toast from "react-hot-toast";
 
 type ProductImage = {

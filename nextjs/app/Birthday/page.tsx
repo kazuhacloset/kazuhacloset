@@ -1,7 +1,7 @@
 'use client';
 
 import React from 'react';
-import BirthdayCharacterCard from '@/components/Birthdaygame';
+import BirthdayCharacterCard from '@/components/extras/Birthdaygame';
 
 function page() {
   return (

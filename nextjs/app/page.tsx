@@ -1,7 +1,7 @@
 'use client';
 
-import Sidebar from '../components/Landingpage/Sidebar';
-import Navbar from '../components/Landingpage/Navbar';
+import Sidebar from '../components/common/Sidebar';
+import Navbar from '../components/common/navbar/Navbar';
 import PromoCard from '../components/Landingpage/PromoCard';
 import ProductShowcase from '../components/Landingpage/ProductShowcase';
 import AboutSection from '../components/Landingpage/AboutSection';

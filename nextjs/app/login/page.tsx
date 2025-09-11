@@ -1,4 +1,4 @@
-import LoginPage from '@/components/Loginuser'
+import LoginPage from '@/components/profilepage/Loginuser'
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
 

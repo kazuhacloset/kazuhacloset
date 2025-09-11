@@ -1,6 +1,6 @@
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
-import ForgotPasswordPage from '@/components/ForgotPassword'
+import ForgotPasswordPage from '@/components/profilepage/ForgotPassword'
 
 export default function Page() {
   return (

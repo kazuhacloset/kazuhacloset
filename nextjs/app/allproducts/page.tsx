@@ -1,4 +1,4 @@
-import { All_product } from '@/components/All_product'
+import { All_product } from '@/components/product/All_product'
 import React from 'react'
 
 function page() {
