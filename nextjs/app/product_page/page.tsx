@@ -1,4 +1,4 @@
-import ProductPage from '@/components/product/Productpage'
+import ProductPage from "@/components/product/ProductPage/ProductPage";
 import React from 'react'
 import { Toaster } from 'react-hot-toast'
 
