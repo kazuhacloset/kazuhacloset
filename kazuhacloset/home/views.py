@@ -22,7 +22,7 @@ from django.utils.decorators import method_decorator
 import pytz
 from datetime import datetime, timedelta
 from pytz import timezone
-from utils.otp_utils import create_otp
+from utils.otp_utils import create_otp,verify_otp,is_verified_otp
 from utils.email_utils import send_email_async
 from utils.otp_utils import verify_otp
 from django.template.loader import render_to_string
@@ -204,25 +204,37 @@ class RegisterView(APIView):
 class LoginView(APIView):
     def post(self, request):
         serializer = LoginSerializer(data=request.data)
-        if serializer.is_valid():
-            email = serializer.validated_data['email']
-            password = serializer.validated_data['password']
-            user = users_collection.find_one({"email": email})
-            if user and check_password(password, user['password']):
-                token = create_jwt(user["_id"])
-                return Response({
-                    "message": "Login successful",
-                    "token": token,
-                    "first_name": user.get("first_name", ""),
-                    "id": str(user.get("_id"))
-                }, status=200)
-            return Response({"error": "Invalid credentials"}, status=401)
-        return Response(serializer.errors, status=400)
+        if not serializer.is_valid():
+            return Response(serializer.errors, status=400)
+        email = serializer.validated_data['email']
+        password = serializer.validated_data['password']
+        # ✅ Fetch only required fields (fastest MongoDB query)
+        user = users_collection.find_one(
+            {"email": email},
+            {"_id": 1, "password": 1, "first_name": 1}
+        )
+        # ✅ Combine checks to minimize Python branching
+        if user is None or not check_password(password, user["password"]):
+            return Response({"error": "Invalid email or password"}, status=401)
+        # ✅ Create token
+        user_id_str = str(user["_id"])  # Convert once
+        token = create_jwt(user_id_str)
+        # ✅ Directly return JSON (no extra processing)
+        return Response(
+            {
+                "message": "Login successful",
+                "token": token,
+                "first_name": user.get("first_name", ""),
+                "id": user_id_str,
+            },
+            status=200
+        )
+
 
 # FORGET POSSWORD VIEW
 class ForgotPasswordOtpView(APIView):
     def post(self, request):
-        serializer = ForgotPasswordSerializer(data=request.data)  # ✅ use serializer
+        serializer = ForgotPasswordSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
@@ -232,77 +244,49 @@ class ForgotPasswordOtpView(APIView):
         if not user:
             return Response({"error": "No account found with this email"}, status=404)
 
-        otp = str(random.randint(100000, 999999))
-        otp_store[email] = {
-            "otp": otp,
-            "expiry": datetime.utcnow() + timedelta(minutes=5),
-            "verified": False,
-            "purpose": "forgot_password"
-        }
+        # reuse otp_utils
+        otp = create_otp(email, purpose="forgot_password")
 
-        try:
-            sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
-            from_email = os.getenv("SENDGRID_FROM_EMAIL")
-            subject = "🔐 Password Reset OTP"
+        # send email asynchronously (using your send_email_async util)
+        html_content = render_to_string("emails/forgot_password_otp.html", {"otp": otp})
+        plain_text_content = f"Your password reset OTP is {otp}. Valid for 5 minutes."
 
-            html_content = f"""
-                <h2>Kazuha Closet</h2>
-                <p>We received a request to reset your password.</p>
-                <p>Your OTP is:</p>
-                <h3>{otp}</h3>
-                <p>This OTP is valid for 5 minutes. If you didn’t request it, ignore this email.</p>
-            """
+        send_email_async(email, "🔐 Password Reset OTP", html_content, plain_text_content)
 
-            message = Mail(
-                from_email=from_email,
-                to_emails=email,
-                subject=subject,
-                html_content=html_content
-            )
-            sg.send(message)
+        return Response({"message": "OTP sent for password reset"}, status=200)
 
-            return Response({"message": "OTP sent for password reset"}, status=200)
-
-        except Exception as e:
-            return Response({"error": f"Failed to send OTP: {str(e)}"}, status=500)
 
 
 class VerifyForgotPasswordOtpView(APIView):
     def post(self, request):
-        serializer = VerifyForgotOtpSerializer(data=request.data)  # ✅ use serializer
+        serializer = VerifyForgotOtpSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
         email = serializer.validated_data["email"]
         otp = serializer.validated_data["otp"]
 
-        if email not in otp_store:
-            return Response({"error": "No OTP found for this email"}, status=404)
+        is_valid, message = verify_otp(email, otp, purpose="forgot_password")
+        if not is_valid:
+            return Response({"error": message}, status=400)
 
-        data = otp_store[email]
-        if datetime.utcnow() > data["expiry"]:
-            return Response({"error": "OTP expired"}, status=400)
-
-        if data["otp"] != otp:
-            return Response({"error": "Invalid OTP"}, status=400)
-
-        if data.get("purpose") != "forgot_password":
-            return Response({"error": "OTP not for password reset"}, status=400)
-
-        otp_store[email]["verified"] = True
-        return Response({"verified": True, "message": "OTP verified, proceed to reset password"}, status=200)
+        return Response(
+            {"verified": True, "message": "OTP verified, proceed to reset password"},
+            status=200
+        )
 
 
 class ResetPasswordView(APIView):
     def post(self, request):
-        serializer = ResetPasswordSerializer(data=request.data)  # ✅ use serializer
+        serializer = ResetPasswordSerializer(data=request.data)
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
         email = serializer.validated_data["email"]
         new_password = serializer.validated_data["new_password"]
 
-        if email not in otp_store or not otp_store[email]["verified"]:
+        # ✅ Check OTP verification
+        if not is_verified_otp(email, purpose="forgot_password"):
             return Response({"error": "OTP not verified for this email"}, status=400)
 
         user = users_collection.find_one({"email": email})
@@ -310,13 +294,14 @@ class ResetPasswordView(APIView):
             return Response({"error": "User not found"}, status=404)
 
         hashed_password = make_password(new_password)
-        users_collection.update_one({"email": email}, {"$set": {"password": hashed_password}})
+        users_collection.update_one(
+            {"email": email},
+            {"$set": {"password": hashed_password}}
+        )
 
-        # ✅ Clear OTP after success
-        del otp_store[email]
+        # ✅ No direct otp_store manipulation here
 
         return Response({"message": "Password reset successful"}, status=200)
-
 # Cart add
 class AddToCartView(APIView):
     def post(self, request):
