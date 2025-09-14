@@ -112,58 +112,43 @@ class ContactSupportView(APIView):
         if not serializer.is_valid():
             return Response(serializer.errors, status=400)
 
-        name = serializer.validated_data["name"]
-        email = serializer.validated_data["email"]
-        message = serializer.validated_data["message"]
+        data = serializer.validated_data
+        name, email, message = data["name"], data["email"], data["message"]
 
         try:
             sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
-            from_email = os.getenv("SENDGRID_FROM_EMAIL")  # noreply@kazuhacloset.com
-            support_email = os.getenv("SUPPORT_EMAIL", "kazuhastore8@gmail.com")  # your inbox
+            from_email = os.getenv("SENDGRID_FROM_EMAIL", "noreply@kazuhacloset.com")
+            support_email = os.getenv("SUPPORT_EMAIL", "kazuhastore8@gmail.com")
 
             subject = f"📩 Support Request from {name}"
+            ist_time = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
 
-            # ✅ Current IST time
-            ist = timezone("Asia/Kolkata")
-            now_ist = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
+            def send_email(to, subject, template_name, context):
+                html_content = render_to_string(template_name, context)
+                msg = Mail(
+                    from_email=from_email,
+                    to_emails=to,
+                    subject=subject,
+                    html_content=html_content
+                )
+                return sg.send(msg)
 
-            # ✅ Send support request details to YOU (admin/support inbox)
-            support_msg = Mail(
-                from_email=from_email,
-                to_emails=support_email,
-                subject=subject,
-                html_content=f"""
-                <div style="font-family: Arial, sans-serif; max-width:600px; margin:auto; padding:20px; border:1px solid #eee; border-radius:8px;">
-                    <h2 style="color:#4CAF50; text-align:center;">Kazuha Closet Support</h2>
-                    <p><b>Name:</b> {name}</p>
-                    <p><b>Email:</b> {email}</p>
-                    <p><b>Time:</b> {now_ist} (IST)</p>
-                    <p><b>Message:</b></p>
-                    <p style="white-space:pre-line;">{message}</p>
-                </div>
-                """
-            )
-            sg.send(support_msg)
-
-            # ✅ Auto reply to user
-            auto_reply = Mail(
-                from_email=from_email,
-                to_emails=email,
-                subject="✅ We received your support request",
-                html_content=f"""
-                    <p>Hi {name},</p>
-                    <p>Thanks for reaching out to <b>Kazuha Closet</b>! 🎉</p>
-                    <p>We received your message at <b>{now_ist} (IST)</b> and will get back to you soon.</p>
-                    <br/>
-                    <p>– Kazuha Closet Support Team</p>
-                """
-            )
-            sg.send(auto_reply)
-
+            context = {
+                "name": name,
+                "email": email,
+                "message": message,
+                "time": f"{ist_time} (IST)"
+            }
+            # 1️⃣ Send support request to admin
+            send_email(support_email, subject, "emails/support_request.html", context)
+            # 2️⃣ Send auto reply to user
+            send_email(email, "✅ We received your support request", "emails/auto_reply.html", context)
             return Response({"message": "Support request sent successfully"}, status=200)
-
-        except Exception as e:
-            return Response({"error": f"Failed to send message: {str(e)}"}, status=500)
+        except Exception:
+            return Response(
+                {"error": "Failed to send message, please try again later."},
+                status=500
+            )
 
 
 # Register with OTP check
