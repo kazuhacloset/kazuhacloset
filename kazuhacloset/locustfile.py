@@ -23,6 +23,7 @@ class WebsiteUser(HttpUser):
             if response.status_code != 200:
                 response.failure(f"Send OTP failed: {response.text}")
                 return
+            
         with self.client.post(
             "/api/verify-otp/",
             json={"email": email, "otp": "123456"},  # ✅ test mode OTP
