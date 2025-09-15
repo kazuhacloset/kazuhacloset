@@ -5,6 +5,8 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { Search, Grid, List, Heart, Star, Eye, SlidersHorizontal } from "lucide-react";
 import Navbar from "../common/navbar/Navbar";
 import Image from "next/image";
+import { toggleWishlist, getWishlist } from "../../utils/api/userUtils";
+import toast from "react-hot-toast";
 
 export type Product = {
   id: string;
@@ -149,7 +151,6 @@ export const products: Product[] = [
     isSale: true,
     tags: ["anime", "jujutsu kaisen", "toji", "cotton"],
   },
-
 ];
 
 const categories = ["All", "Naruto", "One Piece", "Dragon Ball", "Jujutsu Kaisen"];
@@ -173,6 +174,26 @@ export const All_product = () => {
   const [priceRange, setPriceRange] = useState([0, 1000]);
   const [wishlist, setWishlist] = useState<string[]>([]);
   const [imageErrors, setImageErrors] = useState<string[]>([]);
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [wishlistLoading, setWishlistLoading] = useState<string[]>([]);
+
+  // Check if user is logged in and load wishlist
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) {
+      setIsLoggedIn(true);
+      loadWishlist();
+    }
+  }, []);
+
+  const loadWishlist = async () => {
+    try {
+      const response = await getWishlist();
+      setWishlist(response.wishlist || []);
+    } catch (error) {
+      console.error("Error loading wishlist:", error);
+    }
+  };
 
   useEffect(() => {
     const urlCategory = searchParams.get("category");
@@ -286,9 +307,43 @@ export const All_product = () => {
     return filtered;
   }, [searchTerm, selectedCategory, sortBy, priceRange]);
 
-  const toggleWishlist = (e: React.MouseEvent, productId: string) => {
+  const handleWishlistToggle = async (e: React.MouseEvent, productId: string) => {
     e.stopPropagation();
-    setWishlist((prev) => (prev.includes(productId) ? prev.filter((id) => id !== productId) : [...prev, productId]));
+    
+    if (!isLoggedIn) {
+      toast.error("Please login to use wishlist");
+      return;
+    }
+
+    if (wishlistLoading.includes(productId)) {
+      return; // Prevent multiple clicks
+    }
+
+    setWishlistLoading(prev => [...prev, productId]);
+
+    try {
+      console.log("Toggling wishlist for product:", productId);
+      const response = await toggleWishlist(productId);
+      console.log("Wishlist response:", response);
+      
+      if (response.message === "Added to wishlist") {
+        setWishlist(prev => [...prev, productId]);
+        toast.success("Added to wishlist!");
+      } else {
+        setWishlist(prev => prev.filter(id => id !== productId));
+        toast.success("Removed from wishlist!");
+      }
+    } catch (error: unknown) {
+      console.error("Wishlist error:", error);
+      
+      if (error instanceof Error) {
+        toast.error(error.message);
+      } else {
+        toast.error("Error updating wishlist. Please try again.");
+      }
+    } finally {
+      setWishlistLoading(prev => prev.filter(id => id !== productId));
+    }
   };
 
   const renderStars = (rating: number) => {
@@ -463,13 +518,14 @@ export const All_product = () => {
 
                   {/* Wishlist */}
                   <button
-                    onClick={(e) => toggleWishlist(e, product.id)}
-                    className="absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 bg-black/70 backdrop-blur-md rounded-full hover:bg-black/50 border border-white/30 hover:border-white/50 hover:shadow-lg hover:shadow-white/20 transition-all"
+                    onClick={(e) => handleWishlistToggle(e, product.id)}
+                    disabled={wishlistLoading.includes(product.id)}
+                    className="absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 bg-black/70 backdrop-blur-md rounded-full hover:bg-black/50 border border-white/30 hover:border-white/50 hover:shadow-lg hover:shadow-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
                   >
                     <Heart
                       className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                        wishlist.includes(product.id) ? "fill-white text-white" : "text-gray-300 hover:text-white"
-                      }`}
+                        wishlist.includes(product.id) ? "fill-red-500 text-red-500" : "text-gray-300 hover:text-white"
+                      } ${wishlistLoading.includes(product.id) ? "animate-pulse" : ""}`}
                     />
                   </button>
                 </div>

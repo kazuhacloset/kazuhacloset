@@ -4,8 +4,8 @@ from .views import (
     AddToCartView, CartView, Remove_Item,
     SendOtpView, VerifyOtpView, CreateOrderView, VerifyPaymentView,
     OrderHistoryView,
-    # New forgot password imports
-    ForgotPasswordOtpView, VerifyForgotPasswordOtpView, ResetPasswordView,ContactSupportView
+    ForgotPasswordOtpView, VerifyForgotPasswordOtpView, ResetPasswordView, ContactSupportView,
+    WishlistView
 )
 
 urlpatterns = [
@@ -19,6 +19,9 @@ urlpatterns = [
     path('cart/add/', AddToCartView.as_view(), name='add-to-cart'),
     path('cart/', CartView.as_view(), name='get_cart'),
     path("cart/remove/<str:cart_key>/", Remove_Item.as_view(), name="remove_from_cart"),
+
+    # Wishlist routes
+    path('wishlist/', WishlistView.as_view(), name='wishlist'),
 
     # OTP routes
     path('send-otp/', SendOtpView.as_view(), name='send-otp'),

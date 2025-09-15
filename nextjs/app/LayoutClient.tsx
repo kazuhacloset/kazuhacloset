@@ -7,6 +7,7 @@ import Loader from '@/components/common/Loader';
 import FloatingLauncher from '@/components/Landingpage/FloatingLauncher';
 import Footer from '@/components/common/Footer';
 import { Toaster } from 'react-hot-toast';
+import { WishlistProvider } from '@/utils/WishlistContext';
 
 export default function LayoutClient({ children }: { children: React.ReactNode }) {
   const [loading, setLoading] = useState(true);
@@ -26,65 +27,67 @@ export default function LayoutClient({ children }: { children: React.ReactNode }
   }, [pathname]);
 
   return (
-    <main className="relative bg-gradient-to-bl from-black via-zinc-800 to-zinc-300 min-h-screen scroll-smooth overflow-x-hidden flex flex-col">
-      {loading ? (
-        <Loader />
-      ) : (
-        <>
-          <div className="flex-grow">{children}</div>
-          <FloatingLauncher />
-          <Footer />
-        </>
-      )}
+    <WishlistProvider>
+      <main className="relative bg-gradient-to-bl from-black via-zinc-800 to-zinc-300 min-h-screen scroll-smooth overflow-x-hidden flex flex-col">
+        {loading ? (
+          <Loader />
+        ) : (
+          <>
+            <div className="flex-grow">{children}</div>
+            <FloatingLauncher />
+            <Footer />
+          </>
+        )}
 
-      {/* 🔥 Toaster with Gradient Glow */}
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          duration: 3500,
-          className: 'custom-toast',
-          style: {
-            borderRadius: '8px',
-            padding: '12px 18px',
-            minWidth: '280px',
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
-            display: 'flex',
-            alignItems: 'center',
-            fontWeight: 600,
+        {/* 🔥 Toaster with Gradient Glow */}
+        <Toaster
+          position="top-right"
+          toastOptions={{
+            duration: 3500,
+            className: 'custom-toast',
+            style: {
+              borderRadius: '8px',
+              padding: '12px 18px',
+              minWidth: '280px',
+              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              display: 'flex',
+              alignItems: 'center',
+              fontWeight: 600,
 
-            // 🌟 Gradient Glow Effect
-            background: 'linear-gradient(to bottom left, #000000, #1c1c21, #7f7f7f)',
-            color: 'transparent',
-            backgroundClip: 'text',
-            WebkitBackgroundClip: 'text',
-            backgroundImage: 'linear-gradient(90deg, #ca8a04, #eab308, #f59e0b)',
-            textShadow:
-              '0 0 4px rgba(202, 138, 4, 0.7), 0 0 8px rgba(234, 179, 8, 0.5)',
-          },
-          success: {
-            icon: (
-              <Image
-                src="/pass.png"
-                alt="Success"
-                width={36}
-                height={36}
-                className="rounded-full object-cover"
-              />
-            ),
-          },
-          error: {
-            icon: (
-              <Image
-                src="/fail.png"
-                alt="Error"
-                width={36}
-                height={36}
-                className="rounded-full object-cover"
-              />
-            ),
-          },
-        }}
-      />
-    </main>
+              // 🌟 Gradient Glow Effect
+              background: 'linear-gradient(to bottom left, #000000, #1c1c21, #7f7f7f)',
+              color: 'transparent',
+              backgroundClip: 'text',
+              WebkitBackgroundClip: 'text',
+              backgroundImage: 'linear-gradient(90deg, #ca8a04, #eab308, #f59e0b)',
+              textShadow:
+                '0 0 4px rgba(202, 138, 4, 0.7), 0 0 8px rgba(234, 179, 8, 0.5)',
+            },
+            success: {
+              icon: (
+                <Image
+                  src="/pass.png"
+                  alt="Success"
+                  width={36}
+                  height={36}
+                  className="rounded-full object-cover"
+                />
+              ),
+            },
+            error: {
+              icon: (
+                <Image
+                  src="/fail.png"
+                  alt="Error"
+                  width={36}
+                  height={36}
+                  className="rounded-full object-cover"
+                />
+              ),
+            },
+          }}
+        />
+      </main>
+    </WishlistProvider>
   );
 }

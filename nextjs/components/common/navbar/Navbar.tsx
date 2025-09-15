@@ -20,6 +20,7 @@ import {
   User,
   Menu,
   X,
+  Heart,
 } from "lucide-react";
 
 // Lazy load SearchBar
@@ -132,6 +133,9 @@ function Navbar() {
         >
           <Search size={20} />
         </button>
+        <Link href="/wishlist" aria-label="Wishlist" className="text-white">
+          <Heart size={20} />
+        </Link>
         <Link href="/order-summary" aria-label="Orders" className="text-white">
           <Package size={20} />
         </Link>
@@ -161,6 +165,9 @@ function Navbar() {
       <div className="hidden sm:flex items-center space-x-6 text-white">
         <ProtectedLink to="/cart" className="hover:text-yellow-400">
           <ShoppingCart size={20} />
+        </ProtectedLink>
+        <ProtectedLink to="/wishlist" className="hover:text-pink-400">
+          <Heart size={20} />
         </ProtectedLink>
         <ProtectedLink to="/order-summary" className="hover:text-green-400">
           <Package size={20} />

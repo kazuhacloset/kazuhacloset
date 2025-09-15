@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { ShoppingCart, Package, User, LogOut, LogIn } from "lucide-react";
+import { ShoppingCart, Package, User, LogOut, LogIn, Heart } from "lucide-react";
 import ProtectedLink from "../ProtectedLink";
 
 interface Props {
@@ -24,6 +24,13 @@ export default function MobileMenu({ firstLetter, handleLogout }: Props) {
         className="flex items-center gap-2 hover:text-green-400"
       >
         <Package size={18} /> Orders
+      </ProtectedLink>
+
+      <ProtectedLink
+        to="/wishlist"
+        className="flex items-center gap-2 hover:text-pink-400"
+      >
+        <Heart size={18} /> Wishlist
       </ProtectedLink>
 
       {firstLetter ? (

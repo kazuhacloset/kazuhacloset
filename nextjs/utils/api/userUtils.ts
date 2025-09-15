@@ -38,6 +38,20 @@ export const updateUser = async (data: any) => {
   return res.data;
 };
 
+// ---------------- WISHLIST ---------------- //
+
+// Toggle product in wishlist (add/remove)
+export const toggleWishlist = async (product_id: string) => {
+  const res = await userConnection.post("api/wishlist/", { product_id });
+  return res.data;
+};
+
+// Get user's wishlist
+export const getWishlist = async () => {
+  const res = await userConnection.get("api/wishlist/");
+  return res.data;
+};
+
 // ---------------- FORGOT PASSWORD OTP ---------------- //
 
 // 1. Send OTP for forgot password
@@ -70,8 +84,8 @@ export const createOrder = async (data: {
   address: string;
   phone: string;
 }) => {
-  const res = await userConnection.post("api/create-order/", data); // ✅ trailing slash + token
-  return res.data; // will include order_id, amount, currency
+  const res = await userConnection.post("api/create-order/", data);
+  return res.data;
 };
 
 // Verify Razorpay payment (HMAC signature check on backend)

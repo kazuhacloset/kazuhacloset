@@ -26,6 +26,10 @@ from utils.otp_utils import create_otp,verify_otp,is_verified_otp
 from utils.email_utils import send_email_async
 from utils.otp_utils import verify_otp
 from django.template.loader import render_to_string
+from rest_framework.views import APIView
+from rest_framework.response import Response
+from rest_framework.permissions import IsAuthenticated
+from bson import ObjectId
 
 
 
@@ -150,6 +154,73 @@ class ContactSupportView(APIView):
                 status=500
             )
 
+class WishlistView(APIView):
+    def post(self, request):
+        """Toggle product in wishlist"""
+        # Use the same JWT authentication pattern as your other views
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return Response({"error": "Authorization token missing"}, status=401)
+
+        token = auth_header.split(" ")[1]
+        user_id = decode_jwt(token)  # Your existing function
+        if not user_id:
+            return Response({"error": "Invalid or expired token"}, status=401)
+
+        product_id = request.data.get("product_id")
+        if not product_id:
+            return Response({"error": "Product ID is required"}, status=400)
+
+        try:
+            user = users_collection.find_one({"_id": ObjectId(user_id)})
+            if not user:
+                return Response({"error": "User not found"}, status=404)
+
+            wishlist = user.get("wishlist", [])
+            
+            if product_id in wishlist:
+                # Remove from wishlist
+                users_collection.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$pull": {"wishlist": product_id}}
+                )
+                return Response({"message": "Removed from wishlist"}, status=200)
+            else:
+                # Add to wishlist
+                users_collection.update_one(
+                    {"_id": ObjectId(user_id)},
+                    {"$addToSet": {"wishlist": product_id}}
+                )
+                return Response({"message": "Added to wishlist"}, status=200)
+                
+        except Exception as e:
+            print(f"Wishlist error: {str(e)}")
+            return Response({"error": "Database error occurred"}, status=500)
+
+    def get(self, request):
+        """Fetch user's wishlist"""
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return Response({"error": "Authorization token missing"}, status=401)
+
+        token = auth_header.split(" ")[1]
+        user_id = decode_jwt(token)
+        if not user_id:
+            return Response({"error": "Invalid or expired token"}, status=401)
+
+        try:
+            user = users_collection.find_one(
+                {"_id": ObjectId(user_id)},
+                {"wishlist": 1}
+            )
+            if not user:
+                return Response({"error": "User not found"}, status=404)
+            
+            return Response({"wishlist": user.get("wishlist", [])}, status=200)
+            
+        except Exception as e:
+            print(f"Get wishlist error: {str(e)}")
+            return Response({"error": "Database error occurred"}, status=500)
 
 # Register with OTP check
 class RegisterView(APIView):
@@ -176,7 +247,8 @@ class RegisterView(APIView):
             "last_name": serializer.validated_data['last_name'],
             "email": email,
             "password": make_password(serializer.validated_data['password']),
-            "cart": []
+            "cart": [],
+            "wishlist": []  # 👈 added wishlist array
         }
         result = users_collection.insert_one(user_data)
         user_id = result.inserted_id
