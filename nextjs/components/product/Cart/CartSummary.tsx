@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { useRouter } from "next/navigation";
 
 interface CartProduct {
   id: string;
@@ -13,15 +14,26 @@ interface CartProduct {
 
 type Props = {
   items: CartProduct[];
-  onCheckout: () => void;
 };
 
-export default function CartSummary({ items, onCheckout }: Props) {
+export default function CartSummary({ items }: Props) {
+  const router = useRouter();
+
   const total = items.reduce(
     (acc, item) =>
       acc + parseFloat(item.price.replace(/[^0-9.]/g, "")) * item.quantity,
     0
   );
+
+  const handleCheckout = () => {
+    if (items.length === 0) return;
+
+    // ✅ Save items to localStorage so OrderSummary can read them
+    localStorage.setItem("checkoutItems", JSON.stringify(items));
+
+    // ✅ Redirect to Order Summary page
+    router.push("/order-summary");
+  };
 
   return (
     <div className="bg-[#1e1e1e] mt-10 p-6 rounded-xl flex flex-col md:flex-row justify-between items-center shadow-inner">
@@ -30,7 +42,7 @@ export default function CartSummary({ items, onCheckout }: Props) {
       </h3>
 
       <button
-        onClick={onCheckout}
+        onClick={handleCheckout}
         className="bg-yellow-400 text-black font-bold px-4 sm:px-6 py-2 sm:py-3 rounded-xl hover:bg-yellow-500 transition text-xs sm:text-base"
       >
         Proceed to Checkout

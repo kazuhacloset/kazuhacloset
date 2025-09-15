@@ -22,7 +22,7 @@ const products: Product[] = [
     subtitle: "Water Hashira",
     price: "₹449",
     type: "image",
-    media: "/Productimage/GIYU/1.png",
+    media: "/Productimage/GIYU/front.png",
     description: "Stylish Giyu Tomioka T-shirt",
     rating: 4.8
   },
@@ -32,7 +32,7 @@ const products: Product[] = [
     subtitle: "You are already under my Genjutsu",
     price: "₹429",
     type: "image", 
-    media: "/Productimage/ITACHI/1.png",
+    media: "/Productimage/ITACHI/front.png",
     description: "Elegant Itachi Uchiha design tee",
     rating: 4.9
   },
@@ -42,7 +42,7 @@ const products: Product[] = [
     subtitle: "Flame Hashira",
     price: "₹459",
     type: "image",
-    media: "/Productimage/RENGOKU/1.png",
+    media: "/Productimage/RENGOKU/front.png",
     description: "Fiery Rengoku Flame Hashira tee",
     rating: 4.7
   },
@@ -195,7 +195,7 @@ const navigateToProduct = (productId: string) => {
                           alt={products[currentIndex].name}
                           width={500} // set an actual number
                           height={500}
-                          className="w-full h-full object-cover"
+                          className="w-full h-full object-contain bg-black rounded-lg"
                         />
                       )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
@@ -279,7 +279,7 @@ const navigateToProduct = (productId: string) => {
                               alt={product.name}
                               width={500}
                               height={500}
-                              className="w-full h-full object-cover"
+                              className="w-full h-full object-contain bg-black rounded-lg"
                             />
 
                           )}

@@ -1,14 +1,14 @@
-'use client';
+"use client";
 
-import React, { useState } from 'react';
-import { Poppins } from 'next/font/google';
-import { motion } from 'framer-motion';
-import toast from 'react-hot-toast';
-import { sendContact } from '@/utils/api/userUtils'; // ✅ new util API
+import React, { useState } from "react";
+import { Poppins } from "next/font/google";
+import { motion } from "framer-motion";
+import toast from "react-hot-toast";
+import { sendContact } from "@/utils/api/userUtils";
 
 const poppins = Poppins({
-  subsets: ['latin'],
-  weight: ['400', '600', '700'],
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
 });
 
 const fadeInLeft = {
@@ -22,7 +22,7 @@ const fadeInRight = {
 };
 
 const ContactSection = () => {
-  const [form, setForm] = useState({ name: '', email: '', message: '' });
+  const [form, setForm] = useState({ name: "", email: "", message: "" });
   const [loading, setLoading] = useState(false);
 
   const handleChange = (
@@ -36,14 +36,14 @@ const ContactSection = () => {
     setLoading(true);
 
     try {
-      const res = await sendContact(form); // ✅ use util API
-      toast.success(res.message || 'Message sent successfully 📩');
-      setForm({ name: '', email: '', message: '' });
+      const res = await sendContact(form);
+      toast.success(res.message || "Message sent successfully 📩");
+      setForm({ name: "", email: "", message: "" });
     } catch (error: unknown) {
       if (error instanceof Error) {
-        toast.error(error.message || 'Something went wrong');
+        toast.error(error.message || "Something went wrong");
       } else {
-        toast.error('Failed to send message. Try again.');
+        toast.error("Failed to send message. Try again.");
       }
     } finally {
       setLoading(false);
@@ -55,12 +55,12 @@ const ContactSection = () => {
       id="contact"
       className={`${poppins.className} relative min-h-screen px-3 sm:px-6 pt-8 sm:pt-36 pb-8 sm:pb-16 flex items-center justify-center overflow-hidden mt-16 md:mt-0`}
     >
-      {/* Background image with dark overlay */}
+      {/* Background */}
       <div className="absolute inset-0 bg-[url('/itachi.png')] bg-cover bg-center">
         <div className="absolute inset-0 bg-black opacity-60 sm:opacity-50"></div>
       </div>
 
-      {/* Overlay content */}
+      {/* Content */}
       <div className="relative z-10 max-w-7xl w-full grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-12">
         {/* Left Info */}
         <motion.div
@@ -68,22 +68,36 @@ const ContactSection = () => {
           initial="hidden"
           whileInView="visible"
           viewport={{ once: true }}
-          className="flex flex-col justify-center space-y-3 sm:space-y-6 text-white order-2 lg:order-1"
+          className="flex flex-col justify-center text-white order-2 lg:order-1"
         >
-          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-center lg:text-left">
+          <h2 className="text-2xl sm:text-4xl lg:text-5xl font-extrabold tracking-tight leading-tight text-center lg:text-left mb-6">
             Get in Touch
           </h2>
 
-          <div className="space-y-1 sm:space-y-2 text-center lg:text-left">
-            <h4 className="text-lg sm:text-2xl font-semibold">Email</h4>
-            <p className="text-sm sm:text-lg text-gray-300 break-all sm:break-normal">
-              kazuhastore8@gmail.com
-            </p>
-          </div>
+          <div className="flex flex-col space-y-6 text-center lg:text-left">
+            {/* Email */}
+            <div className="space-y-1 sm:space-y-2">
+              <h4 className="text-lg sm:text-2xl font-semibold">Email</h4>
+              <p className="text-sm sm:text-lg text-gray-300 break-all hover:text-yellow-300 transition">
+                kazuhastore8@gmail.com
+              </p>
+            </div>
 
-          <div className="space-y-1 sm:space-y-2 text-center lg:text-left">
-            <h4 className="text-lg sm:text-2xl font-semibold">Location</h4>
-            <p className="text-sm sm:text-lg text-gray-300">Kanpur, India</p>
+            {/* Whatsapp */}
+            <div className="space-y-1 sm:space-y-2">
+              <h4 className="text-lg sm:text-2xl font-semibold">Whatsapp</h4>
+              <p className="text-sm sm:text-lg text-gray-300 break-all hover:text-yellow-300 transition">
+                +91 9336159782
+              </p>
+            </div>
+
+            {/* Location */}
+            <div className="space-y-1 sm:space-y-2">
+              <h4 className="text-lg sm:text-2xl font-semibold">Location</h4>
+              <p className="text-sm sm:text-lg text-gray-300 hover:text-yellow-300 transition">
+                Kanpur, India
+              </p>
+            </div>
           </div>
         </motion.div>
 
@@ -146,7 +160,7 @@ const ContactSection = () => {
             disabled={loading}
             className="block w-full bg-yellow-400 text-black py-2.5 sm:py-4 rounded-lg text-sm sm:text-lg font-semibold text-center hover:bg-yellow-300 transition-colors duration-200 active:scale-95 disabled:opacity-50"
           >
-            {loading ? 'Sending...' : 'Send Message'}
+            {loading ? "Sending..." : "Send Message"}
           </button>
         </motion.form>
       </div>
