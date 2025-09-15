@@ -48,7 +48,7 @@ export const products: Product[] = [
     originalPrice: "₹649",
     type: "image",
     video: "",
-    thumbnail: "/Productimage/GIYU/front.jpg",
+    thumbnail: "/Productimage/GIYU/front.png",
     description: "Stylish Giyu Tomioka T-shirt",
     category: "Demon Slayer",
     rating: 4.9,
@@ -63,7 +63,7 @@ export const products: Product[] = [
     originalPrice: "₹629",
     type: "image",
     video: "",
-    thumbnail: "/Productimage/ITACHI/front.jpg",
+    thumbnail: "/Productimage/ITACHI/front.png",
     description: "Elegant Itachi Uchiha design tee",
     category: "Naruto",
     rating: 4.7,
@@ -78,7 +78,7 @@ export const products: Product[] = [
     originalPrice: "₹659",
     type: "image",
     video: "",
-    thumbnail: "/Productimage/RENGOKU/back.jpg",
+    thumbnail: "/Productimage/RENGOKU/front.png",
     description: "Fiery Rengoku Flame Hashira tee",
     category: "Demon Slayer",
     rating: 4.9,
@@ -93,7 +93,7 @@ export const products: Product[] = [
     originalPrice: "₹619",
     type: "image",
     video: "",
-    thumbnail: "/Productimage/JIRAYA/front.jpg",
+    thumbnail: "/Productimage/JIRAYA/front.png",
     description: "Legendary Sannin Jiraiya T-shirt",
     category: "Naruto",
     rating: 4.6,
@@ -101,6 +101,55 @@ export const products: Product[] = [
     inStock: true,
     tags: ["anime", "Naruto", "Jiraiya", "Sannin"],
   },
+  {
+    id: "goku-tee-001",
+    name: "Goku Tee",
+    price: "₹599",
+    originalPrice: "₹899",
+    type: "image",
+    video: "",
+    thumbnail: "/Productimage/GOKU/front.png",
+    description: "Premium Dragon Ball Z Goku T-shirt made with soft cotton fabric and vibrant print quality.",
+    category: "Dragon Ball Z",
+    rating: 4.9,
+    reviews: 182,
+    inStock: true,
+    isSale: true,
+    tags: ["anime", "dragonball", "goku", "cotton", "comfortable"],
+  },
+  {
+    id: "infinitycastle-tee-001",
+    name: "Infinity Castle Tee",
+    price: "₹649",
+    originalPrice: "₹899",
+    type: "image",
+    video: "",
+    thumbnail: "/Productimage/INFINITY CASTLE/front.png",
+    description: "Exclusive Infinity Castle T-shirt inspired by Demon Slayer. Stylish, durable, and perfect for anime fans.",
+    category: "Demon Slayer",
+    rating: 4.7,
+    reviews: 143,
+    inStock: true,
+    isSale: false,
+    tags: ["anime", "demon slayer", "infinity castle", "cotton"],
+  },
+  {
+    id: "toji-tee-001",
+    name: "Toji Tee",
+    price: "₹699",
+    originalPrice: "₹999",
+    type: "image",
+    video: "",
+    thumbnail: "/Productimage/TOJI/front.png",
+    description: "Stylish Toji Fushiguro T-shirt featuring premium fabric and high-definition anime print.",
+    category: "Jujutsu Kaisen",
+    rating: 4.8,
+    reviews: 167,
+    inStock: true,
+    isSale: true,
+    tags: ["anime", "jujutsu kaisen", "toji", "cotton"],
+  },
+
 ];
 
 const categories = ["All", "Naruto", "One Piece", "Dragon Ball", "Jujutsu Kaisen"];
@@ -406,7 +455,7 @@ export const All_product = () => {
                     alt={product.name}
                     width={400}
                     height={400}
-                    className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                    className="w-full h-full object-contain bg-black transition-transform duration-300 group-hover:scale-105"
                     loading="lazy"
                     onError={() => handleImageError(product.id)}
                     onLoad={() => setImageErrors((prev) => prev.filter((id) => id !== product.id))}

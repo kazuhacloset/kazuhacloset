@@ -39,10 +39,16 @@ export default function ProductPage() {
   const [selectedSize, setSelectedSize] = useState("");
   const [mainImage, setMainImage] = useState("");
 
-  const isLoggedIn = () => !!localStorage.getItem("token");
+  // ✅ Safe login check for Next.js
+  const isLoggedIn = () => {
+    if (typeof window === "undefined") return false;
+    const token = localStorage.getItem("token");
+    return token !== null && token.trim() !== "";
+  };
 
   useEffect(() => {
     const fetchData = async () => {
+      if (typeof window === "undefined") return;
       const productId = localStorage.getItem("productid");
       if (!productId) return;
       try {
@@ -64,9 +70,19 @@ export default function ProductPage() {
   }, []);
 
   const handleAddToCart = async () => {
-    if (!isLoggedIn()) return router.push("/login");
-    if (!selectedSize) return toast.error("Select size first");
-    if (!currentProduct) return toast.error("Product data missing");
+    if (!isLoggedIn()) {
+      return router.push("/login"); // ✅ ensure exit
+    }
+
+    if (!selectedSize) {
+      toast.error("Select size first");
+      return;
+    }
+
+    if (!currentProduct) {
+      toast.error("Product data missing");
+      return;
+    }
 
     try {
       const payload = { product_id: currentProduct.id, quantity, size: selectedSize };
@@ -78,8 +94,15 @@ export default function ProductPage() {
   };
 
   const handleBuyNow = () => {
-    if (!isLoggedIn()) return router.push("/login");
-    if (!selectedSize) return toast.error("Select size first");
+    if (!isLoggedIn()) {
+      return router.push("/login"); // ✅ ensure exit
+    }
+
+    if (!selectedSize) {
+      toast.error("Select size first");
+      return;
+    }
+
     if (!currentProduct) return;
 
     const productToBuy = { ...currentProduct, quantity, size: selectedSize };

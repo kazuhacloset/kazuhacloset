@@ -1,26 +1,27 @@
-"use client"; // if using Next.js 13+ App Router
+"use client";
 
 import { useRouter } from "next/navigation"; 
 import React from "react";
 
 interface ProtectedLinkProps {
-  to: string;         // route to navigate if logged in
+  to: string;          // route to navigate if logged in
   children: React.ReactNode;
-  className?: string // content (icon, button, etc.)
+  className?: string;  // optional custom styling
 }
 
-const ProtectedLink: React.FC<ProtectedLinkProps> = ({ to, children,className}) => {
+const ProtectedLink: React.FC<ProtectedLinkProps> = ({ to, children, className }) => {
   const router = useRouter();
 
   const handleClick = () => {
+    if (typeof window === "undefined") return;
+
     const token = localStorage.getItem("token");
 
-    if (!token) {
-      router.push("/login"); // redirect to login
-      return;
+    if (!token || token.trim() === "") {
+      return router.push("/login"); // ✅ redirect to login
     }
 
-    router.push(to); // go to intended page
+    router.push(to); // ✅ proceed to intended route
   };
 
   return (
