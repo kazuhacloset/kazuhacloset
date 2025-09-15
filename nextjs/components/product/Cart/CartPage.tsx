@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Navbar from "@/components/common/navbar/Navbar";
-import { useRouter } from "next/navigation";
 import { getUserCart, getProductDetails, removeFromCart } from "@/utils/api/productUtils";
 
 import CartItem from "./CartItem";
@@ -26,14 +25,16 @@ type CartItemData = {
 type CartProduct = Product & CartItemData & { cartKey: string };
 
 export default function CartPage() {
-  const router = useRouter();
   const [cartProducts, setCartProducts] = useState<CartProduct[]>([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const fetchCartData = async () => {
       const token = localStorage.getItem("token");
-      if (!token) return setLoading(false);
+      if (!token) {
+        setLoading(false);
+        return;
+      }
 
       try {
         const cartData = await getUserCart();
@@ -63,6 +64,7 @@ export default function CartPage() {
   }, []);
 
   const handleRemoveItem = async (cartKey: string) => {
+    // Optimistic update
     setCartProducts((prev) => prev.filter((item) => item.cartKey !== cartKey));
     try {
       await removeFromCart(cartKey);
@@ -74,7 +76,7 @@ export default function CartPage() {
   return (
     <main className="bg-black text-white min-h-screen px-4 py-6">
       <Navbar />
-      <div className="max-w-5xl mx-auto w-full">
+      <div className="max-w-5xl mx-auto w-full pt-16">
         {loading ? (
           <p className="text-center mt-20 text-gray-400">Loading your cart...</p>
         ) : cartProducts.length === 0 ? (
@@ -82,17 +84,21 @@ export default function CartPage() {
         ) : (
           <>
             <h1 className="text-3xl sm:text-4xl font-bold text-white mb-10 text-center">
-              YOUR CART
+              Your Cart
             </h1>
 
-            {cartProducts.map((item) => (
-              <CartItem key={item.cartKey} item={item} onRemove={handleRemoveItem} />
-            ))}
+            <div className="space-y-6">
+              {cartProducts.map((item) => (
+                <CartItem
+                  key={item.cartKey}
+                  item={item}
+                  onRemove={handleRemoveItem}
+                />
+              ))}
+            </div>
 
-            <CartSummary 
-                items={cartProducts} 
-                onCheckout={() => router.push("/order-summary")} 
-              />
+            {/* ✅ Only pass items now, CartSummary handles checkout itself */}
+            <CartSummary items={cartProducts} />
           </>
         )}
       </div>
