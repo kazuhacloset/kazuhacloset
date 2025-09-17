@@ -3,6 +3,7 @@ import 'aos/dist/aos.css';
 import { Poppins } from 'next/font/google';
 import LayoutClient from './LayoutClient';
 import type { Metadata } from "next";
+import Script from "next/script"; 
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -49,17 +50,32 @@ export const metadata: Metadata = {
     description: "Discover the latest fashion trends with Kazuhacloset.",
     images: ["/opengraph-image.png"],
   },
-  // ✅ Add favicon here
   icons: {
     icon: "/favicon.ico",
     shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png", // optional but good for iOS
+    apple: "/apple-touch-icon.png",
   },
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="en" suppressHydrationWarning={true}>
+      <head>
+        {/* ✅ Organization Schema for Logo */}
+        <Script
+          id="organization-schema"
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{
+            __html: JSON.stringify({
+              "@context": "https://schema.org",
+              "@type": "Organization",
+              "url": "https://www.kazuhacloset.com",
+              "logo": "https://www.kazuhacloset.com/logo.png",
+              "name": "Kazuhacloset"
+            }),
+          }}
+        />
+      </head>
       <body className={`bg-[#1b1b1d] ${poppins.className}`}>
         <LayoutClient>{children}</LayoutClient>
       </body>
