@@ -33,7 +33,7 @@ const SearchBar = dynamic(() => import("../../Landingpage/search"), {
 
 interface User {
   first_name?: string;
-  avatarUrl?: string;
+  avatar?: string; // ✅ changed to match backend response
 }
 
 const luckiest = Luckiest_Guy({ subsets: ["latin"], weight: "400" });
@@ -176,7 +176,7 @@ function Navbar() {
         {firstLetter ? (
           <ProfileMenu
             firstLetter={firstLetter}
-            avatarUrl={userData?.avatarUrl}
+            avatarUrl={userData?.avatar} // ✅ pass avatar directly
             handleLogout={handleLogout}
           />
         ) : (

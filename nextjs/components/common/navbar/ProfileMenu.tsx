@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState, useEffect } from "react";
-import Image from "next/image";
 import Link from "next/link";
 
 interface Props {
@@ -32,7 +31,7 @@ export default function ProfileMenu({ firstLetter, avatarUrl, handleLogout }: Pr
         className="w-9 h-9 rounded-full overflow-hidden border-2 border-yellow-400 flex items-center justify-center cursor-pointer"
       >
         {avatarUrl ? (
-          <Image src={avatarUrl} alt="User Avatar" width={36} height={36} className="object-cover" />
+          <img src={avatarUrl} alt="User Avatar" width={36} height={36} className="object-cover" />
         ) : (
           <span className="bg-yellow-400 text-black font-bold">{firstLetter}</span>
         )}

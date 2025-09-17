@@ -248,7 +248,8 @@ class RegisterView(APIView):
             "email": email,
             "password": make_password(serializer.validated_data['password']),
             "cart": [],
-            "wishlist": []  # 👈 added wishlist array
+            "wishlist": [],  # 👈 added wishlist array
+            "avatar": None
         }
         result = users_collection.insert_one(user_data)
         user_id = result.inserted_id
@@ -286,6 +287,8 @@ class LoginView(APIView):
             },
             status=200
         )
+
+
 
 
 # FORGET POSSWORD VIEW
@@ -448,7 +451,9 @@ class UserProfileView(APIView):
             "email": user.get("email", ""),
             "first_name": user.get("first_name", ""),
             "last_name": user.get("last_name", ""),
+            "avatar": user.get("avatar", "")
         })
+        print( user.get("avatar", ""))
         return Response(serializer.data, status=200)
 
 # Update profile
@@ -789,3 +794,34 @@ class OrderHistoryView(APIView):
             return Response(orders_list, status=200)
         except Exception as e:
             return Response({"error": str(e)}, status=400)
+        
+
+class ProfileAvatarUpdateView(APIView):
+    def patch(self, request):
+        # ✅ Check JWT auth
+        auth_header = request.headers.get("Authorization")
+        if not auth_header or not auth_header.startswith("Bearer "):
+            return Response({"error": "Authorization token missing"}, status=401)
+
+        token = auth_header.split(" ")[1]
+        user_id = decode_jwt(token)
+        if not user_id:
+            return Response({"error": "Invalid or expired token"}, status=401)
+
+        # ✅ Find user
+        user = users_collection.find_one({"_id": ObjectId(user_id)})
+        if not user:
+            return Response({"error": "User not found"}, status=404)
+
+        # ✅ Get avatar URL from request
+        avatar_url = request.data.get("avatar")
+        if not avatar_url:
+            return Response({"error": "Avatar URL required"}, status=400)
+
+        # ✅ Update avatar in MongoDB
+        users_collection.update_one(
+            {"_id": ObjectId(user_id)},
+            {"$set": {"avatar": avatar_url}}
+        )
+
+        return Response({"message": "Avatar updated successfully", "avatar": avatar_url}, status=200)
