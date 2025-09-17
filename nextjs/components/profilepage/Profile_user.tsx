@@ -3,8 +3,10 @@
 import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getUser, updateUserAvatar } from "@/utils/api/userUtils";
-import Image from 'next/image';
+import Image from "next/image";
 
+// ✅ Motion-enabled Next Image
+const MotionImage = motion(Image);
 
 interface User {
   first_name: string;
@@ -36,10 +38,10 @@ const ProfileSection = () => {
   }, [token]);
 
   const avatarOptions = [
-    "Birthdaycard/6.jpg",
-    "Birthdaycard/1.jpg",
-    "Birthdaycard/2.jpg",
-    "Birthdaycard/3.jpg",
+    "/Birthdaycard/6.jpg",
+    "/Birthdaycard/1.jpg",
+    "/Birthdaycard/2.jpg",
+    "/Birthdaycard/3.jpg",
   ];
 
   // ✅ update avatar in DB + refresh user
@@ -57,12 +59,12 @@ const ProfileSection = () => {
   return (
     <div className="relative min-h-screen px-4 py-6 sm:py-10 flex items-center justify-center overflow-hidden">
       <Image
-              src="/background.jpg"
-              alt="Background"
-              fill
-              priority
-              className="object-cover z-0"
-            />
+        src="/background.jpg"
+        alt="Background"
+        fill
+        priority
+        className="object-cover z-0"
+      />
 
       <motion.div
         initial={{ opacity: 0, scale: 0.95 }}
@@ -82,9 +84,11 @@ const ProfileSection = () => {
           <div className="flex flex-col items-center justify-center lg:w-[30%] gap-4">
             {/* Main Avatar */}
             {selectedAvatar ? (
-              <motion.img
+              <MotionImage
                 src={selectedAvatar}
                 alt="User Avatar"
+                width={160}
+                height={160}
                 initial={{ scale: 0.95, opacity: 0.8 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{
@@ -115,10 +119,12 @@ const ProfileSection = () => {
             {/* Avatar Selection Thumbnails */}
             <div className="flex gap-3 mt-2">
               {avatarOptions.map((src, idx) => (
-                <img
+                <Image
                   key={idx}
                   src={src}
                   alt={`Avatar ${idx + 1}`}
+                  width={40}
+                  height={40}
                   className={`w-10 h-10 rounded-full border-2 ${
                     selectedAvatar === src
                       ? "border-yellow-400 scale-110"

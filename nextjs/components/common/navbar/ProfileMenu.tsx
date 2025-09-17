@@ -2,6 +2,7 @@
 
 import { useRef, useState, useEffect } from "react";
 import Link from "next/link";
+import Image from "next/image";
 
 interface Props {
   firstLetter: string;
@@ -31,9 +32,17 @@ export default function ProfileMenu({ firstLetter, avatarUrl, handleLogout }: Pr
         className="w-9 h-9 rounded-full overflow-hidden border-2 border-yellow-400 flex items-center justify-center cursor-pointer"
       >
         {avatarUrl ? (
-          <img src={avatarUrl} alt="User Avatar" width={36} height={36} className="object-cover" />
+          <Image
+            src={avatarUrl}
+            alt="User Avatar"
+            width={36}
+            height={36}
+            className="object-cover w-full h-full"
+          />
         ) : (
-          <span className="bg-yellow-400 text-black font-bold">{firstLetter}</span>
+          <span className="bg-yellow-400 text-black font-bold w-full h-full flex items-center justify-center">
+            {firstLetter}
+          </span>
         )}
       </div>
 

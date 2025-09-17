@@ -3,7 +3,6 @@ import 'aos/dist/aos.css';
 import { Poppins } from 'next/font/google';
 import LayoutClient from './LayoutClient';
 import type { Metadata } from "next";
-import Script from "next/script";
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -68,7 +67,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
               "@context": "https://schema.org",
               "@type": "Organization",
               "url": "https://www.kazuhacloset.com",
-              "logo": "https://www.kazuhacloset.com/logo-112.png", // 👈 upload square version
+              "logo": "https://www.kazuhacloset.com/logo.png", // 👈 upload square version
               "name": "Kazuhacloset"
             }),
           }}
