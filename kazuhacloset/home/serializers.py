@@ -21,6 +21,7 @@ class ProfileSerializer(serializers.Serializer):
     first_name = serializers.CharField()
     last_name = serializers.CharField()
     otp = serializers.CharField(required=False)  # optional for profile
+    avatar = serializers.CharField(allow_blank=True, required=False) 
 
 class UpdateProfileSerializer(serializers.Serializer):
     first_name = serializers.CharField(max_length=255)
