@@ -61,17 +61,14 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
-        {/* ✅ Ensure Google sees schema before page renders */}
-        <Script
-          id="organization-schema"
+        <script
           type="application/ld+json"
-          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
               "@type": "Organization",
               "url": "https://www.kazuhacloset.com",
-              "logo": "https://www.kazuhacloset.com/logo.png",
+              "logo": "https://www.kazuhacloset.com/logo-112.png", // 👈 upload square version
               "name": "Kazuhacloset"
             }),
           }}
