@@ -5,7 +5,7 @@ from .views import (
     SendOtpView, VerifyOtpView, CreateOrderView, VerifyPaymentView,
     OrderHistoryView,
     ForgotPasswordOtpView, VerifyForgotPasswordOtpView, ResetPasswordView, ContactSupportView,
-    WishlistView
+    WishlistView,ProfileAvatarUpdateView
 )
 
 urlpatterns = [
@@ -37,4 +37,8 @@ urlpatterns = [
     path("verify-forgot-otp/", VerifyForgotPasswordOtpView.as_view(), name="verify-forgot-otp"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
     path("contact/", ContactSupportView.as_view(), name="contact-support"),
+
+
+    path("user/avatar", ProfileAvatarUpdateView.as_view(), name="user-avatar"),
+
 ]

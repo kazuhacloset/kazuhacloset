@@ -111,3 +111,9 @@ export const sendContact = async (data: { name: string; email: string; message: 
   const res = await userConnection.post("api/contact/", data);
   return res.data;
 };
+
+
+export const updateUserAvatar = async (avatarUrl: string) => {
+  const res = await userConnection.patch("/api/user/avatar", { avatar: avatarUrl });
+  return res.data;
+};
