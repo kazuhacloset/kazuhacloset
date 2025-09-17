@@ -3,7 +3,7 @@ import 'aos/dist/aos.css';
 import { Poppins } from 'next/font/google';
 import LayoutClient from './LayoutClient';
 import type { Metadata } from "next";
-import Script from "next/script"; 
+import Script from "next/script";
 
 const poppins = Poppins({
   subsets: ['latin'],
@@ -61,10 +61,11 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
   return (
     <html lang="en" suppressHydrationWarning={true}>
       <head>
-        {/* ✅ Organization Schema for Logo */}
+        {/* ✅ Ensure Google sees schema before page renders */}
         <Script
           id="organization-schema"
           type="application/ld+json"
+          strategy="beforeInteractive"
           dangerouslySetInnerHTML={{
             __html: JSON.stringify({
               "@context": "https://schema.org",
