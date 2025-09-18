@@ -19,8 +19,8 @@ def create_otp(email, purpose="general"):
     """Create an OTP for an email with optional purpose"""
     clean_expired_otps()
 
-    # 🔹 In TEST_MODE, always return "123456" for predictable load testing
-    otp = "123456" if TEST_MODE else str(random.randint(100000, 999999))
+    # Always random OTP (removed fixed "123456")
+    otp = str(random.randint(100000, 999999))
 
     otp_store[email] = {
         "otp": otp,
