@@ -7,7 +7,6 @@ import ProductShowcase from '../components/Landingpage/ProductShowcase';
 import AboutSection from '../components/Landingpage/AboutSection';
 import ContactSection from '../components/Landingpage/ContactSection';
 import Wallpaper from '../components/Landingpage/wallpaper';
-import Reel from '../components/Landingpage/reels';
 export default function Home() {
   return (
     <main className="relative bg-gradient-to-bl from-black via-zinc-800 to-zinc-300 min-h-screen scroll-smooth overflow-x-hidden">
@@ -36,10 +35,6 @@ export default function Home() {
       {/* Wallpapers Section */}
       <section id="wallpapers" className="mt-[-64px] md:mt-[-96px]">
         <Wallpaper />
-      </section>
-
-<section id="reels" className="mt-[-64px] md:mt-[-96px]">
-        <Reel/>
       </section>
 
       {/* Contact Section */}
