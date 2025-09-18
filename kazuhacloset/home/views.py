@@ -249,7 +249,7 @@ class RegisterView(APIView):
             "password": make_password(serializer.validated_data['password']),
             "cart": [],
             "wishlist": [],  # 👈 added wishlist array
-            "avatar": None
+            "avatar": "Birthdaycard/6.jpg"
         }
         result = users_collection.insert_one(user_data)
         user_id = result.inserted_id
@@ -453,7 +453,6 @@ class UserProfileView(APIView):
             "last_name": user.get("last_name", ""),
             "avatar": user.get("avatar", "")
         })
-        print( user.get("avatar", ""))
         return Response(serializer.data, status=200)
 
 # Update profile
