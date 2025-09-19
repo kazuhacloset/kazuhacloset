@@ -33,7 +33,7 @@ const SearchBar = dynamic(() => import("../../Landingpage/search"), {
 
 interface User {
   first_name?: string;
-  avatar?: string; // ✅ changed to match backend response
+  avatar?: string; // backend avatar
 }
 
 const luckiest = Luckiest_Guy({ subsets: ["latin"], weight: "400" });
@@ -46,6 +46,14 @@ function Navbar() {
 
   const firstLetter = userData?.first_name?.[0]?.toUpperCase() ?? null;
   const searchRef = useRef<HTMLDivElement>(null);
+
+  // ✅ Always ensure avatar is a valid URL or fallback
+  const avatarUrl =
+    userData?.avatar && userData.avatar.startsWith("http")
+      ? userData.avatar
+      : userData?.avatar
+      ? `${process.env.NEXT_PUBLIC_API_URL || ""}/${userData.avatar}`
+      : "/default-avatar.png"; // Put default-avatar.png inside /public
 
   // Scroll effect (debounced)
   useEffect(() => {
@@ -176,7 +184,7 @@ function Navbar() {
         {firstLetter ? (
           <ProfileMenu
             firstLetter={firstLetter}
-            avatarUrl={userData?.avatar} // ✅ pass avatar directly
+            avatarUrl={avatarUrl} // ✅ now always valid
             handleLogout={handleLogout}
           />
         ) : (
