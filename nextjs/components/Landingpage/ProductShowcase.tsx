@@ -20,7 +20,7 @@ const products: Product[] = [
     id: "giyu-tee-001", // Using the same IDs as in All_product.tsx
     name: "Giyu Tee",
     subtitle: "Water Hashira",
-    price: "₹449",
+    price: "₹399",
     type: "image",
     media: "/Productimage/GIYU/front.png",
     description: "Stylish Giyu Tomioka T-shirt",
@@ -30,7 +30,7 @@ const products: Product[] = [
     id: "itachi-tee-001", // Using the same IDs as in All_product.tsx
     name: "Itachi Tee",
     subtitle: "You are already under my Genjutsu",
-    price: "₹429",
+    price: "₹399",
     type: "image", 
     media: "/Productimage/ITACHI/front.png",
     description: "Elegant Itachi Uchiha design tee",
@@ -40,7 +40,7 @@ const products: Product[] = [
     id: "rengoku-tee-001", // Using the same IDs as in All_product.tsx
     name: "Rengoku Tee",
     subtitle: "Flame Hashira",
-    price: "₹459",
+    price: "₹399",
     type: "image",
     media: "/Productimage/RENGOKU/front.png",
     description: "Fiery Rengoku Flame Hashira tee",

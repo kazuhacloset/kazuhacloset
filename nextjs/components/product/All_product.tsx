@@ -177,7 +177,7 @@ export const All_product = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState<string[]>([]);
 
-  // Check if user is logged in and load wishlist
+  // Check login and load wishlist
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -195,55 +195,39 @@ export const All_product = () => {
     }
   };
 
-  useEffect(() => {
-    const urlCategory = searchParams.get("category");
-    const urlSearch = searchParams.get("search");
-
-    let newCategory = selectedCategory;
-    let newSearchTerm = searchTerm;
-
-    if (urlCategory !== null) {
-      newCategory = urlCategory;
-      newSearchTerm = "";
-    } else if (urlSearch !== null) {
-      newSearchTerm = urlSearch;
-      newCategory = "All";
-    } else {
-      newCategory = "All";
-      newSearchTerm = "";
-    }
-
-    if (newCategory !== selectedCategory) setSelectedCategory(newCategory);
-    if (newSearchTerm !== searchTerm) setSearchTerm(newSearchTerm);
-  }, [searchParams, selectedCategory, searchTerm]);
-
-  const handleCategoryButtonClick = (category: string) => {
-    const newUrl = new URL(window.location.href);
-    newUrl.searchParams.set("category", category);
-    newUrl.searchParams.delete("search");
-    router.push(newUrl.pathname + newUrl.search);
-
-    setSelectedCategory(category);
-    setSearchTerm("");
-  };
-
+  // Handle search input change
   const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchTerm(e.target.value);
   };
 
+  // Handle search submit
   const handleSearchSubmit = () => {
-    const newUrl = new URL(window.location.href);
-    if (searchTerm.trim() !== "") {
-      newUrl.searchParams.set("search", encodeURIComponent(searchTerm.trim()));
-      newUrl.searchParams.delete("category");
-    } else {
-      newUrl.searchParams.delete("search");
-      newUrl.searchParams.set("category", "All");
-    }
-    router.push(newUrl.pathname + newUrl.search);
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("search", searchTerm);
+    if (selectedCategory !== "All") params.set("category", selectedCategory);
+    
+    const queryString = params.toString();
+    const url = queryString ? `?${queryString}` : "";
+    router.push(`${window.location.pathname}${url}`, { scroll: false });
+  };
+
+  // Handle category button click
+  const handleCategoryButtonClick = (category: string) => {
+    setSelectedCategory(category);
+    const params = new URLSearchParams();
+    if (searchTerm) params.set("search", searchTerm);
+    if (category !== "All") params.set("category", category);
+    
+    const queryString = params.toString();
+    const url = queryString ? `?${queryString}` : "";
+    router.push(`${window.location.pathname}${url}`, { scroll: false });
   };
 
   const navigateToProduct = (productId: string) => {
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
     localStorage.setItem("productid", productId);
     router.push(`/product_page/`);
   };
@@ -255,6 +239,36 @@ export const All_product = () => {
 
   const handleImageClick = (productId: string) => {
     navigateToProduct(productId);
+  };
+
+  const handleWishlistToggle = async (e: React.MouseEvent, productId: string) => {
+    e.stopPropagation();
+
+    if (!isLoggedIn) {
+      router.push("/login");
+      return;
+    }
+
+    if (wishlistLoading.includes(productId)) return;
+
+    setWishlistLoading(prev => [...prev, productId]);
+
+    try {
+      const response = await toggleWishlist(productId);
+
+      if (response.message === "Added to wishlist") {
+        setWishlist(prev => [...prev, productId]);
+        toast.success("Added to wishlist!");
+      } else {
+        setWishlist(prev => prev.filter(id => id !== productId));
+        toast.success("Removed from wishlist!");
+      }
+    } catch (error: unknown) {
+      console.error("Wishlist error:", error);
+      toast.error("Error updating wishlist. Please try again.");
+    } finally {
+      setWishlistLoading(prev => prev.filter(id => id !== productId));
+    }
   };
 
   const handleImageError = (productId: string) => {
@@ -307,51 +321,12 @@ export const All_product = () => {
     return filtered;
   }, [searchTerm, selectedCategory, sortBy, priceRange]);
 
-  const handleWishlistToggle = async (e: React.MouseEvent, productId: string) => {
-    e.stopPropagation();
-    
-    if (!isLoggedIn) {
-      toast.error("Please login to use wishlist");
-      return;
-    }
-
-    if (wishlistLoading.includes(productId)) {
-      return; // Prevent multiple clicks
-    }
-
-    setWishlistLoading(prev => [...prev, productId]);
-
-    try {
-      console.log("Toggling wishlist for product:", productId);
-      const response = await toggleWishlist(productId);
-      console.log("Wishlist response:", response);
-      
-      if (response.message === "Added to wishlist") {
-        setWishlist(prev => [...prev, productId]);
-        toast.success("Added to wishlist!");
-      } else {
-        setWishlist(prev => prev.filter(id => id !== productId));
-        toast.success("Removed from wishlist!");
-      }
-    } catch (error: unknown) {
-      console.error("Wishlist error:", error);
-      
-      if (error instanceof Error) {
-        toast.error(error.message);
-      } else {
-        toast.error("Error updating wishlist. Please try again.");
-      }
-    } finally {
-      setWishlistLoading(prev => prev.filter(id => id !== productId));
-    }
-  };
-
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
       <Star key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(rating) ? "fill-white text-white" : "text-gray-400"}`} />
     ));
   };
-
+  
   return (
     <main className="relative bg-gradient-to-bl from-[#000000] to-[#a3a3a3] min-h-screen scroll-smooth text-white">
       <Navbar />

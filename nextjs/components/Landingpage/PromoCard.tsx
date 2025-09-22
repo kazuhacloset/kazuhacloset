@@ -17,7 +17,7 @@ const PromoCard: React.FC = () => {
             TSHIRT
           </h3>
           <p className="text-2xl sm:text-3xl md:text-5xl mt-4 sm:mt-6 text-black drop-shadow-lg font-extrabold transition-all duration-300 ease-in-out animate-fadeIn">
-            50% OFF
+            20% OFF
           </p>
         </div>
 
