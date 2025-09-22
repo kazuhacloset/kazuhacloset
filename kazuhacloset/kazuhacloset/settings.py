@@ -75,6 +75,7 @@ WSGI_APPLICATION = 'kazuhacloset.wsgi.application'
 # Authentication settings for MongoDB (you can ignore this if not using Django's ORM)
 # AUTH_USER_MODEL = 'home.User'
 
+
 # Password validation
 AUTH_PASSWORD_VALIDATORS = [
     {

@@ -28,7 +28,6 @@ from utils.otp_utils import verify_otp
 from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
-from rest_framework.permissions import IsAuthenticated
 from bson import ObjectId
 
 
@@ -120,22 +119,8 @@ class ContactSupportView(APIView):
         name, email, message = data["name"], data["email"], data["message"]
 
         try:
-            sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
-            from_email = os.getenv("SENDGRID_FROM_EMAIL", "noreply@kazuhacloset.com")
             support_email = os.getenv("SUPPORT_EMAIL", "kazuhastore8@gmail.com")
-
-            subject = f"📩 Support Request from {name}"
             ist_time = datetime.now(timezone("Asia/Kolkata")).strftime("%Y-%m-%d %H:%M:%S")
-
-            def send_email(to, subject, template_name, context):
-                html_content = render_to_string(template_name, context)
-                msg = Mail(
-                    from_email=from_email,
-                    to_emails=to,
-                    subject=subject,
-                    html_content=html_content
-                )
-                return sg.send(msg)
 
             context = {
                 "name": name,
@@ -143,16 +128,35 @@ class ContactSupportView(APIView):
                 "message": message,
                 "time": f"{ist_time} (IST)"
             }
+
             # 1️⃣ Send support request to admin
-            send_email(support_email, subject, "emails/support_request.html", context)
+            html_content_admin = render_to_string("emails/support_request.html", context)
+            plain_content_admin = f"Support request from {name} ({email}):\n\n{message}\n\nSent at {ist_time} (IST)."
+            send_email_async(
+                support_email,
+                f"📩 Support Request from {name}",
+                html_content_admin,
+                plain_content_admin,
+            )
+
             # 2️⃣ Send auto reply to user
-            send_email(email, "✅ We received your support request", "emails/auto_reply.html", context)
+            html_content_user = render_to_string("emails/auto_reply.html", context)
+            plain_content_user = f"Hello {name},\n\nWe received your request. Our team will get back to you shortly.\n\nMessage you sent:\n{message}\n\nTime: {ist_time} (IST)."
+            send_email_async(
+                email,
+                "✅ We received your support request",
+                html_content_user,
+                plain_content_user,
+            )
+
             return Response({"message": "Support request sent successfully"}, status=200)
+
         except Exception:
             return Response(
                 {"error": "Failed to send message, please try again later."},
                 status=500
             )
+
 
 class WishlistView(APIView):
     def post(self, request):
@@ -726,11 +730,11 @@ class VerifyPaymentView(APIView):
                     """
 
                     message = Mail(
-                        from_email=from_email,
-                        to_emails=user["email"],
-                        subject=subject,
-                        html_content=html_content
-                    )
+                                from_email=from_email,
+                                to_emails=[user["email"], "kazuhastore8@gmail.com"],  # ✅ Proper format
+                                subject=subject,
+                                html_content=html_content
+                            )                   
                     sg.send(message)
                     print(f"✅ Invoice sent successfully to {user['email']}")
 
