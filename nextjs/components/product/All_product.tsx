@@ -223,7 +223,8 @@ export const All_product = () => {
     router.push(`${window.location.pathname}${url}`, { scroll: false });
   };
 
-  const navigateToProduct = (productId: string) => {
+  // Updated: Check login for any product interaction
+  const checkLoginAndNavigate = (productId: string) => {
     if (!isLoggedIn) {
       router.push("/login");
       return;
@@ -232,17 +233,20 @@ export const All_product = () => {
     router.push(`/product_page/`);
   };
 
+  // Handle card click (entire product card)
+  const handleCardClick = (productId: string) => {
+    checkLoginAndNavigate(productId);
+  };
+
+  // Handle Quick View button click
   const handleQuickView = (e: React.MouseEvent, productId: string) => {
-    e.stopPropagation();
-    navigateToProduct(productId);
+    e.stopPropagation(); // Prevent card click event
+    checkLoginAndNavigate(productId);
   };
 
-  const handleImageClick = (productId: string) => {
-    navigateToProduct(productId);
-  };
-
+  // Handle wishlist toggle - now only handles wishlist logic after login check
   const handleWishlistToggle = async (e: React.MouseEvent, productId: string) => {
-    e.stopPropagation();
+    e.stopPropagation(); // Prevent card click event
 
     if (!isLoggedIn) {
       router.push("/login");
@@ -467,7 +471,7 @@ export const All_product = () => {
             {filteredAndSortedProducts.map((product) => (
               <div
                 key={product.id}
-                onClick={() => handleImageClick(product.id)}
+                onClick={() => handleCardClick(product.id)}
                 className={`group relative bg-black/30 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden hover:border-white/40 hover:bg-black/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-white/30 cursor-pointer ${
                   viewMode === "list" ? "flex gap-4 sm:gap-6 p-4 sm:p-8 max-w-full" : "p-2 sm:p-8 w-full"
                 }`}
@@ -538,7 +542,7 @@ export const All_product = () => {
                     {product.description}
                   </p>
 
-                  {/* Only Quick View Button */}
+                  {/* Quick View Button */}
                   <div className="w-full mt-2">
                     <button
                       onClick={(e) => handleQuickView(e, product.id)}
