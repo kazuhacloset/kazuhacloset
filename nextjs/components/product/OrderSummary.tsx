@@ -126,10 +126,14 @@ export default function OrderSummary() {
   const cleanPrice = (price: string) =>
     parseFloat(price.replace(/[^0-9.]/g, ""));
 
-  const total = products.reduce(
+  const subtotal = products.reduce(
     (sum, item) => sum + cleanPrice(item.price) * item.quantity,
     0
   );
+
+  // Apply discount logic
+  const discount = subtotal > 500 ? 50 : 0;
+  const total = subtotal - discount;
 
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
@@ -329,10 +333,25 @@ export default function OrderSummary() {
               </div>
             ))}
 
-            <div className="bg-[#1e1e1e] mt-6 p-4 rounded-xl flex justify-between items-center">
-              <h3 className="text-lg sm:text-2xl font-bold">
-                Total: <span className="text-yellow-400">₹{total}</span>
-              </h3>
+            <div className="bg-[#1e1e1e] mt-6 p-4 rounded-xl space-y-2">
+              <div className="flex justify-between items-center">
+                <span className="text-lg font-medium">Subtotal:</span>
+                <span className="text-lg">₹{subtotal}</span>
+              </div>
+              
+              {discount > 0 && (
+                <div className="flex justify-between items-center">
+                  <span className="text-lg font-medium text-green-400">Discount:</span>
+                  <span className="text-lg text-green-400">-₹{discount}</span>
+                </div>
+              )}
+              
+              <div className="border-t border-gray-600 pt-2">
+                <div className="flex justify-between items-center">
+                  <h3 className="text-lg sm:text-2xl font-bold">Total:</h3>
+                  <span className="text-lg sm:text-2xl font-bold text-yellow-400">₹{total}</span>
+                </div>
+              </div>
             </div>
 
             <div className="flex justify-center mt-6">

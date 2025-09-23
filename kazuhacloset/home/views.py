@@ -604,18 +604,16 @@ class VerifyPaymentView(APIView):
                 sort=[("created_at", -1)]
             )
 
-            # ✅ Send Payment Confirmation Email (via SendGrid)
+            # ✅ Send Payment Confirmation Email (via Brevo util)
             user = users_collection.find_one({"_id": ObjectId(order["user_id"])})
             if user and "email" in user and latest_order:
                 try:
-                    sg = sendgrid.SendGridAPIClient(api_key=os.getenv("SENDGRID_API_KEY"))
-                    from_email = os.getenv("SENDGRID_FROM_EMAIL")
                     subject = "🧾 Invoice - Order Confirmation"
 
                     ist = timezone("Asia/Kolkata")
                     order_time = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
 
-                    # ✅ FIXED: Handle cart structure properly
+                    # ✅ Handle cart structure properly
                     cart_data = latest_order.get("cart", {})
                     cart_items = []
                     if isinstance(cart_data, dict) and "items" in cart_data:
@@ -626,61 +624,9 @@ class VerifyPaymentView(APIView):
                         print(f"Warning: Unexpected cart format: {cart_data}")
                         cart_items = []
 
-                    html_content = f"""
-                    <!DOCTYPE html>
-                    <html>
-                    <head>
-                    <meta charset="UTF-8" />
-                    <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-                    </head>
-                    <body style="font-family: Arial, sans-serif; margin:0; padding:0; background:#f9f9f9;">
-                    <div style="max-width:600px; margin:20px auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-                        
-                        <!-- Header -->
-                        <div style="background:#2c3e50; padding:20px; text-align:center; color:#fff;">
-                        <h2 style="margin:0;">Kazuha Closet</h2>
-                        <p style="margin:5px 0;">Order Invoice</p>
-                        </div>
-
-                        <!-- Body -->
-                        <div style="padding:20px; color:#333;">
-                        <p>Hi {user.get("first_name", "Customer")},</p>
-                        <p>Thank you for your purchase! 🎉<br>Here are your order details:</p>
-
-                        <!-- Order Info -->
-                        <table style="width:100%; margin:15px 0; border-collapse: collapse;">
-                            <tr>
-                            <td><strong>Order ID:</strong></td>
-                            <td>{latest_order.get("razorpay_order_id", order_id)}</td>
-                            </tr>
-                            <tr>
-                            <td><strong>Payment ID:</strong></td>
-                            <td>{latest_order.get("payment_id", payment_id)}</td>
-                            </tr>
-                            <tr>
-                            <td><strong>Date:</strong></td>
-                            <td>{order_time}</td>
-                            </tr>
-                        </table>
-                    """
-
-                    # ✅ Items Table
-                    html_content += """
-                        <h3 style="margin-top:20px;">Order Summary</h3>
-                        <table style="width:100%; border-collapse: collapse; margin-top:10px;">
-                            <thead>
-                            <tr style="background:#f2f2f2;">
-                                <th style="padding:10px; border:1px solid #ddd; text-align:left;">Item</th>
-                                <th style="padding:10px; border:1px solid #ddd; text-align:center;">Size</th>
-                                <th style="padding:10px; border:1px solid #ddd; text-align:center;">Qty</th>
-                                <th style="padding:10px; border:1px solid #ddd; text-align:right;">Price</th>
-                                <th style="padding:10px; border:1px solid #ddd; text-align:right;">Subtotal</th>
-                            </tr>
-                            </thead>
-                            <tbody>
-                    """
-
+                    # ✅ Build Invoice HTML
                     total_price = 0
+                    items_html = ""
                     for item in cart_items:
                         product_name = item.get("name", "Product")
                         qty = item.get("quantity", 1)
@@ -689,7 +635,7 @@ class VerifyPaymentView(APIView):
                         clean_price = float(''.join(c for c in price_str if c.isdigit() or c == '.') or '0')
                         subtotal = clean_price * qty
                         total_price += subtotal
-                        html_content += f"""
+                        items_html += f"""
                             <tr>
                                 <td style="padding:10px; border:1px solid #ddd;">{product_name}</td>
                                 <td style="padding:10px; border:1px solid #ddd; text-align:center;">{size}</td>
@@ -699,48 +645,80 @@ class VerifyPaymentView(APIView):
                             </tr>
                         """
 
-                    html_content += f"""
-                            </tbody>
-                            <tfoot>
-                                <tr style="background:#f8f9fa; font-weight:bold;">
-                                    <td colspan="4" style="padding:10px; border:1px solid #ddd; text-align:right;">Grand Total:</td>
-                                    <td style="padding:10px; border:1px solid #ddd; text-align:right; color:#28a745;">₹{total_price:.2f}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
+                    html_content = f"""
+                    <!DOCTYPE html>
+                    <html>
+                    <body style="font-family: Arial, sans-serif; background:#f9f9f9; margin:0; padding:0;">
+                        <div style="max-width:600px; margin:20px auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                            
+                            <!-- Header -->
+                            <div style="background:#2c3e50; padding:20px; text-align:center; color:#fff;">
+                                <h2 style="margin:0;">Kazuha Closet</h2>
+                                <p style="margin:5px 0;">Order Invoice</p>
+                            </div>
 
-                        <!-- Shipping Address -->
-                        <div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:5px;">
-                            <h4 style="margin:0 0 10px 0; color:#333;">Shipping Address:</h4>
-                            <p style="margin:0; color:#666;">{latest_order.get('address', 'Address not provided')}</p>
-                            <p style="margin:5px 0 0 0; color:#666;"><strong>Phone:</strong> {latest_order.get('phone', 'Phone not provided')}</p>
-                        </div>
+                            <!-- Body -->
+                            <div style="padding:20px; color:#333;">
+                                <p>Hi {user.get("first_name", "Customer")},</p>
+                                <p>Thank you for your purchase! 🎉<br>Here are your order details:</p>
 
-                        <p style="margin-top:20px;">Your order is now being processed. You'll receive another update when it ships 🚚</p>
-                        </div>
+                                <!-- Order Info -->
+                                <table style="width:100%; margin:15px 0; border-collapse: collapse;">
+                                    <tr><td><strong>Order ID:</strong></td><td>{latest_order.get("razorpay_order_id", order_id)}</td></tr>
+                                    <tr><td><strong>Payment ID:</strong></td><td>{latest_order.get("payment_id", payment_id)}</td></tr>
+                                    <tr><td><strong>Date:</strong></td><td>{order_time}</td></tr>
+                                </table>
 
-                        <!-- Footer -->
-                        <div style="background:#f2f2f2; padding:15px; text-align:center; font-size:12px; color:#555;">
-                        <p>If you have any questions, contact us at <a href="mailto:kazuhastore8@gmail.com">support@kazuhacloset.com</a></p>
-                        <p>© {datetime.utcnow().year} Kazuha Closet. All rights reserved.</p>
+                                <h3>Order Summary</h3>
+                                <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                                    <thead>
+                                        <tr style="background:#f2f2f2;">
+                                            <th style="padding:10px; border:1px solid #ddd; text-align:left;">Item</th>
+                                            <th style="padding:10px; border:1px solid #ddd; text-align:center;">Size</th>
+                                            <th style="padding:10px; border:1px solid #ddd; text-align:center;">Qty</th>
+                                            <th style="padding:10px; border:1px solid #ddd; text-align:right;">Price</th>
+                                            <th style="padding:10px; border:1px solid #ddd; text-align:right;">Subtotal</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        {items_html}
+                                    </tbody>
+                                    <tfoot>
+                                        <tr style="background:#f8f9fa; font-weight:bold;">
+                                            <td colspan="4" style="padding:10px; border:1px solid #ddd; text-align:right;">Grand Total:</td>
+                                            <td style="padding:10px; border:1px solid #ddd; text-align:right; color:#28a745;">₹{total_price:.2f}</td>
+                                        </tr>
+                                    </tfoot>
+                                </table>
+
+                                <!-- Shipping -->
+                                <div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:5px;">
+                                    <h4 style="margin:0 0 10px 0; color:#333;">Shipping Address:</h4>
+                                    <p style="margin:0; color:#666;">{latest_order.get('address', 'Address not provided')}</p>
+                                    <p style="margin:5px 0 0 0; color:#666;"><strong>Phone:</strong> {latest_order.get('phone', 'Phone not provided')}</p>
+                                </div>
+
+                                <p style="margin-top:20px;">Your order is now being processed. You'll receive another update when it ships 🚚</p>
+                            </div>
+
+                            <!-- Footer -->
+                            <div style="background:#f2f2f2; padding:15px; text-align:center; font-size:12px; color:#555;">
+                                <p>If you have any questions, contact us at <a href="mailto:kazuhastore8@gmail.com">support@kazuhacloset.com</a></p>
+                                <p>© {datetime.utcnow().year} Kazuha Closet. All rights reserved.</p>
+                            </div>
                         </div>
-                    </div>
                     </body>
                     </html>
                     """
 
-                    message = Mail(
-                                from_email=from_email,
-                                to_emails=[user["email"], "kazuhastore8@gmail.com"],  # ✅ Proper format
-                                subject=subject,
-                                html_content=html_content
-                            )                   
-                    sg.send(message)
-                    print(f"✅ Invoice sent successfully to {user['email']}")
+                    plain_text = f"Hi {user.get('first_name', 'Customer')}, your payment is confirmed. Order ID: {order_id}, Amount: ₹{total_price:.2f}"
+
+                    # ✅ Use Brevo util here
+                    send_email_async(user["email"], subject, html_content, plain_text)
+                    send_email_async("kazuhastore8@gmail.com", subject, html_content, plain_text)
 
                 except Exception as e:
                     print(f"❌ Email sending failed: {str(e)}")
-                    print(f"Cart data structure: {latest_order.get('cart', {})}")
 
             return Response({"status": "Payment verified"}, status=200)
 
