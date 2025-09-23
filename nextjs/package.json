@@ -16,15 +16,13 @@
     "frame": "^1.0.0-alpha.2",
     "framer-motion": "^12.12.2",
     "html2canvas": "^1.4.1",
-    "keen-slider": "^6.8.6",
     "lucide-react": "^0.511.0",
     "motion": "^12.19.1",
     "next": "^15.3.0",
     "next-sitemap": "^4.2.3",
     "react": "^19.1.1",
     "react-dom": "^19.1.1",
-    "react-slick": "^0.31.0",
-    "react-toastify": "^11.0.5"
+    "react-hot-toast": "^2.5.2"
   },
   "devDependencies": {
     "@eslint/eslintrc": "^3",
