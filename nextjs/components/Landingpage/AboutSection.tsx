@@ -14,7 +14,7 @@ const AboutUs = () => {
     let sales = 0;
 
     const custInterval = setInterval(() => {
-      if (cust < 5000) {
+      if (cust < 50) {
         cust += 50;
         setCustomers(cust);
       } else {
@@ -23,7 +23,7 @@ const AboutUs = () => {
     }, 10);
 
     const prodInterval = setInterval(() => {
-      if (prod < 150) {
+      if (prod < 8) {
         prod += 1;
         setProducts(prod);
       } else {
@@ -32,7 +32,7 @@ const AboutUs = () => {
     }, 20);
 
     const salesInterval = setInterval(() => {
-      if (sales < 80) {
+      if (sales < 30) {
         sales += 1;
         setSalesProducts(sales);
       } else {
