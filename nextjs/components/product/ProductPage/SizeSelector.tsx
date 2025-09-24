@@ -10,7 +10,7 @@ export default function SizeSelector({ selectedSize, setSelectedSize }: Props) {
     <div>
       <h3 className="text-white font-semibold mb-2 text-sm">Select Size</h3>
       <div className="flex gap-2">
-        {["S", "M", "L", "XL"].map((size) => (
+        {["S", "M", "L", "XL", "XXL"].map((size) => (
           <button
             key={size}
             onClick={() => setSelectedSize(size)}

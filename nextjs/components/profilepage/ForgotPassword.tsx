@@ -113,20 +113,20 @@ export default function ForgotPasswordPage() {
         {/* Email + Send OTP */}
         <div className="mb-3 sm:mb-4">
           <label htmlFor="email" className="block text-xs sm:text-sm font-medium mb-1">Email</label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               type="email"
               id="email"
               onChange={handleChange}
               value={form.email}
               placeholder="Enter your email"
-              className="flex-1 p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border border-gray-500 focus:border-yellow-400"
+              className="flex-1 min-w-[140px] p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border border-gray-500 focus:border-yellow-400"
             />
             <button
               type="button"
               onClick={handleSendOtp}
               disabled={isSendingOtp}
-              className="bg-yellow-400 text-black px-3 sm:px-4 rounded-lg hover:bg-yellow-300 transition text-sm py-2 sm:py-3"
+              className="flex-shrink-0 bg-yellow-400 text-black px-3 py-2 sm:px-4 sm:py-3 rounded-lg hover:bg-yellow-300 transition text-sm"
             >
               {isSendingOtp ? "Sending..." : "Send OTP"}
             </button>
@@ -136,20 +136,20 @@ export default function ForgotPasswordPage() {
         {/* OTP + Verify */}
         <div className="mb-3 sm:mb-4">
           <label htmlFor="otp" className="block text-xs sm:text-sm font-medium mb-1">Verification OTP</label>
-          <div className="flex gap-2">
+          <div className="flex flex-wrap gap-2">
             <input
               type="text"
               id="otp"
               onChange={handleChange}
               value={form.otp}
               placeholder="Enter OTP"
-              className="flex-1 p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border border-gray-500 focus:border-yellow-400"
+              className="flex-1 min-w-[140px] p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border border-gray-500 focus:border-yellow-400"
             />
             <button
               type="button"
               onClick={handleVerifyOtp}
               disabled={isVerifyingOtp}
-              className={`px-3 sm:px-4 rounded-lg text-sm py-2 sm:py-3 transition ${
+              className={`flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 rounded-lg text-sm transition ${
                 otpVerified
                   ? "bg-green-500 text-white"
                   : "bg-blue-400 text-black hover:bg-blue-300"
