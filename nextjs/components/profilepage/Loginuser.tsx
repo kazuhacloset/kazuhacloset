@@ -4,9 +4,26 @@ import React, { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { userLogin } from '@/utils/api/userUtils';
-import { Eye, EyeOff, Loader2 } from 'lucide-react'; // 👈 Loader2 for spinner
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 import Image from 'next/image';
+
+// Shape of login response (adjust if your API differs)
+interface LoginResponse {
+  token?: string;
+  error?: string;
+  message?: string;
+  detail?: string;
+  data?: unknown;
+}
+
+// Shape of axios-like error
+interface ApiError {
+  response?: {
+    data?: unknown;
+    status?: number;
+  };
+}
 
 export default function LoginPage() {
   const router = useRouter();
@@ -15,10 +32,44 @@ export default function LoginPage() {
     password: '',
   });
   const [showPassword, setShowPassword] = useState(false);
-  const [loading, setLoading] = useState(false); // 👈 loading state
+  const [loading, setLoading] = useState(false);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
+  };
+
+  const friendlyErrorFrom = (payload: unknown, status?: number): string => {
+    const raw =
+      (typeof payload === 'object' &&
+        payload !== null &&
+        ('error' in payload || 'message' in payload || 'detail' in payload) &&
+        ((payload as { error?: string; message?: string; detail?: string })
+          .error ||
+          (payload as { error?: string; message?: string; detail?: string })
+            .message ||
+          (payload as { error?: string; message?: string; detail?: string })
+            .detail))?.toString() || '';
+
+    const msg = raw.toLowerCase();
+
+    if (
+      status === 401 ||
+      msg.includes('invalid') ||
+      msg.includes('credentials') ||
+      msg.includes('unauthor')
+    ) {
+      return 'Incorrect email or password';
+    }
+    if (msg.includes('password')) return 'Incorrect password';
+    if (
+      msg.includes('not found') ||
+      msg.includes('no user') ||
+      msg.includes('email')
+    ) {
+      return 'No account found with this email';
+    }
+    if (raw) return raw;
+    return 'Login failed, please check your credentials';
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -29,28 +80,41 @@ export default function LoginPage() {
       return;
     }
 
-    setLoading(true); // 👈 start spinner
+    setLoading(true);
     try {
-      const res = await userLogin(form);
-      if (res && res.token) {
-        localStorage.setItem('token', res.token);
-        toast.success("Login Successful");
+      const res: LoginResponse = await userLogin(form);
+      const data = (res as { data?: LoginResponse }).data ?? res;
+
+      if (data && data.token) {
+        localStorage.setItem('token', data.token);
+        toast.success('Login Successful');
         setTimeout(() => {
           router.push('/');
         }, 1500);
-      } else {
-        toast.error('Login failed, please check your credentials');
+        return;
       }
-    } catch {
-      toast.error('Something went wrong!');
+
+      if (data && (data.error || data.message || data.detail)) {
+        const friendly = friendlyErrorFrom(data);
+        toast.error(friendly);
+        return;
+      }
+
+      toast.error('Login failed, please check your credentials');
+    } catch (err: unknown) {
+      const apiErr = err as ApiError;
+      const serverPayload = apiErr.response?.data ?? err;
+      const status = apiErr.response?.status;
+
+      const friendly = friendlyErrorFrom(serverPayload, status);
+      toast.error(friendly);
     } finally {
-      setLoading(false); // 👈 stop spinner
+      setLoading(false);
     }
   };
 
   return (
     <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
-      {/* Background Image */}
       <Image
         src="/background.jpg"
         alt="Background"
@@ -59,19 +123,26 @@ export default function LoginPage() {
         className="object-cover z-0"
       />
 
-      {/* Login Form */}
-      <div className="relative z-10 bg-black/30 backdrop-blur-md border border-transparent 
+      <div
+        className="relative z-10 bg-black/30 backdrop-blur-md border border-transparent 
         rounded-2xl shadow-xl hover:shadow-[0_0_25px_rgba(255,255,255,0.6)] hover:border-white 
         transition-all duration-500 ease-in-out transform hover:scale-105
         w-[95%] sm:w-[90%] md:max-w-md
         px-3 py-4 sm:px-6 sm:py-8 md:px-8 md:py-10 text-white"
       >
-        <h2 className="text-center text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">Login</h2>
+        <h2 className="text-center text-2xl sm:text-3xl font-bold mb-4 sm:mb-6">
+          Login
+        </h2>
 
         <form onSubmit={handleSubmit}>
           {/* Email Input */}
           <div className="mb-3 sm:mb-4">
-            <label htmlFor="email" className="block text-xs sm:text-sm font-medium mb-1">Email</label>
+            <label
+              htmlFor="email"
+              className="block text-xs sm:text-sm font-medium mb-1"
+            >
+              Email
+            </label>
             <input
               type="email"
               id="email"
@@ -85,7 +156,12 @@ export default function LoginPage() {
 
           {/* Password Input */}
           <div className="mb-2 sm:mb-3 relative">
-            <label htmlFor="password" className="block text-xs sm:text-sm font-medium mb-1">Password</label>
+            <label
+              htmlFor="password"
+              className="block text-xs sm:text-sm font-medium mb-1"
+            >
+              Password
+            </label>
             <input
               type={showPassword ? 'text' : 'password'}
               id="password"
@@ -107,7 +183,10 @@ export default function LoginPage() {
 
           {/* Forgot Password Link */}
           <div className="text-right mb-4">
-            <Link href="/forgot-password" className="text-yellow-400 hover:underline text-xs sm:text-sm">
+            <Link
+              href="/forgot-password"
+              className="text-yellow-400 hover:underline text-xs sm:text-sm"
+            >
               Forgot Password?
             </Link>
           </div>
@@ -120,14 +199,13 @@ export default function LoginPage() {
               hover:bg-yellow-300 transition-all duration-300 flex items-center justify-center"
           >
             {loading ? (
-              <Loader2 className="animate-spin" size={18} /> // 👈 spinner here
+              <Loader2 className="animate-spin" size={18} />
             ) : (
-              "Login"
+              'Login'
             )}
           </button>
         </form>
 
-        {/* Register Redirect */}
         <p className="mt-3 sm:mt-4 text-center text-xs sm:text-sm text-white">
           Not registered?{' '}
           <Link href="/register" className="text-yellow-400 hover:underline">

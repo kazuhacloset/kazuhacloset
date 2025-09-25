@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { sendForgotOtp, verifyForgotOtp, resetPassword } from '@/utils/api/userUtils';
@@ -19,6 +19,7 @@ export default function ForgotPasswordPage() {
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState(''); // ✅ OTP error state
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -40,39 +41,45 @@ export default function ForgotPasswordPage() {
       }
 
       toast.success(res.message || "OTP sent successfully!");
-    } catch (err: unknown) {
-      console.error(err); // log error in console
+    } catch {
       toast.error("Failed to send OTP");
     } finally {
       setIsSendingOtp(false);
     }
   };
 
-  // Step 2: Verify OTP
-  const handleVerifyOtp = async () => {
-    if (!form.email || !form.otp) {
-      toast.error("Please enter your email and OTP");
-      return;
-    }
-    try {
-      setIsVerifyingOtp(true);
-      const res = await verifyForgotOtp(form.email, form.otp);
-      if (res.verified) {
-        setOtpVerified(true);
-        toast.success(res.message || "OTP verified!");
-      } else {
-        toast.error(res.error || "Invalid OTP");
+  // ✅ Step 2: Auto Verify OTP when length is 6
+  useEffect(() => {
+    const verify = async () => {
+      if (form.email && form.otp.length === 6 && !otpVerified) {
+        try {
+          setIsVerifyingOtp(true);
+          const res = await verifyForgotOtp(form.email, form.otp);
+          if (res.verified) {
+            setOtpVerified(true);
+            setOtpError('');
+            toast.success(res.message || "OTP verified successfully!");
+          } else {
+            setOtpVerified(false);
+            setOtpError("Invalid OTP");
+            toast.error(res.error || "Invalid OTP");
+          }
+        } catch {
+          setOtpVerified(false);
+          setOtpError("OTP verification failed");
+          toast.error("OTP verification failed");
+        } finally {
+          setIsVerifyingOtp(false);
+        }
       }
-    } catch {
-      toast.error("OTP verification failed");
-    } finally {
-      setIsVerifyingOtp(false);
-    }
-  };
+    };
+    verify();
+  }, [form.otp, form.email, otpVerified]);
 
   // Step 3: Reset Password
   const handleResetPassword = async () => {
     if (!otpVerified) {
+      setOtpError("Please enter a valid 6-digit OTP");
       toast.error("Please verify OTP first");
       return;
     }
@@ -95,8 +102,19 @@ export default function ForgotPasswordPage() {
     }
   };
 
+  // ✅ Handle Enter key to submit
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleResetPassword();
+    }
+  };
+
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      onKeyDown={handleKeyDown}
+    >
       {/* Background */}
       <Image
         src="/background.jpg"
@@ -133,31 +151,45 @@ export default function ForgotPasswordPage() {
           </div>
         </div>
 
-        {/* OTP + Verify */}
-        <div className="mb-3 sm:mb-4">
-          <label htmlFor="otp" className="block text-xs sm:text-sm font-medium mb-1">Verification OTP</label>
-          <div className="flex flex-wrap gap-2">
+        {/* OTP (auto verifies) */}
+        <div className="mb-3 sm:mb-4 relative">
+          <label
+            htmlFor="otp"
+            className="block text-xs sm:text-sm font-medium mb-1"
+          >
+            Verification OTP
+          </label>
+          <div className="relative">
             <input
               type="text"
               id="otp"
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setForm({ ...form, otp: value });
+                if (value.length < 6) {
+                  setOtpError("OTP must be 6 digits");
+                  setOtpVerified(false);
+                } else {
+                  setOtpError("");
+                }
+              }}
               value={form.otp}
+              maxLength={6}
               placeholder="Enter OTP"
-              className="flex-1 min-w-[140px] p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border border-gray-500 focus:border-yellow-400"
+              className={`w-full p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border ${
+                otpVerified ? "border-green-500" : otpError ? "border-red-500" : "border-gray-500"
+              } focus:border-yellow-400`}
             />
-            <button
-              type="button"
-              onClick={handleVerifyOtp}
-              disabled={isVerifyingOtp}
-              className={`flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 rounded-lg text-sm transition ${
-                otpVerified
-                  ? "bg-green-500 text-white"
-                  : "bg-blue-400 text-black hover:bg-blue-300"
-              }`}
-            >
-              {otpVerified ? "Verified" : isVerifyingOtp ? "Verifying..." : "Verify"}
-            </button>
+            {/* ✅ Green tick inside input */}
+            {otpVerified && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-green-500 text-white text-xs font-bold">
+                ✓
+              </div>
+            )}
           </div>
+          {/* Status messages */}
+          {isVerifyingOtp && <p className="text-xs text-blue-400 mt-1">Verifying...</p>}
+          {otpError && !isVerifyingOtp && <p className="text-xs text-red-400 mt-1">{otpError}</p>}
         </div>
 
         {/* New Password */}

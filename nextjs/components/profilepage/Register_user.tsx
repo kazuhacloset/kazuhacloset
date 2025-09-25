@@ -1,11 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { useRouter } from 'next/navigation';
 import { userRegister, sendOtp, verifyOtp } from '@/utils/api/userUtils';
-import { Eye, EyeOff, Loader2 } from 'lucide-react'; // 👈 Loader2 for spinner
+import { Eye, EyeOff, Loader2 } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function RegisterPage() {
@@ -21,8 +21,9 @@ export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false);
   const [isSendingOtp, setIsSendingOtp] = useState(false);
   const [isVerifyingOtp, setIsVerifyingOtp] = useState(false);
-  const [isRegistering, setIsRegistering] = useState(false); // 👈 for register button
+  const [isRegistering, setIsRegistering] = useState(false);
   const [otpVerified, setOtpVerified] = useState(false);
+  const [otpError, setOtpError] = useState('');
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setForm({ ...form, [e.target.id]: e.target.value });
@@ -43,53 +44,57 @@ export default function RegisterPage() {
       }
 
       toast.success(res.message || "OTP sent successfully!");
-    } catch (err: unknown) {
-      if (typeof err === 'object' && err && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { error?: string } } };
-        toast.error(axiosErr.response?.data?.error || "Failed to send OTP");
-      } else {
-        toast.error("Failed to send OTP");
-      }
+    } catch {
+      toast.error("Failed to send OTP");
     } finally {
       setIsSendingOtp(false);
     }
   };
 
-  const handleVerifyOtp = async () => {
-    if (!form.email || !form.otp) {
-      toast.error("Please enter your email and OTP first");
+  // ✅ Auto verify OTP when length is 6
+  useEffect(() => {
+    const verify = async () => {
+      if (form.email && form.otp.length === 6 && !otpVerified) {
+        try {
+          setIsVerifyingOtp(true);
+          const res = await verifyOtp(form.email, form.otp);
+          if (res.verified) {
+            setOtpVerified(true);
+            setOtpError('');
+            toast.success(res.message || "OTP verified successfully!");
+          } else {
+            setOtpVerified(false);
+            setOtpError("Invalid OTP");
+            toast.error(res.error || "Invalid OTP");
+          }
+        } catch {
+          setOtpVerified(false);
+          setOtpError("OTP verification failed");
+          toast.error("OTP verification failed");
+        } finally {
+          setIsVerifyingOtp(false);
+        }
+      }
+    };
+    verify();
+  }, [form.otp, form.email, otpVerified]);
+
+  const handleRegister = async () => {
+    if (!otpVerified) {
+      setOtpError("Please enter a valid 6-digit OTP");
+      toast.error("Please verify OTP first");
       return;
     }
     try {
-      setIsVerifyingOtp(true);
-      const res = await verifyOtp(form.email, form.otp);
-      if (res.verified) {
-        setOtpVerified(true);
-        toast.success(res.message || "OTP verified successfully!");
-      } else {
-        setOtpVerified(false);
-        toast.error(res.error || "Invalid OTP");
-      }
-    } catch (err: unknown) {
-      setOtpVerified(false);
-      if (typeof err === 'object' && err && 'response' in err) {
-        const axiosErr = err as { response?: { data?: { error?: string } } };
-        toast.error(axiosErr.response?.data?.error || "OTP verification failed");
-      } else {
-        toast.error("OTP verification failed");
-      }
-    } finally {
-      setIsVerifyingOtp(false);
-    }
-  };
-
-  const handleRegister = async () => {
-    try {
-      setIsRegistering(true); // 👈 start roller
+      setIsRegistering(true);
       const res = await userRegister(form);
 
       if (res?.error) {
-        toast.error(res.error);
+        if (res.error.toLowerCase().includes("already")) {
+          toast.error("Email already registered");
+        } else {
+          toast.error(res.error);
+        }
         return;
       }
 
@@ -101,19 +106,32 @@ export default function RegisterPage() {
         toast.error('Registration failed.');
       }
     } catch (err: unknown) {
-      if (typeof err === 'object' && err && 'response' in err) {
+      if (err && typeof err === "object" && "response" in err) {
         const axiosErr = err as { response?: { data?: { error?: string } } };
-        toast.error(axiosErr.response?.data?.error || 'Something went wrong!');
-      } else {
-        toast.error('Something went wrong!');
+        if (axiosErr.response?.data?.error?.toLowerCase().includes("already")) {
+          toast.error("Email already registered");
+          return;
+        }
       }
+      toast.error("Something went wrong!");
     } finally {
-      setIsRegistering(false); // 👈 stop roller
+      setIsRegistering(false);
+    }
+  };
+
+  // ✅ Allow Enter key to submit form
+  const handleKeyDown = (e: React.KeyboardEvent<HTMLDivElement>) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      handleRegister();
     }
   };
 
   return (
-    <div className="relative min-h-screen flex items-center justify-center overflow-hidden">
+    <div
+      className="relative min-h-screen flex items-center justify-center overflow-hidden"
+      onKeyDown={handleKeyDown}
+    >
       {/* Background Image */}
       <Image
         src="/background.jpg"
@@ -176,35 +194,42 @@ export default function RegisterPage() {
           </div>
         </div>
 
-        {/* OTP Field + Verify Button */}
+        {/* OTP Field (auto verifies) */}
         <div className="mb-4 sm:mb-6">
           <label htmlFor="otp" className="block text-xs sm:text-sm font-medium mb-1">Verification OTP</label>
-          <div className="flex flex-wrap gap-2">
+          <div className="relative">
             <input
               type="text"
               id="otp"
-              onChange={handleChange}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "").slice(0, 6);
+                setForm({ ...form, otp: value });
+                if (value.length < 6) {
+                  setOtpError("OTP must be 6 digits");
+                  setOtpVerified(false);
+                } else {
+                  setOtpError("");
+                }
+              }}
               value={form.otp}
               placeholder="Enter OTP"
-              className="flex-1 min-w-[140px] p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border border-gray-500 focus:border-yellow-400"
+              maxLength={6}
+              className={`w-full p-2 sm:p-3 text-sm rounded-lg bg-black/40 placeholder-gray-300 text-white outline-none border ${
+                otpVerified ? "border-green-500" : otpError ? "border-red-500" : "border-gray-500"
+              } focus:border-yellow-400`}
             />
-            <button
-              type="button"
-              onClick={handleVerifyOtp}
-              disabled={isVerifyingOtp}
-              className={`flex-shrink-0 px-3 py-2 sm:px-4 sm:py-3 rounded-lg text-sm transition flex items-center justify-center ${
-                otpVerified
-                  ? "bg-green-500 text-white"
-                  : "bg-blue-400 text-black hover:bg-blue-300"
-              }`}
-            >
-              {otpVerified
-                ? "Verified"
-                : isVerifyingOtp
-                ? <Loader2 className="animate-spin" size={18} />
-                : "Verify"}
-            </button>
+
+            {/* ✅ Green tick inside input */}
+            {otpVerified && (
+              <div className="absolute right-3 top-1/2 -translate-y-1/2 w-6 h-6 flex items-center justify-center rounded-full bg-green-500 text-white text-xs font-bold">
+                ✓
+              </div>
+            )}
           </div>
+
+          {/* Status messages */}
+          {isVerifyingOtp && <p className="text-xs text-blue-400 mt-1">Verifying...</p>}
+          {otpError && !isVerifyingOtp && <p className="text-xs text-red-400 mt-1">{otpError}</p>}
         </div>
 
         {/* Password */}
