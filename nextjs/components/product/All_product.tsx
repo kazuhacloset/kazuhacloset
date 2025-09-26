@@ -158,7 +158,7 @@ export const products: Product[] = [
   originalPrice: "₹499",
   type: "image",
   video: "",
-  thumbnail: "/Productimage/BAKI/front.png",
+  thumbnail: "/Productimage/BAKIS/front.png",
   description: "Bold Baki Hanma T-shirt crafted with premium cotton fabric and high-quality anime print.",
   category: "Baki",
   rating: 4.8,
