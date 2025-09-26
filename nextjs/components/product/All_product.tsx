@@ -151,6 +151,40 @@ export const products: Product[] = [
     isSale: true,
     tags: ["anime", "jujutsu kaisen", "toji", "cotton"],
   },
+  {
+  id: "baki-tee-001",
+  name: "Baki Tee",
+  price: "₹399",
+  originalPrice: "₹499",
+  type: "image",
+  video: "",
+  thumbnail: "/Productimage/BAKI/front.png",
+  description: "Bold Baki Hanma T-shirt crafted with premium cotton fabric and high-quality anime print.",
+  category: "Baki",
+  rating: 4.8,
+  reviews: 167,
+  inStock: true,
+  isSale: true,
+  tags: ["anime", "baki", "hanma", "cotton"],
+},
+
+ {
+  id: "hxh-tee-001",
+  name: "Hunter x Hunter Tee",
+  price: "₹399",
+  originalPrice: "₹499",
+  type: "image",
+  video: "",
+  thumbnail: "/Productimage/HUNTER X HUNTER/front.png",
+  description: "Premium Hunter x Hunter T-shirt with high-quality fabric and detailed anime print featuring iconic characters.",
+  category: "Hunter x Hunter",
+  rating: 4.8,
+  reviews: 167,
+  inStock: true,
+  isSale: true,
+  tags: ["anime", "hunter x hunter", "gon", "killua", "cotton"],
+}
+
 ];
 
 const categories = ["All", "Naruto", "One Piece", "Dragon Ball", "Jujutsu Kaisen"];
