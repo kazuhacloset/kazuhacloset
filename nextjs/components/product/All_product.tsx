@@ -175,7 +175,7 @@ export const products: Product[] = [
   originalPrice: "₹499",
   type: "image",
   video: "",
-  thumbnail: "/Productimage/HUNTER X HUNTER/front.png",
+  thumbnail: "/Productimage/HUNTER_X_HUNTER/front.png",
   description: "Premium Hunter x Hunter T-shirt with high-quality fabric and detailed anime print featuring iconic characters.",
   category: "Hunter x Hunter",
   rating: 4.8,
