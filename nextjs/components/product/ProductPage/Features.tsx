@@ -6,7 +6,7 @@ export default function Features() {
     { icon: Sparkles, text: "Durable Print", color: "text-purple-400" },
     { icon: Shirt, text: "Soft Cotton", color: "text-blue-400" },
     { icon: Scale3D, text: "Unisex Fit", color: "text-green-400" },
-    { icon: Ruler, text: "210 GSM", color: "text-yellow-400" },
+    { icon: Ruler, text: "180 GSM", color: "text-yellow-400" },
   ];
 
   return (
