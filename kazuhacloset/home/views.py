@@ -29,6 +29,10 @@ from django.template.loader import render_to_string
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from bson import ObjectId
+import base64
+import requests
+import json
+
 
 
 
@@ -53,6 +57,9 @@ order_history_collection= db["order_history"]
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
+
+SHIPWAY_EMAIL = os.getenv("SHIPWAY_EMAIL")
+SHIPWAY_LICENSE_KEY = os.getenv("SHIPWAY_LICENSE_KEY")
 
 
 # JWT helpers
@@ -569,6 +576,7 @@ class VerifyPaymentView(APIView):
         signature = data.get("razorpay_signature")
 
         try:
+            # 1. Verify Razorpay signature
             generated_signature = hmac.new(
                 os.getenv("RAZORPAY_KEY_SECRET").encode(),
                 f"{order_id}|{payment_id}".encode(),
@@ -578,66 +586,63 @@ class VerifyPaymentView(APIView):
             if generated_signature != signature:
                 return Response({"status": "Verification failed"}, status=400)
 
+            # 2. Get pending order
             order = orders_collection.find_one({"razorpay_order_id": order_id})
             if not order:
                 return Response({"error": "Order not found"}, status=404)
 
+            # 3. Update order status
             order["payment_status"] = "PAID"
             order["payment_id"] = payment_id
             order["verified_at"] = datetime.utcnow()
 
-            # ✅ Move to order history
+            # 4. Move to history
             order_history_collection.insert_one(order)
-
-            # Remove from pending orders
+            # 5. Delete from pending
             orders_collection.delete_one({"razorpay_order_id": order_id})
-
-            # ✅ Clear user's cart after successful payment
+            # 6. Clear cart
             users_collection.update_one(
                 {"_id": ObjectId(order["user_id"])},
                 {"$set": {"cart": {}}}
             )
 
-            # ✅ Fetch the latest order for invoice (from order_history)
+            # 7. Fetch the moved order (latest) — this has full order doc
             latest_order = order_history_collection.find_one(
                 {"user_id": order["user_id"]},
                 sort=[("created_at", -1)]
             )
 
-            # ✅ Send Payment Confirmation Email (via Brevo util)
+            # 8. Send invoice emails
             user = users_collection.find_one({"_id": ObjectId(order["user_id"])})
-            if user and "email" in user and latest_order:
+            if user and user.get("email") and latest_order:
                 try:
                     subject = "🧾 Invoice - Order Confirmation"
-
                     ist = timezone("Asia/Kolkata")
                     order_time = datetime.now(ist).strftime("%Y-%m-%d %H:%M:%S")
 
-                    # ✅ Handle cart structure properly
-                    cart_data = latest_order.get("cart", {})
+                    # build cart items
                     cart_items = []
+                    cart_data = latest_order.get("cart", {})
                     if isinstance(cart_data, dict) and "items" in cart_data:
                         cart_items = cart_data["items"]
                     elif isinstance(cart_data, list):
                         cart_items = cart_data
                     else:
                         print(f"Warning: Unexpected cart format: {cart_data}")
-                        cart_items = []
 
-                    # ✅ Build Invoice HTML
                     total_price = 0
                     items_html = ""
                     for item in cart_items:
-                        product_name = item.get("name", "Product")
+                        name = item.get("name", "Product")
                         qty = item.get("quantity", 1)
                         size = item.get("size", "N/A")
                         price_str = str(item.get("price", 0))
-                        clean_price = float(''.join(c for c in price_str if c.isdigit() or c == '.') or '0')
+                        clean_price = float(''.join(c for c in price_str if c.isdigit() or c == '.') or "0")
                         subtotal = clean_price * qty
                         total_price += subtotal
                         items_html += f"""
                             <tr>
-                                <td style="padding:10px; border:1px solid #ddd;">{product_name}</td>
+                                <td style="padding:10px; border:1px solid #ddd;">{name}</td>
                                 <td style="padding:10px; border:1px solid #ddd; text-align:center;">{size}</td>
                                 <td style="padding:10px; border:1px solid #ddd; text-align:center;">{qty}</td>
                                 <td style="padding:10px; border:1px solid #ddd; text-align:right;">₹{clean_price:.2f}</td>
@@ -645,87 +650,110 @@ class VerifyPaymentView(APIView):
                             </tr>
                         """
 
-                    html_content = f"""
-                    <!DOCTYPE html>
-                    <html>
-                    <body style="font-family: Arial, sans-serif; background:#f9f9f9; margin:0; padding:0;">
-                        <div style="max-width:600px; margin:20px auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
-                            
-                            <!-- Header -->
-                            <div style="background:#2c3e50; padding:20px; text-align:center; color:#fff;">
-                                <h2 style="margin:0;">Kazuha Closet</h2>
-                                <p style="margin:5px 0;">Order Invoice</p>
-                            </div>
-
-                            <!-- Body -->
-                            <div style="padding:20px; color:#333;">
-                                <p>Hi {user.get("first_name", "Customer")},</p>
-                                <p>Thank you for your purchase! 🎉<br>Here are your order details:</p>
-
-                                <!-- Order Info -->
-                                <table style="width:100%; margin:15px 0; border-collapse: collapse;">
-                                    <tr><td><strong>Order ID:</strong></td><td>{latest_order.get("razorpay_order_id", order_id)}</td></tr>
-                                    <tr><td><strong>Payment ID:</strong></td><td>{latest_order.get("payment_id", payment_id)}</td></tr>
-                                    <tr><td><strong>Date:</strong></td><td>{order_time}</td></tr>
-                                </table>
-
-                                <h3>Order Summary</h3>
-                                <table style="width:100%; border-collapse: collapse; margin-top:10px;">
-                                    <thead>
-                                        <tr style="background:#f2f2f2;">
-                                            <th style="padding:10px; border:1px solid #ddd; text-align:left;">Item</th>
-                                            <th style="padding:10px; border:1px solid #ddd; text-align:center;">Size</th>
-                                            <th style="padding:10px; border:1px solid #ddd; text-align:center;">Qty</th>
-                                            <th style="padding:10px; border:1px solid #ddd; text-align:right;">Price</th>
-                                            <th style="padding:10px; border:1px solid #ddd; text-align:right;">Subtotal</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                        {items_html}
-                                    </tbody>
-                                    <tfoot>
-                                        <tr style="background:#f8f9fa; font-weight:bold;">
-                                            <td colspan="4" style="padding:10px; border:1px solid #ddd; text-align:right;">Grand Total:</td>
-                                            <td style="padding:10px; border:1px solid #ddd; text-align:right; color:#28a745;">₹{total_price:.2f}</td>
-                                        </tr>
-                                    </tfoot>
-                                </table>
-
-                                <!-- Shipping -->
-                                <div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:5px;">
-                                    <h4 style="margin:0 0 10px 0; color:#333;">Shipping Address:</h4>
-                                    <p style="margin:0; color:#666;">{latest_order.get('address', 'Address not provided')}</p>
-                                    <p style="margin:5px 0 0 0; color:#666;"><strong>Phone:</strong> {latest_order.get('phone', 'Phone not provided')}</p>
-                                </div>
-
-                                <p style="margin-top:20px;">Your order is now being processed. You'll receive another update when it ships 🚚</p>
-                            </div>
-
-                            <!-- Footer -->
-                            <div style="background:#f2f2f2; padding:15px; text-align:center; font-size:12px; color:#555;">
-                                <p>If you have any questions, contact us at <a href="mailto:kazuhastore8@gmail.com">support@kazuhacloset.com</a></p>
-                                <p>© {datetime.utcnow().year} Kazuha Closet. All rights reserved.</p>
-                            </div>
+                    html_content = f"""<!DOCTYPE html>
+                    <html><body style="font-family: Arial, sans-serif; background:#f9f9f9; margin:0; padding:0;">
+                    <div style="max-width:600px; margin:20px auto; background:#fff; border-radius:8px; overflow:hidden; box-shadow:0 2px 6px rgba(0,0,0,0.1);">
+                        <div style="background:#2c3e50; padding:20px; text-align:center; color:#fff;">
+                            <h2 style="margin:0;">Kazuha Closet</h2>
+                            <p style="margin:5px 0;">Order Invoice</p>
                         </div>
-                    </body>
-                    </html>
+                        <div style="padding:20px; color:#333;">
+                            <p>Hi {user.get('first_name', 'Customer')},</p>
+                            <p>Thank you for your purchase! 🎉<br>Here are your order details:</p>
+                            <table style="width:100%; margin:15px 0; border-collapse: collapse;">
+                                <tr><td><strong>Order ID:</strong></td><td>{latest_order.get('razorpay_order_id', order_id)}</td></tr>
+                                <tr><td><strong>Payment ID:</strong></td><td>{latest_order.get('payment_id', payment_id)}</td></tr>
+                                <tr><td><strong>Date:</strong></td><td>{order_time}</td></tr>
+                            </table>
+                            <h3>Order Summary</h3>
+                            <table style="width:100%; border-collapse: collapse; margin-top:10px;">
+                                <thead>
+                                    <tr style="background:#f2f2f2;">
+                                        <th style="padding:10px; border:1px solid #ddd; text-align:left;">Item</th>
+                                        <th style="padding:10px; border:1px solid #ddd; text-align:center;">Size</th>
+                                        <th style="padding:10px; border:1px solid #ddd; text-align:center;">Qty</th>
+                                        <th style="padding:10px; border:1px solid #ddd; text-align:right;">Price</th>
+                                        <th style="padding:10px; border:1px solid #ddd; text-align:right;">Subtotal</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {items_html}
+                                </tbody>
+                                <tfoot>
+                                    <tr style="background:#f8f9fa; font-weight:bold;">
+                                        <td colspan="4" style="padding:10px; border:1px solid #ddd; text-align:right;">Grand Total:</td>
+                                        <td style="padding:10px; border:1px solid #ddd; text-align:right; color:#28a745;">₹{total_price:.2f}</td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                            <div style="margin-top:20px; padding:15px; background:#f8f9fa; border-radius:5px;">
+                                <h4 style="margin:0 0 10px 0; color:#333;">Shipping Address:</h4>
+                                <p style="margin:0; color:#666;">{latest_order.get('address', 'Address not provided')}</p>
+                                <p style="margin:5px 0 0 0; color:#666;"><strong>Phone:</strong> {latest_order.get('phone', 'Phone not provided')}</p>
+                            </div>
+                            <p style="margin-top:20px;">Your order is now being processed. You’ll receive another update when it ships 🚚</p>
+                        </div>
+                        <div style="background:#f2f2f2; padding:15px; text-align:center; font-size:12px; color:#555;">
+                            <p>If you have any questions, contact us at <a href="mailto:kazuhastore8@gmail.com">support@kazuhacloset.com</a></p>
+                            <p>© {datetime.utcnow().year} Kazuha Closet. All rights reserved.</p>
+                        </div>
+                    </div>
+                    </body></html>
                     """
 
-                    plain_text = f"Hi {user.get('first_name', 'Customer')}, your payment is confirmed. Order ID: {order_id}, Amount: ₹{total_price:.2f}"
+                    plain_text = f"Hi {user.get('first_name', 'Customer')}, your payment is confirmed. Order ID: {order_id}, Total ₹{total_price:.2f}"
 
-                    # ✅ Use Brevo util here
                     send_email_async(user["email"], subject, html_content, plain_text)
                     send_email_async("kazuhastore8@gmail.com", subject, html_content, plain_text)
 
                 except Exception as e:
                     print(f"❌ Email sending failed: {str(e)}")
 
+            # 9. Trigger Shipway shipment
+            try:
+                # Use latest_order or `order` dict — whichever is complete
+                shipway_resp = create_shipway_shipment(latest_order or order)
+                print("📦 Shipway response:", shipway_resp)
+                if shipway_resp.get("ok") or shipway_resp.get("success"):
+                    data = shipway_resp.get("data", {})
+                    # extract AWB/courier
+                    awb = data.get("awb_number") or data.get("tracking_number") or data.get("awb")
+                    courier = data.get("courier_name") or data.get("courier")
+                    track_url = data.get("tracking_url") or data.get("tracking_link")
+
+                    order_history_collection.update_one(
+                        {"razorpay_order_id": order_id},
+                        {"$set": {
+                            "delivery": {
+                                "tracking_number": awb,
+                                "courier": courier,
+                                "tracking_url": track_url,
+                                "status": "Pending Shipment",
+                                "shipway_data": data,
+                                "shipway_created_at": datetime.utcnow()
+                            }
+                        }}
+                    )
+                else:
+                    # record error details
+                    order_history_collection.update_one(
+                        {"razorpay_order_id": order_id},
+                        {"$set": {
+                            "delivery": {
+                                "status": "Shipway Error",
+                                "error": shipway_resp.get("data") or shipway_resp.get("error")
+                            }
+                        }}
+                    )
+            except Exception as e:
+                print(f"❌ Exception while pushing to Shipway: {str(e)}")
+
+            # 10. Final response
             return Response({"status": "Payment verified"}, status=200)
 
         except Exception as e:
             print(f"❌ Payment verification error: {str(e)}")
             return Response({"error": str(e)}, status=400)
-
 
 
 @method_decorator(csrf_exempt, name='dispatch')
@@ -806,3 +834,49 @@ class ProfileAvatarUpdateView(APIView):
         )
 
         return Response({"message": "Avatar updated successfully", "avatar": avatar_url}, status=200)
+
+
+# SHIPWAY CREATEION AND AUTOMATION HERE==>
+
+def create_shipway_shipment(order_data):
+    token=base64.b64encode(f"{SHIPWAY_EMAIL}:{SHIPWAY_LICENSE_KEY}".encode()).decode()
+    headers = {
+        "Authorization": f"Basic {token}",
+        "Content-Type": "application/json",
+    }
+    payload = {
+        "order_id": order_data["order_id"],
+        "products": order_data["products"],  # should be a list of dicts as per Shipway format
+        "payment_type": order_data.get("payment_type", "P"),  # 'P' for Prepaid, 'C' for COD
+        "email": order_data.get("email", ""),
+        "discount": order_data.get("discount", "0"),
+        "shipping": order_data.get("shipping", "0"),
+        "order_total": order_data.get("order_total", "0"),
+        "billing_address": order_data.get("billing_address", ""),
+        "billing_address2": order_data.get("billing_address2", ""),
+        "billing_city": order_data.get("billing_city", ""),
+        "billing_state": order_data.get("billing_state", ""),
+        "billing_country": order_data.get("billing_country", "India"),
+        "billing_firstname": order_data.get("billing_firstname", ""),
+        "billing_lastname": order_data.get("billing_lastname", ""),
+        "billing_phone": order_data.get("billing_phone", ""),
+        "billing_zipcode": order_data.get("billing_zipcode", ""),
+        "shipping_address": order_data.get("shipping_address", ""),
+        "shipping_city": order_data.get("shipping_city", ""),
+        "shipping_state": order_data.get("shipping_state", ""),
+        "shipping_country": order_data.get("shipping_country", "India"),
+        "shipping_firstname": order_data.get("shipping_firstname", ""),
+        "shipping_lastname": order_data.get("shipping_lastname", ""),
+        "shipping_phone": order_data.get("shipping_phone", ""),
+        "shipping_zipcode": order_data.get("shipping_zipcode", ""),
+        "order_date": order_data.get("order_date", ""),
+    }
+
+    response = requests.post(
+        "https://app.shipway.com/api/v2orders",
+        headers=headers,
+        data=json.dumps(payload)
+    )
+
+    return response.json()
+
