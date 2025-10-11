@@ -5,7 +5,6 @@ import { motion } from "framer-motion";
 import { getUser, updateUserAvatar } from "@/utils/api/userUtils";
 import Image from "next/image";
 
-// ✅ Motion-enabled Next Image
 const MotionImage = motion(Image);
 
 interface User {
@@ -22,14 +21,23 @@ const ProfileSection = () => {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  // ✅ fetch user from DB on mount
+  // ✅ Helper: Make sure avatar URL is valid
+  const getValidAvatarURL = (avatar?: string | null): string | null => {
+    if (!avatar) return null;
+    // If it's already a full URL or from public folder
+    if (avatar.startsWith("http") || avatar.startsWith("/")) return avatar;
+    // If it's a relative backend path
+    return `${process.env.NEXT_PUBLIC_API_URL || ""}/${avatar}`;
+  };
+
+  // ✅ Fetch user on mount
   useEffect(() => {
     const fetchUser = async () => {
       if (!token) return;
       try {
         const user = await getUser();
         setUserData(user);
-        setSelectedAvatar(user.avatar || null);
+        setSelectedAvatar(getValidAvatarURL(user.avatar));
       } catch (error) {
         console.error("Failed to fetch user:", error);
       }
@@ -44,12 +52,13 @@ const ProfileSection = () => {
     "/Birthdaycard/3.jpg",
   ];
 
-  // ✅ update avatar in DB + refresh user
+  // ✅ Update avatar
   const handleAvatarClick = async (src: string) => {
-    setSelectedAvatar(src); // instant UI update
+    const validSrc = getValidAvatarURL(src);
+    setSelectedAvatar(validSrc);
     try {
-      await updateUserAvatar(src); // send to backend
-      const updatedUser = await getUser(); // fetch fresh data
+      await updateUserAvatar(src);
+      const updatedUser = await getUser();
       setUserData(updatedUser);
     } catch (error) {
       console.error("Failed to update avatar:", error);
@@ -82,8 +91,8 @@ const ProfileSection = () => {
         <div className="flex flex-col lg:flex-row px-4 sm:px-6 pb-6 sm:pb-10 gap-6">
           {/* Avatar + Selection */}
           <div className="flex flex-col items-center justify-center lg:w-[30%] gap-4">
-            {/* Main Avatar */}
-            {selectedAvatar ? (
+            {/* ✅ Main Avatar with Safe URL Check */}
+            {selectedAvatar && (selectedAvatar.startsWith("/") || selectedAvatar.startsWith("http")) ? (
               <MotionImage
                 src={selectedAvatar}
                 alt="User Avatar"
