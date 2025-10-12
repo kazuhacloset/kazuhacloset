@@ -14,33 +14,39 @@ interface CartProduct {
 
 type Props = {
   items: CartProduct[];
+  totalAmount: number;
+  discount: number;
 };
 
-export default function CartSummary({ items }: Props) {
+export default function CartSummary({ items, totalAmount, discount }: Props) {
   const router = useRouter();
-
-  const total = items.reduce(
-    (acc, item) =>
-      acc + parseFloat(item.price.replace(/[^0-9.]/g, "")) * item.quantity,
-    0
-  );
 
   const handleCheckout = () => {
     if (items.length === 0) return;
 
-    // ✅ Save items to localStorage so OrderSummary can read them
+    // ✅ Save checkout details for OrderSummary page
     localStorage.setItem("checkoutItems", JSON.stringify(items));
+    localStorage.setItem(
+      "checkoutSummary",
+      JSON.stringify({ totalAmount, discount })
+    );
 
-    // ✅ Redirect to Order Summary page
+    // ✅ Redirect to order summary
     router.push("/order-summary");
   };
 
   return (
     <div className="bg-[#1e1e1e] mt-10 p-6 rounded-xl flex flex-col md:flex-row justify-between items-center shadow-inner">
-      <h3 className="text-lg sm:text-2xl font-bold text-white mb-4 md:mb-0">
-        Total:{" "}
-        <span className="text-yellow-400">₹{total.toFixed(2)}</span>
-      </h3>
+      <div className="text-center md:text-left mb-4 md:mb-0">
+        <h3 className="text-lg sm:text-2xl font-bold text-white">
+          Discount:{" "}
+          <span className="text-green-400">₹{discount.toFixed(2)}</span>
+        </h3>
+        <h3 className="text-lg sm:text-2xl font-bold text-white mt-1">
+          Total:{" "}
+          <span className="text-yellow-400">₹{totalAmount.toFixed(2)}</span>
+        </h3>
+      </div>
 
       <button
         onClick={handleCheckout}

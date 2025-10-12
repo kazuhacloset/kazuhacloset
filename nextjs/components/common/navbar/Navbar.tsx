@@ -38,6 +38,15 @@ interface User {
 
 const luckiest = Luckiest_Guy({ subsets: ["latin"], weight: "400" });
 
+// ✅ Helper: Normalize avatar path
+const normalizeAvatarPath = (path?: string): string => {
+  if (!path) return "/default-avatar.png"; // Default image in /public folder
+  if (path.startsWith("http")) return path; // Full URL from backend (CDN, etc.)
+  if (path.startsWith("//")) path = path.replace(/^\/+/, ""); // Remove double slashes
+  if (path.startsWith("/")) return path; // Local public folder path
+  return `${process.env.NEXT_PUBLIC_API_URL || ""}/${path}`; // Relative backend path
+};
+
 function Navbar() {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -47,13 +56,8 @@ function Navbar() {
   const firstLetter = userData?.first_name?.[0]?.toUpperCase() ?? null;
   const searchRef = useRef<HTMLDivElement>(null);
 
-  // ✅ Always ensure avatar is a valid URL or fallback
-  const avatarUrl =
-    userData?.avatar && userData.avatar.startsWith("http")
-      ? userData.avatar
-      : userData?.avatar
-      ? `${process.env.NEXT_PUBLIC_API_URL || ""}/${userData.avatar}`
-      : "/default-avatar.png"; // Put default-avatar.png inside /public
+  // ✅ Always ensure avatar URL is clean
+  const avatarUrl = normalizeAvatarPath(userData?.avatar);
 
   // Scroll effect (debounced)
   useEffect(() => {
@@ -65,7 +69,7 @@ function Navbar() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Fetch user
+  // Fetch user on mount
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
@@ -79,7 +83,7 @@ function Navbar() {
     })();
   }, []);
 
-  // Close search if clicked outside
+  // Close mobile search when clicking outside
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
       if (searchRef.current && !searchRef.current.contains(e.target as Node)) {
@@ -90,7 +94,7 @@ function Navbar() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Preload SearchBar after mount for faster open
+  // Preload SearchBar for performance
   useEffect(() => {
     import("../../Landingpage/search");
   }, []);
@@ -108,7 +112,7 @@ function Navbar() {
           : "py-4 backdrop-blur-lg bg-black/60 shadow-lg"
       }`}
     >
-      {/* Logo */}
+      {/* === Logo === */}
       <Link
         href="/"
         className="flex items-center space-x-3 sm:space-x-4 cursor-pointer"
@@ -127,12 +131,12 @@ function Navbar() {
         </div>
       </Link>
 
-      {/* Desktop Search */}
+      {/* === Desktop Search === */}
       <div className="hidden sm:flex items-center w-1/2 md:w-1/3">
         <SearchBar />
       </div>
 
-      {/* Mobile Right Icons */}
+      {/* === Mobile Right Icons === */}
       <div className="sm:hidden flex items-center space-x-4">
         <button
           onClick={() => setMobileSearchOpen((prev) => !prev)}
@@ -156,7 +160,7 @@ function Navbar() {
         </button>
       </div>
 
-      {/* Mobile Search */}
+      {/* === Mobile Search === */}
       {mobileSearchOpen && (
         <div
           ref={searchRef}
@@ -169,7 +173,7 @@ function Navbar() {
         </div>
       )}
 
-      {/* Desktop Right Side */}
+      {/* === Desktop Right Icons === */}
       <div className="hidden sm:flex items-center space-x-6 text-white">
         <ProtectedLink to="/cart" className="hover:text-yellow-400">
           <ShoppingCart size={20} />
@@ -184,7 +188,7 @@ function Navbar() {
         {firstLetter ? (
           <ProfileMenu
             firstLetter={firstLetter}
-            avatarUrl={avatarUrl} // ✅ now always valid
+            avatarUrl={avatarUrl}
             handleLogout={handleLogout}
           />
         ) : (
@@ -194,7 +198,7 @@ function Navbar() {
         )}
       </div>
 
-      {/* Mobile Menu */}
+      {/* === Mobile Menu === */}
       {menuOpen && (
         <MobileMenu firstLetter={firstLetter} handleLogout={handleLogout} />
       )}

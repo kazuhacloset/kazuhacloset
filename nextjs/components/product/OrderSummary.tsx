@@ -1,6 +1,6 @@
 "use client";
 
-import React, {  useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Navbar from "@/components/common/navbar/Navbar";
 import {
@@ -11,15 +11,11 @@ import {
 } from "../../utils/api/userUtils";
 import toast from "react-hot-toast";
 
-
-
 interface User {
   first_name: string;
   last_name: string;
   email: string;
 }
-
-
 
 // ---------------- Types ----------------
 type Product = {
@@ -43,9 +39,6 @@ type OrderItem = Product & {
   size: string;
 };
 
-
-
-
 type Order = {
   razorpay_order_id: string;
   payment_status: string;
@@ -57,10 +50,6 @@ type Order = {
   };
 };
 
-
-
-
-// ---------------- Component ----------------
 export default function OrderSummary() {
   const [products, setProducts] = useState<OrderItem[]>([]);
   const [address, setAddress] = useState("");
@@ -70,25 +59,24 @@ export default function OrderSummary() {
   const [loadingHistory, setLoadingHistory] = useState(false);
   const [user, setUser] = useState<User | null>(null);
 
-// FETCH USER DATA
-  const token = typeof window !== "undefined" ? localStorage.getItem("token") : null;
+  const token =
+    typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
+  // ---------------- Fetch User ----------------
   useEffect(() => {
     const fetchUser = async () => {
       if (!token) return;
-
       try {
-        const fetcheduser = await getUser();
-        setUser(fetcheduser)
+        const fetchedUser = await getUser();
+        setUser(fetchedUser);
       } catch (error) {
         console.error("Failed to fetch user:", error);
       }
     };
-
     fetchUser();
   }, [token]);
 
-
+  // ---------------- Load Cart Items & Order History ----------------
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -124,17 +112,31 @@ export default function OrderSummary() {
   };
 
   const cleanPrice = (price: string) =>
-    parseFloat(price.replace(/[^0-9.]/g, ""));
+    parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
 
+  // ---------------- Bundle Pricing Logic ----------------
+  const totalQuantity = products.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = products.reduce(
     (sum, item) => sum + cleanPrice(item.price) * item.quantity,
     0
   );
 
-  // Apply discount logic
-  const discount = subtotal > 500 ? 50 : 0;
-  const total = subtotal - discount;
+  let discount = 0;
+  let total = 0;
+  let bundleMessage = "";
 
+  if (totalQuantity === 2) {
+    total = 699;
+    bundleMessage = "🎉 Bundle Offer Applied: ₹699 for 2 Tees!";
+  } else if (totalQuantity === 3) {
+    total = 999;
+    bundleMessage = "🎉 Bundle Offer Applied: ₹999 for 3 Tees!";
+  } else {
+    discount = subtotal > 500 ? 50 : 0;
+    total = subtotal - discount;
+  }
+
+  // ---------------- Handlers ----------------
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 10) setPhone(value);
@@ -232,6 +234,7 @@ export default function OrderSummary() {
     }
   };
 
+  // ---------------- UI ----------------
   if (loading) {
     return (
       <main className="bg-black text-white min-h-screen px-4 py-6">
@@ -246,6 +249,7 @@ export default function OrderSummary() {
       <Navbar />
 
       <div className="max-w-5xl mx-auto w-full pt-16">
+        {/* Title */}
         <div className="text-center mb-6 sm:mb-10">
           <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
             Order Summary
@@ -255,29 +259,29 @@ export default function OrderSummary() {
 
         {products.length > 0 && (
           <>
-            {/* Address & Phone inputs */}
-            <div className="mb-6 sm:mb-8 space-y-3 sm:space-y-4">
+            {/* Address & Phone */}
+            <div className="mb-6 sm:mb-8 space-y-4">
               <div>
-                <label className="block text-xs sm:text-sm font-medium mb-1 text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-gray-300">
                   Address
                 </label>
                 <input
                   type="text"
                   placeholder="Enter your delivery address"
-                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none text-sm sm:text-base"
+                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-xs sm:text-sm font-medium mb-1 text-gray-300">
+                <label className="block text-sm font-medium mb-1 text-gray-300">
                   Phone No.
                 </label>
                 <input
                   type="tel"
                   placeholder="Enter your 10-digit phone number"
-                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none text-sm sm:text-base"
+                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
                   value={phone}
                   onChange={handlePhoneChange}
                   maxLength={10}
@@ -333,23 +337,33 @@ export default function OrderSummary() {
               </div>
             ))}
 
+            {/* Totals */}
             <div className="bg-[#1e1e1e] mt-6 p-4 rounded-xl space-y-2">
+              {bundleMessage && (
+                <p className="text-green-400 font-semibold text-center mb-2">
+                  {bundleMessage}
+                </p>
+              )}
               <div className="flex justify-between items-center">
                 <span className="text-lg font-medium">Subtotal:</span>
                 <span className="text-lg">₹{subtotal}</span>
               </div>
-              
+
               {discount > 0 && (
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-green-400">Discount:</span>
+                  <span className="text-lg font-medium text-green-400">
+                    Discount:
+                  </span>
                   <span className="text-lg text-green-400">-₹{discount}</span>
                 </div>
               )}
-              
+
               <div className="border-t border-gray-600 pt-2">
                 <div className="flex justify-between items-center">
                   <h3 className="text-lg sm:text-2xl font-bold">Total:</h3>
-                  <span className="text-lg sm:text-2xl font-bold text-yellow-400">₹{total}</span>
+                  <span className="text-lg sm:text-2xl font-bold text-yellow-400">
+                    ₹{total}
+                  </span>
                 </div>
               </div>
             </div>
@@ -377,10 +391,7 @@ export default function OrderSummary() {
           ) : (
             <div className="space-y-4">
               {orders.map((order, idx) => (
-                <div
-                  key={idx}
-                  className="bg-[#1e1e1e] rounded-xl p-4 shadow-md"
-                >
+                <div key={idx} className="bg-[#1e1e1e] rounded-xl p-4 shadow-md">
                   <div className="flex gap-4">
                     {order.cart.items[0]?.images?.[0]?.url && (
                       <div className="w-16 h-16 flex-shrink-0">
@@ -394,9 +405,6 @@ export default function OrderSummary() {
                           width={64}
                           height={64}
                           className="rounded-lg object-cover w-full h-full"
-                          onError={(e) => {
-                            e.currentTarget.src = "/fallback.jpg";
-                          }}
                         />
                       </div>
                     )}
@@ -437,6 +445,7 @@ export default function OrderSummary() {
           )}
         </div>
 
+        {/* Empty State */}
         {products.length === 0 && orders.length === 0 && (
           <div className="flex flex-col items-center text-center mt-16">
             <Image

@@ -24,9 +24,22 @@ type CartItemData = {
 
 type CartProduct = Product & CartItemData & { cartKey: string };
 
+type BundleData = {
+  subtotal: number;
+  discount: number;
+  total: number;
+  bundleMessage: string;
+};
+
 export default function CartPage() {
   const [cartProducts, setCartProducts] = useState<CartProduct[]>([]);
   const [loading, setLoading] = useState(true);
+  const [bundleData, setBundleData] = useState<BundleData>({
+    subtotal: 0,
+    discount: 0,
+    total: 0,
+    bundleMessage: "",
+  });
 
   useEffect(() => {
     const fetchCartData = async () => {
@@ -48,11 +61,38 @@ export default function CartPage() {
           })
         );
 
-        setCartProducts(
-          cartItems
-            .filter((res) => res.status === "fulfilled")
-            .map((res) => (res as PromiseFulfilledResult<CartProduct>).value)
+        const products = cartItems
+          .filter((res) => res.status === "fulfilled")
+          .map((res) => (res as PromiseFulfilledResult<CartProduct>).value);
+
+        setCartProducts(products);
+
+        // ---------------- Bundle Pricing Logic ----------------
+        const cleanPrice = (price: string) =>
+          parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
+
+        const totalQuantity = products.reduce((sum, item) => sum + item.quantity, 0);
+        const subtotal = products.reduce(
+          (sum, item) => sum + cleanPrice(item.price) * item.quantity,
+          0
         );
+
+        let discount = 0;
+        let total = 0;
+        let bundleMessage = "";
+
+        if (totalQuantity === 2) {
+          total = 699;
+          bundleMessage = "🎉 Bundle Offer Applied: ₹699 for 2 Tees!";
+        } else if (totalQuantity === 3) {
+          total = 999;
+          bundleMessage = "🎉 Bundle Offer Applied: ₹999 for 3 Tees!";
+        } else {
+          discount = subtotal > 500 ? 50 : 0;
+          total = subtotal - discount;
+        }
+
+        setBundleData({ subtotal, discount, total, bundleMessage });
       } catch (error) {
         console.error("Failed to fetch cart products:", error);
       } finally {
@@ -97,8 +137,19 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* ✅ Only pass items now, CartSummary handles checkout itself */}
-            <CartSummary items={cartProducts} />
+            {/* ✅ Bundle message */}
+            {bundleData.bundleMessage && (
+              <p className="text-center text-green-400 mt-6 font-medium animate-pulse">
+                {bundleData.bundleMessage}
+              </p>
+            )}
+
+            {/* ✅ Pass total and bundleData to CartSummary */}
+            <CartSummary
+              items={cartProducts}
+              totalAmount={bundleData.total}
+              discount={bundleData.discount}
+            />
           </>
         )}
       </div>
