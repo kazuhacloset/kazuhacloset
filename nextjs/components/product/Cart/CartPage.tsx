@@ -67,29 +67,50 @@ export default function CartPage() {
 
         setCartProducts(products);
 
-        // ---------------- Bundle Pricing Logic ----------------
+        // ---------------- Offer Logic: Tiered Buy X Get Y Free ----------------
         const cleanPrice = (price: string) =>
           parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
 
-        const totalQuantity = products.reduce((sum, item) => sum + item.quantity, 0);
+        const totalQuantity = products.reduce(
+          (sum, item) => sum + item.quantity,
+          0
+        );
         const subtotal = products.reduce(
           (sum, item) => sum + cleanPrice(item.price) * item.quantity,
           0
         );
 
         let discount = 0;
-        let total = 0;
+        let total = subtotal;
         let bundleMessage = "";
 
-        if (totalQuantity === 2) {
-          total = 699;
-          bundleMessage = "🎉 Bundle Offer Applied: ₹699 for 2 Tees!";
-        } else if (totalQuantity === 3) {
-          total = 999;
-          bundleMessage = "🎉 Bundle Offer Applied: ₹999 for 3 Tees!";
-        } else {
-          discount = subtotal > 500 ? 50 : 0;
+        if (totalQuantity >= 3) {
+          // Determine free tees count
+          let freeCount = 0;
+          if (totalQuantity >= 3 && totalQuantity <= 5) freeCount = 1;
+          else if (totalQuantity >= 6 && totalQuantity <= 8) freeCount = 2;
+          else if (totalQuantity >= 9 && totalQuantity <= 11) freeCount = 3;
+          else if (totalQuantity >= 12 && totalQuantity <= 14) freeCount = 4;
+          else if (totalQuantity >= 15) freeCount = Math.floor(totalQuantity / 3);
+
+          // Create a full list of all tee prices (each quantity counted)
+          const allPrices: number[] = [];
+          products.forEach((item) => {
+            const price = cleanPrice(item.price);
+            for (let i = 0; i < item.quantity; i++) {
+              allPrices.push(price);
+            }
+          });
+
+          // Sort to find cheapest free tees
+          allPrices.sort((a, b) => a - b);
+          const freeItems = allPrices.slice(0, freeCount);
+          discount = freeItems.reduce((sum, val) => sum + val, 0);
           total = subtotal - discount;
+
+          bundleMessage = `🎉 Offer Applied: Buy ${totalQuantity} Get ${freeCount} Free — Total ₹${subtotal.toFixed(
+            2
+          )} - ₹${discount.toFixed(2)} = ₹${total.toFixed(2)} to Pay`;
         }
 
         setBundleData({ subtotal, discount, total, bundleMessage });
@@ -104,7 +125,6 @@ export default function CartPage() {
   }, []);
 
   const handleRemoveItem = async (cartKey: string) => {
-    // Optimistic update
     setCartProducts((prev) => prev.filter((item) => item.cartKey !== cartKey));
     try {
       await removeFromCart(cartKey);
@@ -137,9 +157,9 @@ export default function CartPage() {
               ))}
             </div>
 
-            {/* ✅ Bundle message */}
+            {/* ✅ Offer message */}
             {bundleData.bundleMessage && (
-              <p className="text-center text-green-400 mt-6 font-medium animate-pulse">
+              <p className="text-center text-green-400 mt-6 font-semibold animate-pulse text-lg sm:text-xl">
                 {bundleData.bundleMessage}
               </p>
             )}

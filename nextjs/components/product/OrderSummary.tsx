@@ -17,7 +17,6 @@ interface User {
   email: string;
 }
 
-// ---------------- Types ----------------
 type Product = {
   id: string;
   name: string;
@@ -114,7 +113,7 @@ export default function OrderSummary() {
   const cleanPrice = (price: string) =>
     parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
 
-  // ---------------- Bundle Pricing Logic ----------------
+  // ---------------- Tiered Offer Logic ----------------
   const totalQuantity = products.reduce((sum, item) => sum + item.quantity, 0);
   const subtotal = products.reduce(
     (sum, item) => sum + cleanPrice(item.price) * item.quantity,
@@ -122,18 +121,36 @@ export default function OrderSummary() {
   );
 
   let discount = 0;
-  let total = 0;
+  let total = subtotal;
   let bundleMessage = "";
 
-  if (totalQuantity === 2) {
-    total = 699;
-    bundleMessage = "🎉 Bundle Offer Applied: ₹699 for 2 Tees!";
-  } else if (totalQuantity === 3) {
-    total = 999;
-    bundleMessage = "🎉 Bundle Offer Applied: ₹999 for 3 Tees!";
-  } else {
-    discount = subtotal > 500 ? 50 : 0;
+  if (totalQuantity >= 3) {
+    // Determine how many free tees
+    let freeCount = 0;
+    if (totalQuantity >= 3 && totalQuantity <= 5) freeCount = 1;
+    else if (totalQuantity >= 6 && totalQuantity <= 8) freeCount = 2;
+    else if (totalQuantity >= 9 && totalQuantity <= 11) freeCount = 3;
+    else if (totalQuantity >= 12 && totalQuantity <= 14) freeCount = 4;
+    else freeCount = Math.floor(totalQuantity / 3); // continue pattern
+
+    // Gather all individual prices (by quantity)
+    const allPrices: number[] = [];
+    products.forEach((item) => {
+      const price = cleanPrice(item.price);
+      for (let i = 0; i < item.quantity; i++) {
+        allPrices.push(price);
+      }
+    });
+
+    // Sort and find cheapest items to make free
+    allPrices.sort((a, b) => a - b);
+    const freeItems = allPrices.slice(0, freeCount);
+    discount = freeItems.reduce((sum, val) => sum + val, 0);
     total = subtotal - discount;
+
+    bundleMessage = `🎉 Offer Applied: Buy ${totalQuantity} Get ${freeCount} Free (₹${discount.toFixed(
+      2
+    )} off!)`;
   }
 
   // ---------------- Handlers ----------------
@@ -340,7 +357,7 @@ export default function OrderSummary() {
             {/* Totals */}
             <div className="bg-[#1e1e1e] mt-6 p-4 rounded-xl space-y-2">
               {bundleMessage && (
-                <p className="text-green-400 font-semibold text-center mb-2">
+                <p className="text-green-400 font-semibold text-center mb-2 animate-pulse">
                   {bundleMessage}
                 </p>
               )}
