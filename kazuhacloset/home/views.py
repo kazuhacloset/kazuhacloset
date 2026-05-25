@@ -242,7 +242,7 @@ class RegisterView(APIView):
             "password": make_password(serializer.validated_data['password']),
             "cart": [],
             "wishlist": [],  # 👈 added wishlist array
-            "avatar": "Birthdaycard/6.jpg"
+            "avatar": "/Profile/pfp1.jpg"
         }
         result = users_collection.insert_one(user_data)
         user_id = result.inserted_id
