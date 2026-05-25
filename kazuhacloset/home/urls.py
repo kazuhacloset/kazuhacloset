@@ -1,14 +1,21 @@
 from django.urls import path
+from django.http import JsonResponse
 from .views import (
     RegisterView, LoginView, UserProfileView, UpdateProfileView,
     AddToCartView, CartView, Remove_Item,
     SendOtpView, VerifyOtpView, CreateOrderView, VerifyPaymentView,
     OrderHistoryView,
     ForgotPasswordOtpView, VerifyForgotPasswordOtpView, ResetPasswordView, ContactSupportView,
-    WishlistView,ProfileAvatarUpdateView
+    WishlistView, ProfileAvatarUpdateView
 )
 
+def health_check(request):
+    return JsonResponse({"status": "ok"})
+
 urlpatterns = [
+    # Health check (keeps Render alive)
+    path('health/', health_check, name='health'),
+
     # Auth routes
     path('register/', RegisterView.as_view(), name='register'),
     path('login/', LoginView.as_view(), name='login'),
@@ -32,13 +39,14 @@ urlpatterns = [
     path("verify-payment/", VerifyPaymentView.as_view(), name="verify-payment"),
     path("order-history/", OrderHistoryView.as_view(), name="order-history"),
 
-    # Forgot Password OTP routes
+    # Forgot Password routes
     path("forgot-password/", ForgotPasswordOtpView.as_view(), name="forgot-password"),
     path("verify-forgot-otp/", VerifyForgotPasswordOtpView.as_view(), name="verify-forgot-otp"),
     path("reset-password/", ResetPasswordView.as_view(), name="reset-password"),
+
+    # Support
     path("contact/", ContactSupportView.as_view(), name="contact-support"),
 
-
-    path("user/avatar", ProfileAvatarUpdateView.as_view(), name="user-avatar"),
-
+    # Avatar
+    path("user/avatar/", ProfileAvatarUpdateView.as_view(), name="user-avatar"),
 ]

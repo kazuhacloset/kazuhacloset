@@ -1,6 +1,4 @@
-from pymongo import MongoClient
 import os
-from dotenv import load_dotenv
 from rest_framework.views import APIView
 from rest_framework.response import Response
 from .serializers import (
@@ -32,28 +30,12 @@ from bson import ObjectId
 import base64
 import requests
 import json
-
-
-
-
-# Load env variables
-load_dotenv()
+from home.db import users_collection, orders_collection, order_history_collection
 
 razorpay_client = razorpay.Client(auth=(
     os.getenv("RAZORPAY_KEY_ID"),
     os.getenv("RAZORPAY_KEY_SECRET")
 ))
-
-client = MongoClient(os.getenv('MONGO_URI'))
-db = client["LoginData"]
-users_collection = db["Users"]
-
-
-db = client["Orders"]
-orders_collection=db["order_collections"]
-
-db=client["History"]
-order_history_collection= db["order_history"]
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 JWT_ALGORITHM = "HS256"
