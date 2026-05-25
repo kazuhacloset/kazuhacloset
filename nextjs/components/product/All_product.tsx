@@ -1,8 +1,19 @@
 // components/All_product.tsx
 "use client";
+
 import React, { useState, useMemo, useEffect } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
-import { Search, Grid, List, Heart, Star, Eye, SlidersHorizontal } from "lucide-react";
+import {
+  Search,
+  Grid,
+  List,
+  Heart,
+  Star,
+  Eye,
+  SlidersHorizontal,
+  ChevronRight,
+} from "lucide-react";
+
 import Navbar from "../common/navbar/Navbar";
 import Image from "next/image";
 import { toggleWishlist, getWishlist } from "../../utils/api/userUtils";
@@ -239,7 +250,7 @@ export const products: Product[] = [
     type: "image",
     video: "",
     thumbnail: "/Productimage/SUNGJIN/back.png",
-    description: "Solo Leveling inspired Sung Jin-Woo T-shirt. Premium cotton tee featuring the Shadow Monarch’s dark, powerful design.",
+    description: "Solo Leveling inspired Sung Jin-Woo T-shirt. Premium cotton tee featuring the Shadow Monarch's dark, powerful design.",
     category: "Solo Leveling",
     rating: 4.9,
     reviews: 182,
@@ -295,7 +306,6 @@ export const products: Product[] = [
     isSale: true,
     tags: ["anime", "dragon ball z", "goku", "cotton", "super saiyan"],
   },
-
   {
     id: "levi-tee-001",
     name: "Levi Tee",
@@ -330,8 +340,19 @@ export const products: Product[] = [
   },
 ];
 
+// ✅ FIX: categories match exact product.category strings
+const categories = [
+  "All",
+  "Naruto",
+  "Demon Slayer",
+  "Dragon Ball Z",
+  "Jujutsu Kaisen",
+  "Attack on Titan",
+  "Solo Leveling",
+  "Hunter x Hunter",
+  "Baki",
+];
 
-const categories = ["All", "Naruto", "One Piece", "Dragon Ball", "Jujutsu Kaisen"];
 const sortOptions = [
   { value: "default", label: "Default" },
   { value: "price-low", label: "Price: Low to High" },
@@ -355,7 +376,6 @@ export const All_product = () => {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [wishlistLoading, setWishlistLoading] = useState<string[]>([]);
 
-  // Check login and load wishlist
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (token) {
@@ -373,35 +393,25 @@ export const All_product = () => {
     }
   };
 
-  // Handle search input change
-  const handleSearchInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setSearchTerm(e.target.value);
-  };
-
-  // Handle search submit
   const handleSearchSubmit = () => {
     const params = new URLSearchParams();
     if (searchTerm) params.set("search", searchTerm);
     if (selectedCategory !== "All") params.set("category", selectedCategory);
-    
     const queryString = params.toString();
     const url = queryString ? `?${queryString}` : "";
     router.push(`${window.location.pathname}${url}`, { scroll: false });
   };
 
-  // Handle category button click
   const handleCategoryButtonClick = (category: string) => {
     setSelectedCategory(category);
     const params = new URLSearchParams();
     if (searchTerm) params.set("search", searchTerm);
     if (category !== "All") params.set("category", category);
-    
     const queryString = params.toString();
     const url = queryString ? `?${queryString}` : "";
     router.push(`${window.location.pathname}${url}`, { scroll: false });
   };
 
-  // Updated: Check login for any product interaction
   const checkLoginAndNavigate = (productId: string) => {
     if (!isLoggedIn) {
       router.push("/login");
@@ -411,45 +421,28 @@ export const All_product = () => {
     router.push(`/product_page/`);
   };
 
-  // Handle card click (entire product card)
-  const handleCardClick = (productId: string) => {
-    checkLoginAndNavigate(productId);
-  };
-
-  // Handle Quick View button click
-  const handleQuickView = (e: React.MouseEvent, productId: string) => {
-    e.stopPropagation(); // Prevent card click event
-    checkLoginAndNavigate(productId);
-  };
-
-  // Handle wishlist toggle - now only handles wishlist logic after login check
   const handleWishlistToggle = async (e: React.MouseEvent, productId: string) => {
-    e.stopPropagation(); // Prevent card click event
-
+    e.stopPropagation();
     if (!isLoggedIn) {
       router.push("/login");
       return;
     }
-
     if (wishlistLoading.includes(productId)) return;
-
-    setWishlistLoading(prev => [...prev, productId]);
-
+    setWishlistLoading((prev) => [...prev, productId]);
     try {
       const response = await toggleWishlist(productId);
-
       if (response.message === "Added to wishlist") {
-        setWishlist(prev => [...prev, productId]);
+        setWishlist((prev) => [...prev, productId]);
         toast.success("Added to wishlist!");
       } else {
-        setWishlist(prev => prev.filter(id => id !== productId));
+        setWishlist((prev) => prev.filter((id) => id !== productId));
         toast.success("Removed from wishlist!");
       }
-    } catch (error: unknown) {
+    } catch (error) {
       console.error("Wishlist error:", error);
       toast.error("Error updating wishlist. Please try again.");
     } finally {
-      setWishlistLoading(prev => prev.filter(id => id !== productId));
+      setWishlistLoading((prev) => prev.filter((id) => id !== productId));
     }
   };
 
@@ -461,9 +454,9 @@ export const All_product = () => {
     if (imageErrors.includes(product.id)) {
       return `data:image/svg+xml,${encodeURIComponent(`
         <svg width="400" height="400" xmlns="http://www.w3.org/2000/svg">
-          <rect width="400" height="400" fill="#1a1a1a"/>
-          <text x="200" y="180" text-anchor="middle" fill="#666" font-family="Arial" font-size="16">${product.name}</text>
-          <text x="200" y="220" text-anchor="middle" fill="#999" font-family="Arial" font-size="14">Image Not Available</text>
+          <rect width="400" height="400" fill="#111111"/>
+          <text x="200" y="180" text-anchor="middle" fill="#3a3a3a" font-family="Arial" font-size="16">${product.name}</text>
+          <text x="200" y="220" text-anchor="middle" fill="#2a2a2a" font-family="Arial" font-size="14">Image Not Available</text>
         </svg>
       `)}`;
     }
@@ -477,11 +470,9 @@ export const All_product = () => {
         product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.description.toLowerCase().includes(searchTerm.toLowerCase()) ||
         product.tags.some((tag) => tag.toLowerCase().includes(searchTerm.toLowerCase()));
-
       const matchesCategory = selectedCategory === "All" || product.category === selectedCategory;
       const price = parseInt(product.price.replace("₹", ""));
       const matchesPrice = price >= priceRange[0] && price <= priceRange[1];
-
       return matchesSearch && matchesCategory && matchesPrice;
     });
 
@@ -499,243 +490,896 @@ export const All_product = () => {
         filtered.sort((a, b) => a.name.localeCompare(b.name));
         break;
     }
-
     return filtered;
   }, [searchTerm, selectedCategory, sortBy, priceRange]);
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
-      <Star key={i} className={`w-3 h-3 sm:w-4 sm:h-4 ${i < Math.floor(rating) ? "fill-white text-white" : "text-gray-400"}`} />
+      <Star
+        key={i}
+        className={`w-3 h-3 ${i < Math.floor(rating) ? "fill-[#FF6B00] text-[#FF6B00]" : "text-[#2A2A2A]"}`}
+      />
     ));
   };
-  
+
   return (
-    <main className="relative bg-gradient-to-bl from-[#000000] to-[#a3a3a3] min-h-screen scroll-smooth text-white">
-      <Navbar />
+    <>
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Syne:wght@400;600;700;800&family=DM+Sans:wght@300;400;500&display=swap');
 
-      {/* Header Section */}
-      <div className="pt-24 pb-8 px-3 sm:px-6">
-        <div className="max-w-7xl mx-auto">
-          <div className="text-center mb-6 sm:mb-8">
-            <h1 className="text-2xl sm:text-4xl lg:text-5xl font-bold mb-3 sm:mb-4 text-white">
-              PREMIUM ANIME COLLECTION
-            </h1>
-            <p className="text-gray-400 text-sm sm:text-base lg:text-lg max-w-2xl mx-auto px-2">
-              Discover our exclusive range of high-quality anime T-shirts crafted for true fans
-            </p>
-          </div>
+        .kc-page {
+          background-color: #050505;
+          min-height: 100vh;
+          position: relative;
+          overflow-x: hidden;
+        }
 
-          {/* Search and Filters */}
-          <div className="bg-black/40 backdrop-blur-xl border border-white/20 rounded-2xl p-3 sm:p-6 mb-6 sm:mb-8 shadow-2xl shadow-white/10 hover:shadow-white/20 transition-all duration-500">
-            <div className="flex flex-col gap-3 sm:gap-4">
-              {/* Search Bar */}
-              <div className="relative">
-                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4 sm:w-5 sm:h-5" />
-                <input
-                  type="text"
-                  placeholder="Search products..."
-                  value={searchTerm}
-                  onChange={handleSearchInputChange}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") handleSearchSubmit();
-                  }}
-                  className="w-full pl-10 pr-4 py-2 sm:py-3 bg-black/60 backdrop-blur-md border border-white/30 rounded-xl text-white placeholder-gray-300 focus:outline-none focus:border-white focus:bg-black/40 focus:shadow-lg focus:shadow-white/20 transition-all text-sm sm:text-base"
-                />
-              </div>
+        .kc-bg-layer {
+          position: fixed;
+          inset: 0;
+          pointer-events: none;
+          z-index: 0;
+        }
+        .kc-bg-layer::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background:
+            radial-gradient(ellipse 80% 50% at 10% 0%, rgba(255,107,0,0.07) 0%, transparent 60%),
+            radial-gradient(ellipse 60% 40% at 90% 80%, rgba(225,29,72,0.05) 0%, transparent 60%),
+            radial-gradient(ellipse 100% 80% at 50% 50%, rgba(0,0,0,0.9) 0%, transparent 100%);
+        }
+        .kc-bg-layer::after {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background-image:
+            repeating-linear-gradient(
+              0deg,
+              transparent,
+              transparent 2px,
+              rgba(255,107,0,0.008) 2px,
+              rgba(255,107,0,0.008) 4px
+            );
+        }
 
-              {/* Category Filter */}
-              <div className="flex flex-wrap gap-1.5 sm:gap-2">
-                {categories.map((category) => (
-                  <button
-                    key={category}
-                    onClick={() => handleCategoryButtonClick(category)}
-                    className={`px-2.5 py-1.5 sm:px-4 sm:py-2 rounded-full transition-all duration-300 font-medium backdrop-blur-md text-xs sm:text-sm ${
-                      selectedCategory === category
-                        ? "bg-white/90 text-black shadow-lg shadow-white/30"
-                        : "bg-black/50 hover:bg-black/30 text-white border border-white/30 hover:border-white/50 hover:shadow-md hover:shadow-white/20"
-                    }`}
-                  >
-                    {category}
-                  </button>
-                ))}
-              </div>
+        .kc-orb {
+          position: fixed;
+          border-radius: 50%;
+          filter: blur(120px);
+          pointer-events: none;
+          z-index: 0;
+          animation: kc-orb-drift 20s ease-in-out infinite alternate;
+        }
+        .kc-orb-1 {
+          width: 500px; height: 500px;
+          background: radial-gradient(circle, rgba(255,107,0,0.08) 0%, transparent 70%);
+          top: -150px; left: -100px;
+          animation-duration: 25s;
+        }
+        .kc-orb-2 {
+          width: 400px; height: 400px;
+          background: radial-gradient(circle, rgba(225,29,72,0.06) 0%, transparent 70%);
+          bottom: 10%; right: -100px;
+          animation-duration: 18s;
+          animation-direction: alternate-reverse;
+        }
+        @keyframes kc-orb-drift {
+          0% { transform: translate(0, 0) scale(1); }
+          100% { transform: translate(30px, 20px) scale(1.1); }
+        }
 
-              {/* Controls */}
-              <div className="flex items-center justify-between gap-3 sm:gap-4">
-                <select
-                  value={sortBy}
-                  onChange={(e) => setSortBy(e.target.value)}
-                  className="bg-black/60 backdrop-blur-md border border-white/30 rounded-xl px-2.5 py-2 sm:px-3 text-white focus:outline-none focus:border-white focus:bg-black/40 focus:shadow-lg focus:shadow-white/20 transition-all text-xs sm:text-sm flex-1 sm:flex-none"
-                >
-                  {sortOptions.map((option) => (
-                    <option key={option.value} value={option.value} className="bg-black text-white">
-                      {option.label}
-                    </option>
+        .kc-content {
+          position: relative;
+          z-index: 1;
+        }
+
+        .font-display { font-family: 'Bebas Neue', sans-serif; letter-spacing: 0.05em; }
+        .font-heading { font-family: 'Syne', sans-serif; }
+        .font-body { font-family: 'DM Sans', sans-serif; }
+
+        /* Section eyebrow */
+        .kc-section-eyebrow {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 500;
+          letter-spacing: 0.15em;
+          text-transform: uppercase;
+          color: #FF6B00;
+          margin-bottom: 8px;
+          display: flex;
+          align-items: center;
+          gap: 8px;
+        }
+        .kc-section-eyebrow::before {
+          content: '';
+          display: inline-block;
+          width: 20px;
+          height: 1px;
+          background: #FF6B00;
+        }
+
+        /* Filter panel */
+        .kc-filter-panel {
+          background: rgba(17,17,17,0.95);
+          border: 1px solid rgba(255,107,0,0.15);
+          border-radius: 16px;
+          padding: 20px 24px;
+          backdrop-filter: blur(20px);
+          box-shadow: 0 0 40px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,107,0,0.08);
+        }
+
+        /* Search input */
+        .kc-search-input {
+          width: 100%;
+          background: rgba(10,10,10,0.9);
+          border: 1px solid rgba(255,107,0,0.2);
+          border-radius: 10px;
+          color: #F5F5F5;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 14px;
+          padding: 12px 16px 12px 44px;
+          outline: none;
+          transition: border-color 0.3s, box-shadow 0.3s;
+        }
+        .kc-search-input::placeholder { color: #3a3a3a; }
+        .kc-search-input:focus {
+          border-color: #FF6B00;
+          box-shadow: 0 0 0 1px rgba(255,107,0,0.2), 0 0 20px rgba(255,107,0,0.08);
+        }
+
+        /* Category pills */
+        .kc-cat-pill {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 12px;
+          font-weight: 500;
+          letter-spacing: 0.06em;
+          text-transform: uppercase;
+          padding: 7px 16px;
+          border-radius: 6px;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(255,255,255,0.03);
+          color: #A1A1AA;
+          cursor: pointer;
+          transition: all 0.25s ease;
+        }
+        .kc-cat-pill:hover {
+          border-color: rgba(255,107,0,0.4);
+          color: #FF6B00;
+          background: rgba(255,107,0,0.06);
+        }
+        .kc-cat-pill.active {
+          background: rgba(255,107,0,0.12);
+          border-color: #FF6B00;
+          color: #FF6B00;
+          box-shadow: 0 0 12px rgba(255,107,0,0.15);
+        }
+
+        /* Select */
+        .kc-select {
+          background: rgba(10,10,10,0.9);
+          border: 1px solid rgba(255,107,0,0.2);
+          border-radius: 8px;
+          color: #A1A1AA;
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          padding: 9px 34px 9px 14px;
+          outline: none;
+          cursor: pointer;
+          transition: border-color 0.25s;
+          appearance: none;
+          -webkit-appearance: none;
+          background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23FF6B00' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+          background-repeat: no-repeat;
+          background-position: right 12px center;
+        }
+        .kc-select:focus { border-color: #FF6B00; }
+        .kc-select option { background: #111111; color: #F5F5F5; }
+
+        /* Icon button */
+        .kc-icon-btn {
+          padding: 9px;
+          background: rgba(10,10,10,0.9);
+          border: 1px solid rgba(255,107,0,0.2);
+          border-radius: 8px;
+          color: #A1A1AA;
+          cursor: pointer;
+          transition: all 0.25s ease;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .kc-icon-btn:hover {
+          border-color: rgba(255,107,0,0.5);
+          color: #FF6B00;
+          background: rgba(255,107,0,0.06);
+        }
+        .kc-icon-btn.active {
+          background: rgba(255,107,0,0.1);
+          border-color: #FF6B00;
+          color: #FF6B00;
+        }
+
+        /* View toggle */
+        .kc-view-toggle {
+          display: flex;
+          background: rgba(10,10,10,0.9);
+          border: 1px solid rgba(255,107,0,0.2);
+          border-radius: 8px;
+          padding: 3px;
+        }
+        .kc-view-btn {
+          padding: 6px 10px;
+          border-radius: 5px;
+          border: none;
+          background: transparent;
+          color: #3a3a3a;
+          cursor: pointer;
+          transition: all 0.2s;
+          display: flex; align-items: center; justify-content: center;
+        }
+        .kc-view-btn.active {
+          background: rgba(255,107,0,0.15);
+          color: #FF6B00;
+        }
+
+        /* Product Cards */
+        .kc-card {
+          background: #0e0e0e;
+          border: 1px solid rgba(255,255,255,0.05);
+          border-radius: 14px;
+          overflow: hidden;
+          cursor: pointer;
+          position: relative;
+          transition: transform 0.4s cubic-bezier(0.25,0.46,0.45,0.94), border-color 0.3s, box-shadow 0.4s;
+          animation: kc-fade-up 0.5s ease both;
+        }
+        .kc-card::before {
+          content: '';
+          position: absolute;
+          inset: 0;
+          background: linear-gradient(135deg, rgba(255,107,0,0.03) 0%, transparent 50%);
+          opacity: 0;
+          transition: opacity 0.4s;
+          pointer-events: none;
+          z-index: 1;
+        }
+        .kc-card:hover {
+          transform: translateY(-6px) scale(1.01);
+          border-color: rgba(255,107,0,0.25);
+          box-shadow:
+            0 20px 60px rgba(0,0,0,0.7),
+            0 0 30px rgba(255,107,0,0.08),
+            inset 0 1px 0 rgba(255,107,0,0.1);
+        }
+        .kc-card:hover::before { opacity: 1; }
+
+        /* Card image wrapper */
+        .kc-img-wrap {
+          position: relative;
+          background: #0a0a0a;
+          overflow: hidden;
+        }
+        .kc-img-wrap::after {
+          content: '';
+          position: absolute;
+          bottom: 0; left: 0; right: 0;
+          height: 60px;
+          background: linear-gradient(to top, #0e0e0e, transparent);
+          pointer-events: none;
+          z-index: 2;
+        }
+        .kc-card-img {
+          width: 100%;
+          height: 100%;
+          object-fit: contain;
+          transition: transform 0.6s cubic-bezier(0.25,0.46,0.45,0.94);
+          display: block;
+        }
+        .kc-card:hover .kc-card-img { transform: scale(1.07); }
+
+        /* Wishlist btn */
+        .kc-wish-btn {
+          position: absolute;
+          top: 10px; right: 10px;
+          z-index: 10;
+          width: 34px; height: 34px;
+          border-radius: 50%;
+          border: 1px solid rgba(255,255,255,0.08);
+          background: rgba(5,5,5,0.85);
+          backdrop-filter: blur(8px);
+          display: flex; align-items: center; justify-content: center;
+          cursor: pointer;
+          transition: all 0.3s ease;
+        }
+        .kc-wish-btn:hover {
+          border-color: rgba(225,29,72,0.5);
+          background: rgba(225,29,72,0.1);
+          transform: scale(1.1);
+          box-shadow: 0 0 14px rgba(225,29,72,0.2);
+        }
+        .kc-wish-btn.wishlisted {
+          border-color: rgba(225,29,72,0.6);
+          background: rgba(225,29,72,0.12);
+        }
+        .kc-wish-btn.loading { opacity: 0.5; }
+
+        /* Badges */
+        .kc-badge {
+          position: absolute;
+          top: 10px; left: 10px;
+          z-index: 10;
+          font-family: 'Syne', sans-serif;
+          font-size: 9px;
+          font-weight: 700;
+          letter-spacing: 0.1em;
+          text-transform: uppercase;
+          padding: 4px 8px;
+          border-radius: 4px;
+        }
+        .kc-badge-sale {
+          background: rgba(225,29,72,0.2);
+          border: 1px solid rgba(225,29,72,0.4);
+          color: #E11D48;
+        }
+        .kc-badge-new {
+          background: rgba(255,107,0,0.15);
+          border: 1px solid rgba(255,107,0,0.35);
+          color: #FF6B00;
+        }
+
+        /* Card body */
+        .kc-card-body { padding: 14px 16px 16px; }
+
+        .kc-product-name {
+          font-family: 'Syne', sans-serif;
+          font-weight: 700;
+          font-size: 15px;
+          color: #F5F5F5;
+          line-height: 1.2;
+          margin-bottom: 3px;
+          transition: color 0.2s;
+        }
+        .kc-card:hover .kc-product-name { color: #ffffff; }
+
+        .kc-category-label {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          font-weight: 400;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          color: #FF6B00;
+          opacity: 0.7;
+          margin-bottom: 8px;
+        }
+
+        .kc-stars { display: flex; gap: 2px; }
+
+        .kc-rating-row {
+          display: flex;
+          align-items: center;
+          gap: 6px;
+          margin-bottom: 10px;
+        }
+        .kc-rating-text {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          color: #3a3a3a;
+        }
+
+        /* Price */
+        .kc-price-row { display: flex; align-items: baseline; gap: 8px; margin-bottom: 12px; }
+        .kc-price {
+          font-family: 'Syne', sans-serif;
+          font-weight: 700;
+          font-size: 22px;
+          color: #F5F5F5;
+          letter-spacing: 0.02em;
+        }
+        .kc-price-orig {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #2A2A2A;
+          text-decoration: line-through;
+        }
+        .kc-discount-pct {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 11px;
+          color: #E11D48;
+          font-weight: 500;
+        }
+
+        /* Quick view button */
+        .kc-quick-btn {
+          width: 100%;
+          padding: 11px 0;
+          border-radius: 8px;
+          border: 1px solid rgba(255,107,0,0.3);
+          background: rgba(255,107,0,0.06);
+          color: #FF6B00;
+          font-family: 'Syne', sans-serif;
+          font-weight: 600;
+          font-size: 12px;
+          letter-spacing: 0.08em;
+          text-transform: uppercase;
+          cursor: pointer;
+          display: flex; align-items: center; justify-content: center; gap: 8px;
+          transition: all 0.3s ease;
+        }
+        .kc-quick-btn:hover {
+          background: rgba(255,107,0,0.14);
+          border-color: rgba(255,107,0,0.6);
+          color: #FF8533;
+          box-shadow: 0 0 20px rgba(255,107,0,0.12);
+          transform: translateY(-1px);
+        }
+
+        /* Divider */
+        .kc-divider {
+          height: 1px;
+          background: rgba(255,255,255,0.04);
+          margin: 10px 0 12px;
+        }
+
+        /* List card */
+        .kc-card-list {
+          display: flex;
+          gap: 20px;
+          align-items: stretch;
+          padding: 20px;
+        }
+        .kc-card-list .kc-img-wrap {
+          width: 140px;
+          min-width: 140px;
+          height: 140px;
+          border-radius: 10px;
+        }
+        .kc-card-list .kc-img-wrap::after { display: none; }
+
+        .kc-product-desc {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #3a3a3a;
+          line-height: 1.5;
+          margin-bottom: 12px;
+          display: -webkit-box;
+          -webkit-line-clamp: 2;
+          -webkit-box-orient: vertical;
+          overflow: hidden;
+        }
+
+        /* Results */
+        .kc-results-bar {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          margin-bottom: 24px;
+          padding: 0 2px;
+        }
+        .kc-results-text {
+          font-family: 'DM Sans', sans-serif;
+          font-size: 13px;
+          color: #3a3a3a;
+          letter-spacing: 0.03em;
+        }
+        .kc-results-count {
+          color: #FF6B00;
+          font-weight: 600;
+        }
+
+        /* Price range slider */
+        .kc-range {
+          -webkit-appearance: none;
+          appearance: none;
+          width: 100%;
+          height: 2px;
+          background: linear-gradient(to right, #FF6B00 var(--val, 100%), rgba(255,255,255,0.08) var(--val, 100%));
+          outline: none;
+          border-radius: 2px;
+        }
+        .kc-range::-webkit-slider-thumb {
+          -webkit-appearance: none;
+          width: 16px; height: 16px;
+          border-radius: 50%;
+          background: #FF6B00;
+          cursor: pointer;
+          box-shadow: 0 0 8px rgba(255,107,0,0.4);
+        }
+
+        /* Advanced filter */
+        .kc-adv-filters {
+          margin-top: 16px;
+          padding-top: 16px;
+          border-top: 1px solid rgba(255,107,0,0.1);
+        }
+
+        /* Fade up animation */
+        @keyframes kc-fade-up {
+          from { opacity: 0; transform: translateY(20px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* ── Responsive grid ── */
+        @media (max-width: 639px) {
+          .kc-products-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 10px !important;
+          }
+          .kc-product-name { font-size: 12px; }
+          .kc-price { font-size: 15px; }
+          .kc-price-orig { font-size: 11px; }
+          .kc-discount-pct { font-size: 10px; }
+          .kc-card-body { padding: 8px 10px 10px; }
+          .kc-quick-btn { font-size: 10px; padding: 8px 0; gap: 4px; letter-spacing: 0.04em; }
+          .kc-wish-btn { width: 28px; height: 28px; top: 6px; right: 6px; }
+          .kc-badge { font-size: 8px; padding: 3px 6px; }
+          .kc-category-label { font-size: 9px; margin-bottom: 4px; }
+          .kc-rating-row { margin-bottom: 6px; }
+          .kc-rating-text { font-size: 9px; }
+          .kc-price-row { margin-bottom: 8px; gap: 5px; }
+          .kc-divider { margin: 6px 0 8px; }
+        }
+        @media (min-width: 640px) and (max-width: 1023px) {
+          .kc-products-grid {
+            grid-template-columns: repeat(3, 1fr) !important;
+          }
+        }
+        @media (min-width: 1024px) {
+          .kc-products-grid {
+            grid-template-columns: repeat(4, 1fr) !important;
+          }
+        }
+      `}</style>
+
+      <main className="kc-page">
+        {/* Background layers */}
+        <div className="kc-bg-layer" />
+        <div className="kc-orb kc-orb-1" />
+        <div className="kc-orb kc-orb-2" />
+
+        <Navbar />
+
+        <div className="kc-content pt-24 pb-16 px-4 sm:px-6 lg:px-8">
+          <div style={{ maxWidth: "1280px", margin: "0 auto" }}>
+
+            {/* ── PREMIUM HEADER (from doc 2) ── */}
+            <div style={{ marginBottom: "40px" }}>
+              <div className="kc-section-eyebrow">Kazuha Closet · SS25 Drop</div>
+              <h1
+                className="font-display"
+                style={{
+                  fontSize: "clamp(2.4rem, 6vw, 5rem)",
+                  color: "#F5F5F5",
+                  lineHeight: 1,
+                  marginBottom: "14px",
+                  letterSpacing: "0.04em",
+                }}
+              >
+                THE COLLECTION
+              </h1>
+              <p
+                className="font-body"
+                style={{
+                  color: "#3a3a3a",
+                  fontSize: "clamp(13px, 1.4vw, 15px)",
+                  maxWidth: "500px",
+                  lineHeight: 1.6,
+                }}
+              >
+                Premium anime streetwear, crafted for those who live the culture.
+                Every piece, a statement.
+              </p>
+            </div>
+
+            {/* ── Filter Panel ── */}
+            <div className="kc-filter-panel" style={{ marginBottom: "28px" }}>
+              <div style={{ display: "flex", flexDirection: "column", gap: "14px" }}>
+
+                {/* Search */}
+                <div style={{ position: "relative" }}>
+                  <Search
+                    style={{
+                      position: "absolute", left: "14px", top: "50%",
+                      transform: "translateY(-50%)",
+                      color: "#3a3a3a", width: "16px", height: "16px",
+                    }}
+                  />
+                  <input
+                    type="text"
+                    className="kc-search-input"
+                    placeholder="Search the collection..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => { if (e.key === "Enter") handleSearchSubmit(); }}
+                  />
+                </div>
+
+                {/* Category pills */}
+                <div style={{ display: "flex", flexWrap: "wrap", gap: "8px" }}>
+                  {categories.map((category) => (
+                    <button
+                      key={category}
+                      className={`kc-cat-pill ${selectedCategory === category ? "active" : ""}`}
+                      onClick={() => handleCategoryButtonClick(category)}
+                    >
+                      {category}
+                    </button>
                   ))}
-                </select>
+                </div>
 
-                <div className="flex items-center gap-2">
-                  <button
-                    onClick={() => setShowFilters(!showFilters)}
-                    className="p-2 bg-black/60 hover:bg-black/40 backdrop-blur-md border border-white/30 rounded-xl hover:border-white/50 hover:shadow-md hover:shadow-white/20 transition-all"
+                {/* Controls row */}
+                <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between", gap: "12px", flexWrap: "wrap" }}>
+                  <select
+                    className="kc-select"
+                    value={sortBy}
+                    onChange={(e) => setSortBy(e.target.value)}
                   >
-                    <SlidersHorizontal className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </button>
+                    {sortOptions.map((option) => (
+                      <option key={option.value} value={option.value}>{option.label}</option>
+                    ))}
+                  </select>
 
-                  <div className="flex bg-black/60 backdrop-blur-md rounded-xl p-1 border border-white/30">
+                  <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                     <button
-                      onClick={() => setViewMode("grid")}
-                      className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                        viewMode === "grid"
-                          ? "bg-white/90 text-black shadow-md shadow-white/30"
-                          : "text-white hover:bg-white/20"
-                      }`}
+                      className={`kc-icon-btn ${showFilters ? "active" : ""}`}
+                      onClick={() => setShowFilters(!showFilters)}
+                      title="Advanced filters"
                     >
-                      <Grid className="w-4 h-4 sm:w-5 sm:h-5" />
+                      <SlidersHorizontal size={16} />
                     </button>
-                    <button
-                      onClick={() => setViewMode("list")}
-                      className={`p-1.5 sm:p-2 rounded-lg transition-all ${
-                        viewMode === "list"
-                          ? "bg-white/90 text-black shadow-md shadow-white/30"
-                          : "text-white hover:bg-white/20"
-                      }`}
-                    >
-                      <List className="w-4 h-4 sm:w-5 sm:h-5" />
-                    </button>
+                    <div className="kc-view-toggle">
+                      <button
+                        className={`kc-view-btn ${viewMode === "grid" ? "active" : ""}`}
+                        onClick={() => setViewMode("grid")}
+                        title="Grid view"
+                      >
+                        <Grid size={15} />
+                      </button>
+                      <button
+                        className={`kc-view-btn ${viewMode === "list" ? "active" : ""}`}
+                        onClick={() => setViewMode("list")}
+                        title="List view"
+                      >
+                        <List size={15} />
+                      </button>
+                    </div>
                   </div>
                 </div>
+              </div>
+
+              {/* Advanced filters */}
+              {showFilters && (
+                <div className="kc-adv-filters">
+                  <label
+                    className="font-body"
+                    style={{ display: "block", color: "#A1A1AA", fontSize: "12px", letterSpacing: "0.08em", textTransform: "uppercase", marginBottom: "12px" }}
+                  >
+                    Price Range
+                  </label>
+                  <div style={{ display: "flex", alignItems: "center", gap: "16px" }}>
+                    <input
+                      type="range"
+                      min="0"
+                      max="1000"
+                      value={priceRange[1]}
+                      className="kc-range"
+                      style={{ "--val": `${(priceRange[1] / 1000) * 100}%` } as React.CSSProperties}
+                      onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
+                    />
+                    <span
+                      className="font-body"
+                      style={{
+                        background: "rgba(255,107,0,0.08)",
+                        border: "1px solid rgba(255,107,0,0.2)",
+                        borderRadius: "6px",
+                        padding: "5px 10px",
+                        color: "#FF6B00",
+                        fontSize: "12px",
+                        whiteSpace: "nowrap",
+                        minWidth: "110px",
+                        textAlign: "center",
+                      }}
+                    >
+                      ₹{priceRange[0]} – ₹{priceRange[1]}
+                    </span>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* ── Results bar ── */}
+            <div className="kc-results-bar">
+              <p className="kc-results-text font-body">
+                <span className="kc-results-count">{filteredAndSortedProducts.length}</span>
+                {" "}of {products.length} pieces
+              </p>
+              <div style={{ display: "flex", alignItems: "center", gap: "6px" }}>
+                <div style={{ width: "24px", height: "1px", background: "rgba(255,107,0,0.3)" }} />
+                <span className="font-body" style={{ fontSize: "11px", letterSpacing: "0.1em", color: "#2A2A2A", textTransform: "uppercase" }}>
+                  {selectedCategory === "All" ? "All Drops" : selectedCategory}
+                </span>
               </div>
             </div>
 
-            {/* Advanced Filters */}
-            {showFilters && (
-              <div className="mt-4 sm:mt-6 pt-4 sm:pt-6 border-t border-white/20">
-                <div className="grid grid-cols-1 gap-4 sm:gap-6">
-                  <div>
-                    <label className="block text-white mb-2 font-semibold text-sm sm:text-base">Price Range</label>
-                    <div className="flex items-center gap-3 sm:gap-4">
-                      <input
-                        type="range"
-                        min="0"
-                        max="1000"
-                        value={priceRange[1]}
-                        onChange={(e) => setPriceRange([priceRange[0], parseInt(e.target.value)])}
-                        className="flex-1 accent-white"
+            {/* ── Products Grid / List ── */}
+            <div
+              className={viewMode === "grid" ? "kc-products-grid" : ""}
+              style={
+                viewMode === "grid"
+                  ? { display: "grid", gridTemplateColumns: "repeat(2, 1fr)", gap: "10px" }
+                  : { display: "flex", flexDirection: "column", gap: "16px" }
+              }
+            >
+              {filteredAndSortedProducts.map((product, idx) => {
+                const discountPct = product.originalPrice
+                  ? Math.round((1 - parseInt(product.price.replace("₹", "")) / parseInt(product.originalPrice.replace("₹", ""))) * 100)
+                  : null;
+
+                if (viewMode === "list") {
+                  return (
+                    <div
+                      key={product.id}
+                      className="kc-card"
+                      style={{ animationDelay: `${idx * 0.04}s` }}
+                      onClick={() => checkLoginAndNavigate(product.id)}
+                    >
+                      <div className="kc-card-list">
+                        {/* Image */}
+                        <div style={{ width: 140, minWidth: 140, height: 140, borderRadius: 10, position: "relative", background: "#0a0a0a", overflow: "hidden" }}>
+                          <Image
+                            src={getImageSrc(product)}
+                            alt={product.name}
+                            width={280}
+                            height={280}
+                            className="kc-card-img"
+                            style={{ objectFit: "contain" }}
+                            loading="lazy"
+                            onError={() => handleImageError(product.id)}
+                          />
+                          {product.isSale && <span className="kc-badge kc-badge-sale">Sale</span>}
+                          {product.isNew && (
+                            <span className="kc-badge kc-badge-new" style={{ top: product.isSale ? 34 : 10 }}>New</span>
+                          )}
+                        </div>
+
+                        {/* Body */}
+                        <div style={{ flex: 1, display: "flex", flexDirection: "column", justifyContent: "space-between" }}>
+                          <div>
+                            <p className="kc-category-label font-body">{product.category}</p>
+                            <h3 className="kc-product-name">{product.name}</h3>
+                            <div className="kc-rating-row">
+                              <div className="kc-stars">{renderStars(product.rating)}</div>
+                              <span className="kc-rating-text">{product.rating} ({product.reviews})</span>
+                            </div>
+                            <p className="kc-product-desc">{product.description}</p>
+                          </div>
+                          <div>
+                            <div className="kc-price-row">
+                              <span className="kc-price">{product.price}</span>
+                              {product.originalPrice && <span className="kc-price-orig">{product.originalPrice}</span>}
+                              {discountPct && <span className="kc-discount-pct">−{discountPct}%</span>}
+                            </div>
+                            <button
+                              className="kc-quick-btn"
+                              style={{ maxWidth: 180 }}
+                              onClick={(e) => { e.stopPropagation(); checkLoginAndNavigate(product.id); }}
+                            >
+                              <Eye size={13} />
+                              Quick View
+                              <ChevronRight size={12} />
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Wishlist */}
+                        <button
+                          className={`kc-wish-btn ${wishlist.includes(product.id) ? "wishlisted" : ""} ${wishlistLoading.includes(product.id) ? "loading" : ""}`}
+                          style={{ position: "relative", top: "unset", right: "unset", alignSelf: "flex-start", flexShrink: 0 }}
+                          onClick={(e) => handleWishlistToggle(e, product.id)}
+                          disabled={wishlistLoading.includes(product.id)}
+                        >
+                          <Heart
+                            size={14}
+                            style={{
+                              fill: wishlist.includes(product.id) ? "#E11D48" : "none",
+                              color: wishlist.includes(product.id) ? "#E11D48" : "#3a3a3a",
+                              transition: "all 0.3s",
+                            }}
+                          />
+                        </button>
+                      </div>
+                    </div>
+                  );
+                }
+
+                // Grid card
+                return (
+                  <div
+                    key={product.id}
+                    className="kc-card"
+                    style={{ animationDelay: `${idx * 0.04}s` }}
+                    onClick={() => checkLoginAndNavigate(product.id)}
+                  >
+                    {/* Image Area */}
+                    <div className="kc-img-wrap" style={{ height: "clamp(140px, 45vw, 320px)", position: "relative" }}>
+                      <Image
+                        src={getImageSrc(product)}
+                        alt={product.name}
+                        width={400}
+                        height={400}
+                        className="kc-card-img"
+                        loading="lazy"
+                        onError={() => handleImageError(product.id)}
                       />
-                      <span className="text-white bg-black/60 backdrop-blur-md px-2.5 py-1 sm:px-3 rounded-lg border border-white/30 shadow-md shadow-white/10 text-xs sm:text-sm">
-                        ₹{priceRange[0]} - ₹{priceRange[1]}
-                      </span>
+
+                      {/* Badges */}
+                      {product.isSale && <span className="kc-badge kc-badge-sale">Sale</span>}
+                      {product.isNew && (
+                        <span className="kc-badge kc-badge-new" style={{ top: product.isSale ? 34 : 10 }}>New</span>
+                      )}
+
+                      {/* Wishlist */}
+                      <button
+                        className={`kc-wish-btn ${wishlist.includes(product.id) ? "wishlisted" : ""} ${wishlistLoading.includes(product.id) ? "loading" : ""}`}
+                        onClick={(e) => handleWishlistToggle(e, product.id)}
+                        disabled={wishlistLoading.includes(product.id)}
+                      >
+                        <Heart
+                          size={13}
+                          style={{
+                            fill: wishlist.includes(product.id) ? "#E11D48" : "none",
+                            color: wishlist.includes(product.id) ? "#E11D48" : "#3a3a3a",
+                            transition: "all 0.3s",
+                          }}
+                        />
+                      </button>
+                    </div>
+
+                    {/* Card Body */}
+                    <div className="kc-card-body">
+                      <p className="kc-category-label font-body">{product.category}</p>
+                      <h3 className="kc-product-name">{product.name}</h3>
+
+                      <div className="kc-rating-row">
+                        <div className="kc-stars">{renderStars(product.rating)}</div>
+                        <span className="kc-rating-text">{product.rating} ({product.reviews})</span>
+                      </div>
+
+                      <div className="kc-divider" />
+
+                      <div className="kc-price-row">
+                        <span className="kc-price">{product.price}</span>
+                        {product.originalPrice && <span className="kc-price-orig">{product.originalPrice}</span>}
+                        {discountPct && <span className="kc-discount-pct">−{discountPct}%</span>}
+                      </div>
+
+                      <button
+                        className="kc-quick-btn"
+                        onClick={(e) => { e.stopPropagation(); checkLoginAndNavigate(product.id); }}
+                      >
+                        <Eye size={13} />
+                        Quick View
+                        <ChevronRight size={12} />
+                      </button>
                     </div>
                   </div>
-                </div>
+                );
+              })}
+            </div>
+
+            {/* Empty state */}
+            {filteredAndSortedProducts.length === 0 && (
+              <div style={{ textAlign: "center", padding: "80px 0" }}>
+                <p className="font-display" style={{ fontSize: "3rem", color: "#1a1a1a", marginBottom: "12px" }}>
+                  NO RESULTS
+                </p>
+                <p className="font-body" style={{ color: "#2A2A2A", fontSize: "14px" }}>
+                  Try a different search or category
+                </p>
               </div>
             )}
-          </div>
 
-          {/* Results Count */}
-          <div className="flex justify-between items-center mb-4 sm:mb-6 px-1">
-            <p className="text-gray-400 text-sm sm:text-base">
-              Showing {filteredAndSortedProducts.length} of {products.length} products
-            </p>
-          </div>
-
-          {/* Products Grid/List */}
-          <div
-            className={
-              viewMode === "grid" ? "grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-6 lg:gap-8" : "space-y-4 sm:space-y-6"
-            }
-          >
-            {filteredAndSortedProducts.map((product) => (
-              <div
-                key={product.id}
-                onClick={() => handleCardClick(product.id)}
-                className={`group relative bg-black/30 backdrop-blur-xl border border-white/20 rounded-2xl overflow-hidden hover:border-white/40 hover:bg-black/20 transition-all duration-500 hover:scale-105 hover:shadow-2xl hover:shadow-white/30 cursor-pointer ${
-                  viewMode === "list" ? "flex gap-4 sm:gap-6 p-4 sm:p-8 max-w-full" : "p-2 sm:p-8 w-full"
-                }`}
-              >
-                {/* Product Image */}
-                <div
-                  className={`relative overflow-hidden rounded-lg sm:rounded-xl bg-black/40 backdrop-blur-md border border-white/20 ${
-                    viewMode === "list"
-                      ? "w-24 h-24 sm:w-56 sm:h-56 flex-shrink-0"
-                      : "w-full h-32 sm:h-48 lg:h-80 mb-2 sm:mb-4 lg:mb-6"
-                  }`}
-                >
-                  <Image
-                    src={getImageSrc(product)}
-                    alt={product.name}
-                    width={400}
-                    height={400}
-                    className="w-full h-full object-contain bg-black transition-transform duration-300 group-hover:scale-105"
-                    loading="lazy"
-                    onError={() => handleImageError(product.id)}
-                    onLoad={() => setImageErrors((prev) => prev.filter((id) => id !== product.id))}
-                  />
-
-                  {/* Wishlist */}
-                  <button
-                    onClick={(e) => handleWishlistToggle(e, product.id)}
-                    disabled={wishlistLoading.includes(product.id)}
-                    className="absolute top-2 sm:top-3 right-2 sm:right-3 p-1.5 sm:p-2 bg-black/70 backdrop-blur-md rounded-full hover:bg-black/50 border border-white/30 hover:border-white/50 hover:shadow-lg hover:shadow-white/20 transition-all disabled:opacity-50 disabled:cursor-not-allowed"
-                  >
-                    <Heart
-                      className={`w-3 h-3 sm:w-4 sm:h-4 ${
-                        wishlist.includes(product.id) ? "fill-red-500 text-red-500" : "text-gray-300 hover:text-white"
-                      } ${wishlistLoading.includes(product.id) ? "animate-pulse" : ""}`}
-                    />
-                  </button>
-                </div>
-
-                {/* Product Info */}
-                <div className={viewMode === "list" ? "flex-1" : ""}>
-                  <div className="mb-1.5 sm:mb-3">
-                    <h3 className="text-xs sm:text-lg lg:text-xl font-bold text-white mb-0.5 sm:mb-1 group-hover:text-gray-300 transition-colors line-clamp-1">
-                      {product.name}
-                    </h3>
-                    <p className="text-gray-400 text-xs sm:text-sm mb-1 sm:mb-2 font-medium">{product.category}</p>
-
-                    {/* Rating */}
-                    <div className="flex items-center gap-1 sm:gap-2 mb-1 sm:mb-2">
-                      <div className="flex">{renderStars(product.rating)}</div>
-                      <span className="text-gray-400 text-xs">
-                        {product.rating} ({product.reviews})
-                      </span>
-                    </div>
-
-                    {/* Price */}
-                    <div className="flex items-center gap-1 sm:gap-2 mb-1.5 sm:mb-3">
-                      <span className="text-sm sm:text-lg lg:text-2xl font-bold text-white">{product.price}</span>
-                      {product.originalPrice && (
-                        <span className="text-gray-500 line-through text-xs sm:text-sm">{product.originalPrice}</span>
-                      )}
-                    </div>
-                  </div>
-
-                  <p
-                    className={`text-gray-300 text-xs sm:text-sm mb-2 sm:mb-4 line-clamp-2 ${
-                      viewMode === "grid" ? "hidden sm:block" : ""
-                    }`}
-                  >
-                    {product.description}
-                  </p>
-
-                  {/* Quick View Button */}
-                  <div className="w-full mt-2">
-                    <button
-                      onClick={(e) => handleQuickView(e, product.id)}
-                      className="w-full py-2 sm:py-3 px-4 sm:px-6 rounded-lg sm:rounded-xl font-semibold transition-all duration-300 flex items-center justify-center gap-2 bg-white/95 backdrop-blur-md text-black hover:bg-white hover:scale-105 shadow-lg shadow-white/30 hover:shadow-xl hover:shadow-white/40 text-sm sm:text-base"
-                    >
-                      <Eye className="w-4 h-4 sm:w-5 sm:h-5" />
-                      Quick View
-                    </button>
-                  </div>
-                </div>
-              </div>
-            ))}
           </div>
         </div>
-      </div>
-    </main>
+      </main>
+    </>
   );
 };

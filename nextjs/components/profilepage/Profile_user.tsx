@@ -4,6 +4,7 @@ import React, { useEffect, useState } from "react";
 import { motion } from "framer-motion";
 import { getUser, updateUserAvatar } from "@/utils/api/userUtils";
 import Image from "next/image";
+import Navbar from "../common/navbar/Navbar";
 
 const MotionImage = motion(Image);
 
@@ -19,29 +20,47 @@ const ProfileSection = () => {
   const [selectedAvatar, setSelectedAvatar] = useState<string | null>(null);
 
   const token =
-    typeof window !== "undefined" ? localStorage.getItem("token") : null;
+    typeof window !== "undefined"
+      ? localStorage.getItem("token")
+      : null;
 
-  // ✅ Helper: Make sure avatar URL is valid
-  const getValidAvatarURL = (avatar?: string | null): string | null => {
+  // ✅ Helper
+  const getValidAvatarURL = (
+    avatar?: string | null
+  ): string | null => {
     if (!avatar) return null;
-    // If it's already a full URL or from public folder
-    if (avatar.startsWith("http") || avatar.startsWith("/")) return avatar;
-    // If it's a relative backend path
-    return `${process.env.NEXT_PUBLIC_API_URL || ""}/${avatar}`;
+
+    if (
+      avatar.startsWith("http") ||
+      avatar.startsWith("/")
+    )
+      return avatar;
+
+    return `${
+      process.env.NEXT_PUBLIC_API_URL || ""
+    }/${avatar}`;
   };
 
-  // ✅ Fetch user on mount
+  // ✅ Fetch user
   useEffect(() => {
     const fetchUser = async () => {
       if (!token) return;
+
       try {
         const user = await getUser();
+
         setUserData(user);
-        setSelectedAvatar(getValidAvatarURL(user.avatar));
+        setSelectedAvatar(
+          getValidAvatarURL(user.avatar)
+        );
       } catch (error) {
-        console.error("Failed to fetch user:", error);
+        console.error(
+          "Failed to fetch user:",
+          error
+        );
       }
     };
+
     fetchUser();
   }, [token]);
 
@@ -55,140 +74,247 @@ const ProfileSection = () => {
   // ✅ Update avatar
   const handleAvatarClick = async (src: string) => {
     const validSrc = getValidAvatarURL(src);
+
     setSelectedAvatar(validSrc);
+
     try {
       await updateUserAvatar(src);
+
       const updatedUser = await getUser();
+
       setUserData(updatedUser);
     } catch (error) {
-      console.error("Failed to update avatar:", error);
+      console.error(
+        "Failed to update avatar:",
+        error
+      );
     }
   };
 
   return (
-    <div className="relative min-h-screen px-4 py-6 sm:py-10 flex items-center justify-center overflow-hidden">
-      <Image
-        src="/background.jpg"
-        alt="Background"
-        fill
-        priority
-        className="object-cover z-0"
-      />
+    <>
+      <Navbar />
 
-      <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeInOut" }}
-        className="relative z-10 w-full max-w-5xl mx-auto rounded-[20px] bg-white/10 backdrop-blur-xl shadow-2xl flex flex-col overflow-hidden"
-      >
-        {/* Header */}
-        <div className="text-center py-4 px-4">
-          <h2 className="text-2xl sm:text-3xl lg:text-4xl font-bold text-white drop-shadow-md">
-            PROFILE SECTION
-          </h2>
+      <div className="relative min-h-screen overflow-hidden bg-[#050505] px-4 pt-28 pb-8 sm:pt-32 sm:pb-12 flex items-center justify-center">
+
+        {/* Background Image */}
+        <Image
+          src="/background.jpg"
+          alt="Background"
+          fill
+          priority
+          className="object-cover opacity-10"
+        />
+
+        {/* Cinematic Layers */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top_left,rgba(255,107,0,0.14),transparent_30%)]" />
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_bottom_right,rgba(225,29,72,0.14),transparent_35%)]" />
+
+        {/* Grid Texture */}
+        <div className="absolute inset-0 opacity-[0.04] bg-[linear-gradient(rgba(255,255,255,0.08)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.08)_1px,transparent_1px)] bg-[size:40px_40px]" />
+
+        {/* Ambient Glow */}
+        <div className="absolute top-[-120px] left-[-80px] w-[300px] h-[300px] rounded-full bg-[#FF6B00]/20 blur-[120px]" />
+        <div className="absolute bottom-[-120px] right-[-80px] w-[320px] h-[320px] rounded-full bg-[#E11D48]/20 blur-[120px]" />
+
+        {/* Floating Particles */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className="absolute top-[20%] left-[15%] w-1 h-1 rounded-full bg-[#FF6B00]/40 animate-pulse" />
+          <div className="absolute top-[65%] left-[75%] w-1 h-1 rounded-full bg-[#E11D48]/40 animate-pulse" />
+          <div className="absolute top-[40%] left-[55%] w-1 h-1 rounded-full bg-white/20 animate-pulse" />
         </div>
 
-        <div className="flex flex-col lg:flex-row px-4 sm:px-6 pb-6 sm:pb-10 gap-6">
-          {/* Avatar + Selection */}
-          <div className="flex flex-col items-center justify-center lg:w-[30%] gap-4">
-            {/* ✅ Main Avatar with Safe URL Check */}
-            {selectedAvatar && (selectedAvatar.startsWith("/") || selectedAvatar.startsWith("http")) ? (
-              <MotionImage
-                src={selectedAvatar}
-                alt="User Avatar"
-                width={160}
-                height={160}
-                initial={{ scale: 0.95, opacity: 0.8 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-                className="w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 rounded-full shadow-xl object-cover"
-              />
-            ) : (
-              <motion.div
-                initial={{ scale: 0.95, opacity: 0.8 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{
-                  duration: 2,
-                  repeat: Infinity,
-                  repeatType: "reverse",
-                }}
-                className="w-32 h-32 sm:w-36 sm:h-36 lg:w-40 lg:h-40 rounded-full flex items-center justify-center 
-                           font-extrabold text-4xl sm:text-5xl shadow-xl bg-gradient-to-br from-gray-900 via-gray-600 to-gray-300 
-                           text-white"
-                style={{ textShadow: "0 0 6px rgba(255,255,255,0.4)" }}
-              >
-                {userData?.first_name?.[0]?.toUpperCase() || "?"}
-              </motion.div>
-            )}
+        {/* Main Panel */}
+        <motion.div
+          initial={{ opacity: 0, scale: 0.96 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{
+            duration: 0.6,
+            ease: "easeInOut",
+          }}
+          className="relative z-10 w-full max-w-5xl overflow-hidden rounded-[36px] border border-white/10 bg-white/[0.03] backdrop-blur-2xl shadow-[0_25px_90px_rgba(0,0,0,0.75)]"
+        >
 
-            {/* Avatar Selection Thumbnails */}
-            <div className="flex gap-3 mt-2">
-              {avatarOptions.map((src, idx) => (
-                <Image
-                  key={idx}
-                  src={src}
-                  alt={`Avatar ${idx + 1}`}
-                  width={40}
-                  height={40}
-                  className={`w-10 h-10 rounded-full border-2 ${
-                    selectedAvatar === src
-                      ? "border-yellow-400 scale-110"
-                      : "border-transparent"
-                  } transition-transform duration-300 hover:scale-110 cursor-pointer`}
-                  onClick={() => handleAvatarClick(src)}
-                />
-              ))}
+          {/* Glow Border */}
+          <div className="absolute inset-0 rounded-[36px] border border-[#FF6B00]/10 pointer-events-none" />
+
+          {/* Top Glow Line */}
+          <div className="h-[2px] w-full bg-gradient-to-r from-transparent via-[#FF6B00] to-transparent opacity-70" />
+
+          {/* Header */}
+          <div className="relative text-center px-6 pt-10 sm:pt-12 pb-8">
+
+            <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-[#FF6B00]/20 bg-[#111111]/70 backdrop-blur-xl mb-5">
+              <div className="w-2 h-2 rounded-full bg-[#FF6B00]" />
+              <span className="text-[10px] uppercase tracking-[0.3em] text-[#A1A1AA]">
+                Kazuha Identity
+              </span>
             </div>
+
+            <p className="mt-5 text-[#A1A1AA] text-sm sm:text-base max-w-lg mx-auto leading-relaxed">
+              Manage your Kazuha Closet identity and
+              aesthetic.
+            </p>
           </div>
 
           {/* Divider */}
-          <div className="hidden lg:block w-px bg-white/30 mx-4" />
+          <div className="h-px w-full bg-gradient-to-r from-transparent via-white/10 to-transparent" />
 
-          {/* Profile Info */}
-          <div className="lg:w-[70%] w-full space-y-4 sm:space-y-5 text-white">
-            <div>
-              <label className="block text-sm mb-1 font-semibold text-white">
-                First Name
-              </label>
-              <input
-                type="text"
-                value={userData?.first_name || ""}
-                readOnly
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md text-sm sm:text-base bg-white/10 text-white placeholder-white/70 outline-none border border-white/20 shadow-md"
-              />
+          {/* Content */}
+          <div className="flex flex-col lg:flex-row gap-8 px-5 sm:px-8 lg:px-10 py-8 sm:py-10">
+
+            {/* LEFT SIDE */}
+            <div className="flex flex-col items-center justify-center lg:w-[30%]">
+
+              {/* Avatar Glow */}
+              <div className="relative group">
+
+                {/* Ambient Ring */}
+                <div className="absolute inset-0 rounded-full bg-gradient-to-br from-[#FF6B00]/30 to-[#E11D48]/30 blur-2xl opacity-70 scale-110" />
+
+                {/* Avatar Border */}
+                <div className="relative p-[3px] rounded-full bg-gradient-to-br from-[#FF6B00] to-[#E11D48] shadow-[0_0_35px_rgba(255,107,0,0.25)]">
+
+                  {selectedAvatar &&
+                  (selectedAvatar.startsWith("/") ||
+                    selectedAvatar.startsWith(
+                      "http"
+                    )) ? (
+                    <MotionImage
+                      src={selectedAvatar}
+                      alt="User Avatar"
+                      width={180}
+                      height={180}
+                      initial={{
+                        scale: 0.96,
+                        opacity: 0.85,
+                      }}
+                      animate={{
+                        scale: 1,
+                        opacity: 1,
+                      }}
+                      transition={{
+                        duration: 2.2,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                      }}
+                      className="w-32 h-32 sm:w-40 sm:h-40 lg:w-44 lg:h-44 rounded-full object-cover bg-[#111111] transition-all duration-500 group-hover:scale-[1.03]"
+                    />
+                  ) : (
+                    <motion.div
+                      initial={{
+                        scale: 0.96,
+                        opacity: 0.85,
+                      }}
+                      animate={{
+                        scale: 1,
+                        opacity: 1,
+                      }}
+                      transition={{
+                        duration: 2.2,
+                        repeat: Infinity,
+                        repeatType: "reverse",
+                      }}
+                      className="w-32 h-32 sm:w-40 sm:h-40 lg:w-44 lg:h-44 rounded-full bg-gradient-to-br from-[#18181B] via-[#2A2A2A] to-[#111111] flex items-center justify-center text-5xl sm:text-6xl font-black text-white shadow-inner"
+                      style={{
+                        textShadow:
+                          "0 0 18px rgba(255,107,0,0.45)",
+                      }}
+                    >
+                      {userData?.first_name?.[0]?.toUpperCase() ||
+                        "?"}
+                    </motion.div>
+                  )}
+                </div>
+              </div>
+
+              {/* Avatar Selection */}
+              <div className="flex gap-4 mt-8 flex-wrap justify-center">
+                {avatarOptions.map((src, idx) => (
+                  <div
+                    key={idx}
+                    onClick={() =>
+                      handleAvatarClick(src)
+                    }
+                    className={`relative p-[2px] rounded-full transition-all duration-500 cursor-pointer ${
+                      selectedAvatar === src
+                        ? "bg-gradient-to-br from-[#FF6B00] to-[#E11D48] scale-110 shadow-[0_0_25px_rgba(255,107,0,0.35)]"
+                        : "bg-white/10 hover:bg-white/20 hover:scale-105"
+                    }`}
+                  >
+                    <Image
+                      src={src}
+                      alt={`Avatar ${idx + 1}`}
+                      width={50}
+                      height={50}
+                      className="w-12 h-12 rounded-full object-cover bg-[#111111]"
+                    />
+                  </div>
+                ))}
+              </div>
             </div>
 
-            <div>
-              <label className="block text-sm mb-1 font-semibold text-white">
-                Last Name
-              </label>
-              <input
-                type="text"
-                value={userData?.last_name || ""}
-                readOnly
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md text-sm sm:text-base bg-white/10 text-white placeholder-white/70 outline-none border border-white/20 shadow-md"
-              />
-            </div>
+            {/* Divider */}
+            <div className="hidden lg:block w-px bg-gradient-to-b from-transparent via-white/10 to-transparent" />
 
-            <div>
-              <label className="block text-sm mb-1 font-semibold text-white">
-                Email
-              </label>
-              <input
-                type="email"
-                value={userData?.email || ""}
-                readOnly
-                className="w-full px-3 sm:px-4 py-2 sm:py-3 rounded-md text-sm sm:text-base bg-white/10 text-white placeholder-white/70 outline-none border border-white/20 shadow-md"
-              />
+            {/* RIGHT SIDE */}
+            <div className="lg:w-[70%] w-full space-y-6">
+
+              {/* FIRST NAME */}
+              <div>
+                <label className="block mb-3 text-xs uppercase tracking-[0.25em] text-[#A1A1AA]">
+                  First Name
+                </label>
+
+                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#18181B]/70 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
+                  <input
+                    type="text"
+                    value={userData?.first_name || ""}
+                    readOnly
+                    className="w-full bg-transparent px-5 py-4 text-white outline-none text-sm sm:text-base"
+                  />
+
+                  <div className="absolute inset-0 pointer-events-none opacity-0 hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_top,rgba(255,107,0,0.08),transparent_60%)]" />
+                </div>
+              </div>
+
+              {/* LAST NAME */}
+              <div>
+                <label className="block mb-3 text-xs uppercase tracking-[0.25em] text-[#A1A1AA]">
+                  Last Name
+                </label>
+
+                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#18181B]/70 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
+                  <input
+                    type="text"
+                    value={userData?.last_name || ""}
+                    readOnly
+                    className="w-full bg-transparent px-5 py-4 text-white outline-none text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+
+              {/* EMAIL */}
+              <div>
+                <label className="block mb-3 text-xs uppercase tracking-[0.25em] text-[#A1A1AA]">
+                  Email Address
+                </label>
+
+                <div className="relative overflow-hidden rounded-2xl border border-white/10 bg-[#18181B]/70 backdrop-blur-xl shadow-[0_10px_40px_rgba(0,0,0,0.4)]">
+                  <input
+                    type="email"
+                    value={userData?.email || ""}
+                    readOnly
+                    className="w-full bg-transparent px-5 py-4 text-white outline-none text-sm sm:text-base"
+                  />
+                </div>
+              </div>
+
             </div>
           </div>
-        </div>
-      </motion.div>
-    </div>
+        </motion.div>
+      </div>
+    </>
   );
 };
 

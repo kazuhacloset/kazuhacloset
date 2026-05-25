@@ -1,417 +1,387 @@
-import React, { useState, useRef, useEffect } from "react";
-import { ChevronLeft, ChevronRight, Star } from "lucide-react";
-import Link from 'next/link';
+"use client";
+
 import Image from "next/image";
-import { useRouter } from 'next/navigation';
+import Link from "next/link";
+import { ArrowRight } from "lucide-react";
+import { motion } from "framer-motion";
 
-type Product = {
-  id: string; // Changed from number to string to match your product system
-  name: string;
-  price: string;
-  type: "video" | "image";
-  media: string;
-  subtitle: string;
-  description?: string;
-  rating?: number;
-};
-
-const products: Product[] = [
+const products = [
   {
-    id: "giyu-tee-001", // Using the same IDs as in All_product.tsx
-    name: "Giyu Tee",
-    subtitle: "Water Hashira",
+    id: "itachi",
+    name: "ITACHI UCHIHA",
+    subtitle: "OVERSIZED T-SHIRT",
     price: "₹399",
-    type: "image",
-    media: "/Productimage/GIYU/front.png",
-    description: "Stylish Giyu Tomioka T-shirt",
-    rating: 4.8
+    image: "/Productimage/ITACHI/front.png",
+    badge: "BEST SELLER",
+    badgeColor: "bg-gradient-to-r from-[#ff7b00] to-[#ff4d00]",
   },
   {
-    id: "itachi-tee-001", // Using the same IDs as in All_product.tsx
-    name: "Itachi Tee",
-    subtitle: "You are already under my Genjutsu",
+    id: "goku",
+    name: "GOKU",
+    subtitle: "OVERSIZED T-SHIRT",
     price: "₹399",
-    type: "image", 
-    media: "/Productimage/ITACHI/front.png",
-    description: "Elegant Itachi Uchiha design tee",
-    rating: 4.9
+    image: "/Productimage/GOKU/front.png",
+    badge: "NEW DROP",
+    badgeColor: "bg-gradient-to-r from-[#ff8a00] to-[#ff5e00]",
   },
   {
-    id: "rengoku-tee-001", // Using the same IDs as in All_product.tsx
-    name: "Rengoku Tee",
-    subtitle: "Flame Hashira",
+    id: "obito",
+    name: "OBITO UCHIHA",
+    subtitle: "OVERSIZED T-SHIRT",
     price: "₹399",
-    type: "image",
-    media: "/Productimage/RENGOKU/front.png",
-    description: "Fiery Rengoku Flame Hashira tee",
-    rating: 4.7
+    image: "/Productimage/OBITO/front.png",
+    badge: "BEST SELLER",
+    badgeColor: "bg-gradient-to-r from-[#ff7b00] to-[#ff4d00]",
   },
 ];
 
-const ProductShowcase = () => {
-  const [currentIndex, setCurrentIndex] = useState(1);
-  const observerRef = useRef<(HTMLVideoElement | null)[]>([]);
-  const router = useRouter(); // Added router for navigation
-
-  useEffect(() => {
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const videoElement = entry.target as HTMLVideoElement;
-            videoElement.load();
-          }
-        });
-      },
-      { threshold: 0.1 }
-    );
-
-    observerRef.current.forEach((video) => {
-      if (video) observer.observe(video);
-    });
-
-    return () => observer.disconnect();
-  }, []);
-
-  // Navigation function - same as in All_product.tsx
-const navigateToProduct = (productId: string) => {
-  const t = localStorage.getItem("token");
-  console.log(t);
-
-  if (t === null) {
-    router.push("/login");
-    return; // ✅ stop here if no token
-  }
-
-  localStorage.setItem("productid", productId);
-  router.push("/product_page/");
-};
-  // Handle card click
-  const handleCardClick = (productId: string) => {
-    navigateToProduct(productId);
-  };
-
-  // Handle quick view click
-  const handleQuickView = (e: React.MouseEvent, productId: string) => {
-    e.stopPropagation(); // Prevent event bubbling if needed
-    navigateToProduct(productId);
-  };
-
-  const nextProduct = () => {
-    setCurrentIndex((prev) => (prev + 1) % products.length);
-  };
-
-  const prevProduct = () => {
-    setCurrentIndex((prev) => (prev - 1 + products.length) % products.length);
-  };
-
-  const renderStars = (rating: number) => {
-    return Array.from({ length: 5 }, (_, i) => (
-      <Star
-        key={i}
-        size={12}
-        className={`${
-          i < Math.floor(rating) 
-            ? "fill-yellow-400 text-yellow-400" 
-            : "text-gray-400"
-        }`}
-      />
-    ));
-  };
-
+export default function ProductShowcase() {
   return (
-    <div className="relative w-full min-h-screen overflow-hidden">
-      <button
-        onClick={prevProduct}
-        className="absolute left-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 md:hidden"
+    <section className="relative w-full overflow-hidden bg-[#050505]">
+
+      {/* CINEMATIC GLOBAL GLOW */}
+      <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,110,0,0.06),transparent_55%)]" />
+
+      {/* PREMIUM COLLECTION BAR */}
+      <div
+        className="
+          relative z-20
+          border-y border-orange-500/15
+          bg-gradient-to-r
+          from-[#120600]
+          via-[#3a1200]
+          to-[#120600]
+          shadow-[0_0_45px_rgba(255,98,0,0.10)]
+        "
       >
-        <ChevronLeft size={24} />
-      </button>
-      
-      <button
-        onClick={nextProduct}
-        className="absolute right-4 top-1/2 transform -translate-y-1/2 z-20 bg-black/50 hover:bg-black/70 text-white p-3 rounded-full transition-all duration-300 hover:scale-110 md:hidden"
-      >
-        <ChevronRight size={24} />
-      </button>
 
-      <div className="flex items-center justify-center min-h-screen md:min-h-0 md:h-screen">
-        <div 
-          className="relative w-full h-full"
-          style={{
-            backgroundImage: "url('/background.jpg')",
-            backgroundSize: "cover",
-            backgroundPosition: "center",
-            backgroundAttachment: "fixed"
-          }}
-        >
-          <div className="absolute inset-0 bg-black/20"></div>
-          
-          <div className="relative z-10 px-2 py-8 md:py-4 h-full flex flex-col justify-center">
-            
-            <div className="text-center mb-8 md:mb-6">
-              <h2 className="text-2xl sm:text-3xl font-bold text-white mb-2">
-                FEATURED PRODUCTS
-              </h2>
-              <div className="w-16 h-1 bg-gradient-to-r from-yellow-400 via-pink-500 to-purple-500 mx-auto mb-4"></div>
-              <p className="text-gray-300 text-sm">
-                <span className="md:hidden">Navigate through our collection</span>
-                <span className="hidden md:inline">Swipe to explore our collection</span>
-              </p>
-            </div>
+        {/* TOP LIGHT LINE */}
+        <div className="absolute left-0 top-0 h-[1px] w-full bg-orange-400/15" />
 
-            {/* Mobile View */}
-            <div className="md:hidden">
-              <div className="flex justify-center">
-                <div 
-                  className="w-56 xs:w-60 sm:w-72 transition-all duration-500 hover:-translate-y-8 cursor-pointer"
-                  onClick={() => handleCardClick(products[currentIndex].id)}
-                >
-                  <div className="bg-black/40 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-500 overflow-hidden">
-                    
-                    <div className="relative h-48 sm:h-56 overflow-hidden">
-                      {products[currentIndex].type === "video" ? (
-                        <video
-                          ref={(el) => {
-                            if (el && !observerRef.current.includes(el)) {
-                              observerRef.current.push(el);
-                            }
-                          }}
-                          src={products[currentIndex].media}
-                          muted
-                          loop
-                          playsInline
-                          preload="none"
-                          className="w-full h-full object-cover"
-                          onMouseEnter={(e) => e.currentTarget.play()}
-                          onMouseLeave={(e) => {
-                            e.currentTarget.pause();
-                            e.currentTarget.currentTime = 0;
-                          }}
-                        />
-                      ) : (
-                        <Image
-                          src={products[currentIndex].media}
-                          alt={products[currentIndex].name}
-                          width={500} // set an actual number
-                          height={500}
-                          className="w-full h-full object-contain bg-black rounded-lg"
-                        />
-                      )}
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
-                      <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-all duration-300"></div>
-                      <div className="absolute top-3 left-3 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold">
-                        FEATURED
-                      </div>
-                      <div className="absolute top-3 right-3 w-3 h-3 bg-white rounded-full"></div>
-                    </div>
+        {/* BOTTOM LIGHT LINE */}
+        <div className="absolute bottom-0 left-0 h-[1px] w-full bg-orange-400/10" />
 
-                    <div className="p-4 sm:p-6">
-                      <div className="mb-4">
-                        <h3 className="text-white text-lg sm:text-xl font-bold mb-1">
-                          {products[currentIndex].name}
-                        </h3>
-                        <p className="text-gray-300 text-sm mb-2">
-                          {products[currentIndex].subtitle}
-                        </p>
-                      </div>
-                      
-                      <div className="flex items-center justify-between mb-4">
-                        <div className="text-yellow-400 text-xl sm:text-2xl font-bold">
-                          {products[currentIndex].price}
-                        </div>
-                        <div className="flex items-center gap-1">
-                          {renderStars(products[currentIndex].rating || 0)}
-                          <span className="text-gray-300 text-sm ml-1">
-                            {products[currentIndex].rating}
-                          </span>
-                        </div>
-                      </div>
+        {/* CENTER ATMOSPHERIC GLOW */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_center,rgba(255,120,0,0.10),transparent_70%)]" />
 
-                      <div className="flex justify-center">
-                        <button 
-                          onClick={(e) => handleQuickView(e, products[currentIndex].id)}
-                          className="px-6 py-2 bg-gradient-to-r from-yellow-300 to-orange-400 hover:from-yellow-400 hover:to-orange-500 text-black font-bold rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
-                        >
-                          <span className="text-sm">Quick View</span>
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+        {/* CONTENT */}
+        <div className="relative flex h-[62px] items-center justify-center">
 
-            {/* Desktop View Cards */}
-            <div className="hidden md:flex flex-1 items-center justify-center h-full">
-              <div className="overflow-x-auto pb-4 scrollbar-hide flex items-center">
-                <div className="flex gap-8 px-4 justify-center items-center min-h-full" style={{ minWidth: "max-content" }}>
-                  {products.map((product, index) => (
-                    <div
-                      key={product.id}
-                      className="flex-shrink-0 w-80 transition-all duration-500 hover:scale-105 cursor-pointer"
-                      onClick={() => handleCardClick(product.id)}
-                    >
-                      <div className="bg-black/40 backdrop-blur-lg border border-white/20 rounded-2xl shadow-2xl hover:shadow-[0_0_30px_rgba(255,255,255,0.3)] transition-all duration-500 overflow-hidden">
-                        <div className="relative h-60 overflow-hidden">
-                          {product.type === "video" ? (
-                            <video
-                              ref={(el) => {
-                                if (el && !observerRef.current.includes(el)) {
-                                  observerRef.current.push(el);
-                                }
-                              }}
-                              src={product.media}
-                              muted
-                              loop
-                              playsInline
-                              preload="none"
-                              className="w-full h-full object-cover"
-                              onMouseEnter={(e) => e.currentTarget.play()}
-                              onMouseLeave={(e) => {
-                                e.currentTarget.pause();
-                                e.currentTarget.currentTime = 0;
-                              }}
-                            />
-                          ) : (
-                           <Image
-                              src={product.media}
-                              alt={product.name}
-                              width={500}
-                              height={500}
-                              className="w-full h-full object-contain bg-black rounded-lg"
-                            />
+          {/* LEFT LINE */}
+          <div className="mr-4 h-[1px] w-8 bg-gradient-to-r from-transparent to-orange-500" />
 
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-transparent to-transparent"></div>
-                          <div className="absolute inset-0 bg-black/0 hover:bg-black/20 transition-all duration-300"></div>
-                          {index === currentIndex && (
-                            <div className="absolute top-3 left-3 bg-yellow-400 text-black px-2 py-1 rounded-full text-xs font-bold">
-                              FEATURED
-                            </div>
-                          )}
-                          {index === currentIndex && (
-                            <div className="absolute top-3 right-3 w-3 h-3 bg-white rounded-full"></div>
-                          )}
-                        </div>
+          {/* TITLE */}
+          <h2
+            className="
+              text-center
+              text-[13px]
+              font-black
+              uppercase
+              tracking-[0.35em]
+              text-white
+              drop-shadow-[0_0_12px_rgba(255,140,0,0.25)]
 
-                        <div className="p-4">
-                          <div className="mb-3">
-                            <h3 className="text-white text-lg font-bold mb-1">
-                              {product.name}
-                            </h3>
-                            <p className="text-gray-300 text-sm mb-2">
-                              {product.subtitle}
-                            </p>
-                          </div>
-                          
-                          <div className="flex items-center justify-between mb-3">
-                            <div className="text-yellow-400 text-xl font-bold">
-                              {product.price}
-                            </div>
-                            <div className="flex items-center gap-1">
-                              {renderStars(product.rating || 0)}
-                              <span className="text-gray-300 text-sm ml-1">
-                                {product.rating}
-                              </span>
-                            </div>
-                          </div>
+              sm:text-[15px]
+              md:text-2xl
+            "
+          >
+            PREMIUM COLLECTION
+          </h2>
 
-                          <div className="flex justify-center">
-                            <button 
-                              onClick={(e) => handleQuickView(e, product.id)}
-                              className="px-6 py-2 bg-gradient-to-r from-yellow-300 to-orange-400 hover:from-yellow-400 hover:to-orange-500 text-black font-bold rounded-lg transition-all duration-300 hover:scale-105 shadow-lg"
-                            >
-                              <span className="text-sm">Quick View</span>
-                            </button>
-                          </div>
-                        </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-center mt-6 md:mt-4 gap-2">
-              {products.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentIndex(index)}
-                  className={`w-2 h-2 rounded-full transition-all duration-300 ${
-                    index === currentIndex 
-                      ? "bg-yellow-400 scale-125" 
-                      : "bg-white/30 hover:bg-white/50"
-                  }`}
-                />
-              ))}
-            </div>
-
-            {/* Rotating Border View All Products button at the bottom */}
-            <div className="flex justify-center mt-6 md:mt-6">
-              <Link href="/allproducts">
-                <button className="border-btn-small relative bg-gradient-to-r from-orange-400 to-orange-600 text-white font-bold py-2 px-4 md:py-3 md:px-6 rounded-full cursor-pointer overflow-hidden transition-all duration-300 hover:scale-105 text-sm md:text-base shadow-lg hover:shadow-xl z-10">
-                  <span className="relative z-20">View All Products</span>
-                </button>
-              </Link>
-            </div>
-          </div>
+          {/* RIGHT LINE */}
+          <div className="ml-4 h-[1px] w-8 bg-gradient-to-l from-transparent to-orange-500" />
         </div>
       </div>
 
-      {/* CSS for Rotating Border Button */}
-      <style jsx>{`
-        .border-btn-small {
-          position: relative;
-          background: transparent;
-          border: 2px solid transparent;
-          background-clip: padding-box;
-          color: white;
-          padding: 8px 20px;
-          border-radius: 30px;
-          font-weight: bold;
-          cursor: pointer;
-          overflow: hidden;
-        }
-        
-        @media (min-width: 768px) {
-          .border-btn-small {
-            padding: 12px 24px;
-          }
-        }
-        
-        .border-btn-small::before {
-          content: '';
-          position: absolute;
-          top: 0;
-          left: 0;
-          right: 0;
-          bottom: 0;
-          background: linear-gradient(45deg, #ffd700, #ff8c00, #ff4500, #8b0000);
-          border-radius: 30px;
-          z-index: -1;
-          animation: rotateBorder 3s linear infinite;
-        }
-        
-        .border-btn-small::after {
-          content: '';
-          position: absolute;
-          top: 2px;
-          left: 2px;
-          right: 2px;
-          bottom: 2px;
-          background: #1a1a1a;
-          border-radius: 28px;
-          z-index: -1;
-        }
-        
-        @keyframes rotateBorder {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
-        }
-      `}</style>
-    </div>
-  );
-};
+      {/* PRODUCT SECTION */}
+      <div className="relative bg-[#050505] px-3 py-5 md:px-8 lg:px-12">
 
-export default ProductShowcase;
+        {/* LEFT GLOW */}
+        <div className="absolute left-[-10%] top-0 h-[350px] w-[350px] rounded-full bg-orange-500/10 blur-[130px]" />
+
+        {/* RIGHT GLOW */}
+        <div className="absolute bottom-0 right-[-10%] h-[350px] w-[350px] rounded-full bg-[#ff6a00]/10 blur-[130px]" />
+
+        {/* GRID */}
+        <div
+          className="
+            relative z-10
+            grid gap-3
+
+            grid-cols-2
+            sm:grid-cols-2
+
+            md:grid-cols-4
+          "
+        >
+
+          {/* PRODUCT CARDS */}
+          {products.map((product, index) => (
+            <motion.div
+              key={index}
+              whileHover={{ y: -8 }}
+              transition={{ duration: 0.35 }}
+              className="
+                group overflow-hidden
+                rounded-2xl
+                border border-zinc-800
+                bg-[#090909]
+
+                transition-all duration-500
+
+                hover:border-orange-500/40
+                hover:shadow-[0_0_40px_rgba(255,120,0,0.10)]
+              "
+            >
+
+              {/* IMAGE AREA */}
+              <div
+                className="
+                  relative flex items-center justify-center overflow-hidden
+
+                  bg-gradient-to-b
+                  from-[#101010]
+                  to-black
+
+                  h-[170px]
+                  p-3
+
+                  sm:h-[210px]
+
+                  md:h-[360px]
+                  md:p-5
+                "
+              >
+
+                {/* HOVER GLOW */}
+                <div className="absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_center,rgba(255,120,0,0.16),transparent_70%)]" />
+
+                {/* SHINE EFFECT */}
+                <div className="absolute inset-0 translate-x-[-120%] bg-gradient-to-r from-transparent via-white/5 to-transparent opacity-0 transition duration-700 group-hover:translate-x-[120%] group-hover:opacity-100" />
+
+                {/* BADGE */}
+                <div
+                  className={`
+                    absolute left-2 top-2 z-20
+                    px-2 py-[4px]
+
+                    text-[8px]
+                    md:text-[10px]
+
+                    font-bold uppercase
+                    tracking-[0.15em]
+                    text-white
+
+                    rounded-sm
+                    shadow-lg
+
+                    ${product.badgeColor}
+                  `}
+                >
+                  {product.badge}
+                </div>
+
+                {/* PRODUCT IMAGE */}
+                <Image
+                  src={product.image}
+                  alt={product.name}
+                  width={500}
+                  height={500}
+                  className="
+                    h-full w-full object-contain
+                    transition duration-500
+                    group-hover:scale-105
+                  "
+                />
+
+                {/* BOTTOM FADE */}
+                <div className="absolute inset-x-0 bottom-0 h-16 bg-gradient-to-t from-black to-transparent md:h-24" />
+              </div>
+
+              {/* CONTENT */}
+              <div
+                className="
+                  space-y-1
+
+                  px-2 pb-3 pt-2
+
+                  sm:px-3
+
+                  md:px-4 md:pb-5 md:pt-3
+                "
+              >
+
+                {/* NAME */}
+                <h3
+                  className="
+                    line-clamp-1
+
+                    text-[11px]
+                    sm:text-[12px]
+                    md:text-sm
+
+                    font-extrabold uppercase
+                    tracking-[0.05em]
+
+                    text-white
+                  "
+                >
+                  {product.name}
+                </h3>
+
+                {/* SUBTITLE */}
+                <p
+                  className="
+                    text-[8px]
+                    sm:text-[9px]
+                    md:text-[11px]
+
+                    uppercase
+                    tracking-[0.18em]
+
+                    text-zinc-500
+                  "
+                >
+                  {product.subtitle}
+                </p>
+
+                {/* PRICE */}
+                <div className="pt-1 md:pt-2">
+                  <span
+                    className="
+                      text-base
+                      sm:text-lg
+                      md:text-xl
+
+                      font-black
+
+                      bg-gradient-to-r
+                      from-orange-300
+                      to-orange-500
+
+                      bg-clip-text
+                      text-transparent
+                    "
+                  >
+                    {product.price}
+                  </span>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+
+          {/* VIEW COLLECTION CARD */}
+          <Link href="/allproducts">
+            <motion.div
+              whileHover={{ scale: 1.02 }}
+              className="
+                group relative
+
+                flex cursor-pointer flex-col
+                items-center justify-center
+                overflow-hidden
+
+                rounded-2xl
+                border border-zinc-800
+                bg-[#070707]
+
+                min-h-[240px]
+                md:min-h-[470px]
+
+                transition-all duration-500
+
+                hover:border-orange-500/40
+                hover:shadow-[0_0_45px_rgba(255,120,0,0.14)]
+              "
+            >
+
+              {/* GLOW */}
+              <div className="absolute inset-0 opacity-0 transition duration-500 group-hover:opacity-100 bg-[radial-gradient(circle_at_center,rgba(255,120,0,0.12),transparent_70%)]" />
+
+              {/* LIGHT STREAK */}
+              <div className="absolute inset-0 opacity-0 transition duration-700 group-hover:opacity-100 bg-gradient-to-b from-transparent via-orange-500/5 to-transparent" />
+
+              {/* ICON */}
+              <div
+                className="
+                  relative z-10
+
+                  mb-4
+
+                  flex h-9 w-9
+                  md:h-11 md:w-11
+
+                  items-center justify-center
+
+                  rounded-full
+                  border border-orange-500/40
+
+                  text-orange-400
+
+                  shadow-[0_0_18px_rgba(255,120,0,0.22)]
+                "
+              >
+                ✦
+              </div>
+
+              {/* TEXT */}
+              <h3
+                className="
+                  relative z-10
+
+                  text-center
+                  font-black uppercase
+                  leading-tight
+                  tracking-[0.08em]
+
+                  text-white
+
+                  text-lg
+                  sm:text-xl
+                  md:text-4xl
+                "
+              >
+                View
+                <br />
+                Collection
+              </h3>
+
+              {/* LINE */}
+              <div
+                className="
+                  relative z-10
+
+                  my-4 md:my-8
+                  h-[2px]
+
+                  w-12 md:w-20
+
+                  bg-gradient-to-r
+                  from-orange-500
+                  to-orange-300
+
+                  transition-all duration-300
+
+                  group-hover:w-16
+                  md:group-hover:w-28
+                "
+              />
+
+              {/* ARROW */}
+              <ArrowRight
+                size={28}
+                className="
+                  relative z-10
+                  text-orange-400
+
+                  transition duration-300
+                  group-hover:translate-x-2
+                "
+              />
+            </motion.div>
+          </Link>
+        </div>
+      </div>
+    </section>
+  );
+}

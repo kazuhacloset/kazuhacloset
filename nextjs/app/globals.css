@@ -1,42 +1,86 @@
 @import "tailwindcss";
 
+/* ROOT COLORS */
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --background: #050505;
+  --foreground: #f5f5f5;
+
+  --primary: #ff6b00;
+  --secondary: #e11d48;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
-
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
-  margin: 0;
-  padding: 0;
-}
-
-/* Enable smooth scrolling */
+/* SMOOTH SCROLL */
 html {
   scroll-behavior: smooth;
 }
 
-/* Text css -----------------------------------------------------------------------------------------------------------------------*/
+/* BODY */
+body {
+  background: var(--background);
+  color: var(--foreground);
 
-/* Existing glow effect */
+  font-family: Arial, Helvetica, sans-serif;
+
+  margin: 0;
+  padding: 0;
+
+  overflow-x: hidden;
+
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* TEXT SELECTION */
+::selection {
+  background: rgba(255, 107, 0, 0.3);
+  color: white;
+}
+
+/* SCROLLBAR */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #050505;
+}
+
+::-webkit-scrollbar-thumb {
+  background: linear-gradient(
+    to bottom,
+    #ff6b00,
+    #e11d48
+  );
+
+  border-radius: 999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  opacity: 0.85;
+}
+
+/* GLOBAL IMAGE OPTIMIZATION */
+img,
+.img-hover-scale {
+  will-change: transform;
+}
+
+/* ---------------------------------------------------------------------------------------------------------------- */
+/* TEXT EFFECTS */
+/* ---------------------------------------------------------------------------------------------------------------- */
+
 .glow-text {
   transition: text-shadow 0.3s ease-in-out;
 }
 
 .glow-text:hover {
-  text-shadow: 0 0 8px #ff8c00, 0 0 16px #ffa500, 0 0 24px #ffb347;
+  text-shadow:
+    0 0 8px #ff6b00,
+    0 0 16px #ff8c00,
+    0 0 24px #ffb347;
 }
 
-/* Fade-in animation for the text */
+/* FADE IN */
 .animate-fadeIn {
   animation: fadeIn 1.5s ease-in-out;
 }
@@ -46,38 +90,48 @@ html {
     opacity: 0;
     transform: translateY(10px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
   }
 }
 
-/* Hover effect for "50% OFF" with a more subtle color */
+/* GROUP HOVER */
 .group-hover\:text-indigo-600:hover {
-  text-shadow: 0 0 8px #ff8c00, 0 0 16px #ffa500, 0 0 24px #ffb347;
+  text-shadow:
+    0 0 8px #ff8c00,
+    0 0 16px #ffa500,
+    0 0 24px #ffb347;
 }
 
-/* Group hover scale effect */
 .group-hover\:scale-110:hover {
   transform: scale(1.05);
 }
 
-/* Softer drop-shadow */
+/* SHADOWS */
 .drop-shadow-lg {
-  text-shadow: 0px 2px 6px rgba(0, 0, 0, 0.2), 0 4px 8px rgba(0, 0, 0, 0.15);
+  text-shadow:
+    0px 2px 6px rgba(0, 0, 0, 0.25),
+    0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .drop-shadow-2xl {
-  text-shadow: 0px 2px 10px rgba(0, 0, 0, 0.25), 0 5px 15px rgba(0, 0, 0, 0.2);
+  text-shadow:
+    0px 2px 10px rgba(0, 0, 0, 0.35),
+    0 5px 15px rgba(0, 0, 0, 0.25);
 }
 
-/* Banner images css -----------------------------------------------------------------------------------------------------------------------*/
+/* ---------------------------------------------------------------------------------------------------------------- */
+/* IMAGE ANIMATIONS */
+/* ---------------------------------------------------------------------------------------------------------------- */
 
 @keyframes slideUpFade {
   0% {
     opacity: 0;
     transform: translateY(20px);
   }
+
   100% {
     opacity: 1;
     transform: translateY(0);
@@ -88,8 +142,9 @@ html {
   animation: slideUpFade 1.5s ease-out;
 }
 
+/* IMAGE SCALE */
 .img-hover-scale {
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.35s ease-in-out;
 }
 
 .img-hover-scale:hover {
@@ -97,101 +152,192 @@ html {
 }
 
 img {
-  transition: transform 0.3s ease-in-out;
+  transition: transform 0.35s ease-in-out;
 }
 
-img, .img-hover-scale {
-  will-change: transform;
-}
-
+/* WIGGLE */
 @keyframes wiggle {
-  0%, 100% { transform: rotate(0); }
-  25% { transform: rotate(3deg); }
-  75% { transform: rotate(-3deg); }
+  0%,
+  100% {
+    transform: rotate(0);
+  }
+
+  25% {
+    transform: rotate(3deg);
+  }
+
+  75% {
+    transform: rotate(-3deg);
+  }
 }
 
 .animate-wiggle {
   animation: wiggle 0.6s ease-in-out infinite;
 }
 
-/* about section -----------------------------------------------------------------------------------------------------------------------*/
+/* ---------------------------------------------------------------------------------------------------------------- */
+/* ANIMATION UTILITIES */
+/* ---------------------------------------------------------------------------------------------------------------- */
+
 @layer utilities {
   @keyframes fade-in {
-    from { opacity: 0; transform: translateY(20px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
+
   @keyframes slide-up {
-    from { opacity: 0; transform: translateY(40px); }
-    to { opacity: 1; transform: translateY(0); }
+    from {
+      opacity: 0;
+      transform: translateY(40px);
+    }
+
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
   }
+
   @keyframes float {
-    0%, 100% { transform: translateY(0); }
-    50% { transform: translateY(-5px); }
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+
+    50% {
+      transform: translateY(-5px);
+    }
   }
 
-  .animate-fade-in { animation: fade-in 1s ease-out forwards; }
-  .animate-slide-up { animation: slide-up 0.8s ease-out forwards; }
-  .animate-float { animation: float 3s ease-in-out infinite; }
-  .animate-fade-in-slow { animation: fade-in 2s ease-out forwards; }
+  @keyframes pulseGlow {
+    0% {
+      opacity: 0.5;
+    }
+
+    50% {
+      opacity: 1;
+    }
+
+    100% {
+      opacity: 0.5;
+    }
+  }
+
+  .animate-fade-in {
+    animation: fade-in 1s ease-out forwards;
+  }
+
+  .animate-slide-up {
+    animation: slide-up 0.8s ease-out forwards;
+  }
+
+  .animate-float {
+    animation: float 3s ease-in-out infinite;
+  }
+
+  .animate-fade-in-slow {
+    animation: fade-in 2s ease-out forwards;
+  }
+
+  .animate-pulseGlow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
 }
 
-/* Toast Custom Styling -----------------------------------------------------------------------------------------------------------------------*/
+/* ---------------------------------------------------------------------------------------------------------------- */
+/* TOAST STYLING */
+/* ---------------------------------------------------------------------------------------------------------------- */
+
 .custom-toast {
-  background: linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff) !important; 
+  background: linear-gradient(
+    to bottom left,
+    #000000,
+    #151515,
+    #252525
+  ) !important;
+
   color: #ffffff !important;
+
   font-weight: 500;
+
   border-radius: 16px;
-  padding: 12px 18px; /* ✅ reduced so bigger avatar doesn’t stretch card */
+
+  padding: 12px 18px;
+
   display: flex !important;
+
   align-items: center;
+
   gap: 12px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
-  border: none;
+
+  box-shadow:
+    0 4px 20px rgba(0, 0, 0, 0.45),
+    0 0 25px rgba(255, 107, 0, 0.08);
+
+  border: 1px solid rgba(255, 255, 255, 0.05);
+
   min-width: 280px;
+
   font-size: 14px;
-  animation: toast-slide-in 0.4s ease-out; /* ✅ smooth entry animation */
+
+  animation: toast-slide-in 0.4s ease-out;
 }
 
-/* Success toast styling */
+/* SUCCESS */
 .custom-toast[data-type="success"] {
-  background: linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff) !important;
+  border-left: 3px solid #ff6b00;
 }
 
-/* Error toast styling */
+/* ERROR */
 .custom-toast[data-type="error"] {
-  background: linear-gradient(to bottom left, #000000, #1c1c21ff, #7f7f7fff) !important;
+  border-left: 3px solid #e11d48;
 }
 
-/* Remove default toast styling */
+/* INNER */
 .custom-toast > div {
   display: flex;
   align-items: center;
   gap: 12px;
 }
 
-/* Avatar styling */
+/* AVATAR */
 .toast-avatar {
-  width: 52px;  /* ✅ bigger avatar */
+  width: 52px;
   height: 52px;
+
   border-radius: 50%;
+
   flex-shrink: 0;
+
   object-fit: cover;
+
+  border: 2px solid rgba(255, 255, 255, 0.08);
 }
 
-/* Text styling */
+/* MESSAGE */
 .custom-toast .toast-message {
   flex: 1;
+
   font-size: 14px;
+
   font-weight: 500;
+
   color: #ffffff;
 }
 
-/* 🔥 Toast slide-in animation */
+/* TOAST ANIMATION */
 @keyframes toast-slide-in {
   from {
     opacity: 0;
     transform: translateX(30px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);

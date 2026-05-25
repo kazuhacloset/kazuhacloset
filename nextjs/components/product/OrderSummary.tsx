@@ -61,7 +61,6 @@ export default function OrderSummary() {
   const token =
     typeof window !== "undefined" ? localStorage.getItem("token") : null;
 
-  // ---------------- Fetch User ----------------
   useEffect(() => {
     const fetchUser = async () => {
       if (!token) return;
@@ -75,7 +74,6 @@ export default function OrderSummary() {
     fetchUser();
   }, [token]);
 
-  // ---------------- Load Cart Items & Order History ----------------
   useEffect(() => {
     const fetchProducts = async () => {
       setLoading(true);
@@ -113,8 +111,8 @@ export default function OrderSummary() {
   const cleanPrice = (price: string) =>
     parseFloat(price.replace(/[^0-9.]/g, "")) || 0;
 
-  // ---------------- Tiered Offer Logic ----------------
   const totalQuantity = products.reduce((sum, item) => sum + item.quantity, 0);
+
   const subtotal = products.reduce(
     (sum, item) => sum + cleanPrice(item.price) * item.quantity,
     0
@@ -125,35 +123,35 @@ export default function OrderSummary() {
   let bundleMessage = "";
 
   if (totalQuantity >= 3) {
-    // Determine how many free tees
     let freeCount = 0;
+
     if (totalQuantity >= 3 && totalQuantity <= 5) freeCount = 1;
     else if (totalQuantity >= 6 && totalQuantity <= 8) freeCount = 2;
     else if (totalQuantity >= 9 && totalQuantity <= 11) freeCount = 3;
     else if (totalQuantity >= 12 && totalQuantity <= 14) freeCount = 4;
-    else freeCount = Math.floor(totalQuantity / 3); // continue pattern
+    else freeCount = Math.floor(totalQuantity / 3);
 
-    // Gather all individual prices (by quantity)
     const allPrices: number[] = [];
+
     products.forEach((item) => {
       const price = cleanPrice(item.price);
+
       for (let i = 0; i < item.quantity; i++) {
         allPrices.push(price);
       }
     });
 
-    // Sort and find cheapest items to make free
     allPrices.sort((a, b) => a - b);
+
     const freeItems = allPrices.slice(0, freeCount);
+
     discount = freeItems.reduce((sum, val) => sum + val, 0);
+
     total = subtotal - discount;
 
-    bundleMessage = `🎉 Offer Applied: Buy ${totalQuantity} Get ${freeCount} Free (₹${discount.toFixed(
-      2
-    )} off!)`;
+    bundleMessage = `🎉 Offer Applied: Buy ${totalQuantity} Get ${freeCount} Free`;
   }
 
-  // ---------------- Handlers ----------------
   const handlePhoneChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = e.target.value.replace(/\D/g, "");
     if (value.length <= 10) setPhone(value);
@@ -165,11 +163,15 @@ export default function OrderSummary() {
         resolve(true);
         return;
       }
+
       const script = document.createElement("script");
+
       script.id = "razorpay-script";
       script.src = "https://checkout.razorpay.com/v1/checkout.js";
+
       script.onload = () => resolve(true);
       script.onerror = () => resolve(false);
+
       document.body.appendChild(script);
     });
   };
@@ -179,12 +181,14 @@ export default function OrderSummary() {
       toast.error("Please enter your delivery address");
       return;
     }
+
     if (!phone.trim() || phone.length !== 10) {
       toast.error("Please enter a valid 10-digit phone number");
       return;
     }
 
     const res = await loadRazorpay();
+
     if (!res) {
       toast.error("Failed to load Razorpay SDK.");
       return;
@@ -216,7 +220,11 @@ export default function OrderSummary() {
           contact: phone,
         },
         notes: { address },
-        theme: { color: "#FBBF24" },
+
+        theme: {
+          color: "#FF6B00",
+        },
+
         handler: async function (response: RazorpayResponse) {
           try {
             const verifyRes = await verifyPayment({
@@ -241,9 +249,11 @@ export default function OrderSummary() {
       };
 
       const rzp = new window.Razorpay(options);
+
       rzp.on("payment.failed", (resp: RazorpayErrorResponse) => {
         toast.error("Payment failed: " + resp.error.description);
       });
+
       rzp.open();
     } catch (error) {
       console.error("Error during payment:", error);
@@ -251,209 +261,253 @@ export default function OrderSummary() {
     }
   };
 
-  // ---------------- UI ----------------
   if (loading) {
     return (
-      <main className="bg-black text-white min-h-screen px-4 py-6">
+      <main className="min-h-screen bg-[#050505] text-white">
         <Navbar />
-        <div className="max-w-5xl mx-auto pt-16">Loading...</div>
       </main>
     );
   }
 
   return (
-    <main className="bg-black text-white min-h-screen px-4 py-6">
+    <main className="relative min-h-screen overflow-hidden bg-[#050505] text-[#F5F5F5]">
+      {/* Cinematic Background */}
+      <div className="absolute inset-0 overflow-hidden pointer-events-none">
+        <div className="absolute top-0 left-[-10%] w-[500px] h-[500px] bg-[#FF6B00]/10 blur-[140px] rounded-full"></div>
+
+        <div className="absolute bottom-0 right-[-10%] w-[500px] h-[500px] bg-[#E11D48]/10 blur-[140px] rounded-full"></div>
+
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,107,0,0.08),transparent_40%)]"></div>
+      </div>
+
       <Navbar />
 
-      <div className="max-w-5xl mx-auto w-full pt-16">
-        {/* Title */}
-        <div className="text-center mb-6 sm:mb-10">
-          <h1 className="text-xl sm:text-3xl md:text-4xl font-bold text-white mb-3 sm:mb-4">
-            Order Summary
-          </h1>
-          <div className="w-16 sm:w-24 h-1 bg-gradient-to-r from-pink-500 via-purple-500 to-blue-500 mx-auto rounded-full"></div>
+      <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-24 pb-16">
+        {/* Header */}
+        <div className="text-center mb-14">
+          <p className="uppercase tracking-[0.35em] text-[#FF6B00] text-xs mb-4">
+            Kazuha Closet Checkout
+          </p>
+
+          <div className="w-40 h-[2px] bg-gradient-to-r from-transparent via-[#FF6B00] to-transparent mx-auto mt-8"></div>
         </div>
 
         {products.length > 0 && (
           <>
-            {/* Address & Phone */}
-            <div className="mb-6 sm:mb-8 space-y-4">
+            {/* Address Form */}
+            <div className="mb-10 grid gap-5">
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-300">
-                  Address
+                <label className="block mb-3 text-sm tracking-wide text-zinc-400 uppercase">
+                  Delivery Address
                 </label>
+
                 <input
                   type="text"
                   placeholder="Enter your delivery address"
-                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                  className="w-full bg-[#111111]/80 border border-zinc-800 focus:border-[#FF6B00]/60 focus:ring-4 focus:ring-[#FF6B00]/10 rounded-2xl px-5 py-4 outline-none transition-all duration-300 text-white placeholder:text-zinc-500"
                   value={address}
                   onChange={(e) => setAddress(e.target.value)}
                 />
               </div>
 
               <div>
-                <label className="block text-sm font-medium mb-1 text-gray-300">
-                  Phone No.
+                <label className="block mb-3 text-sm tracking-wide text-zinc-400 uppercase">
+                  Phone Number
                 </label>
+
                 <input
                   type="tel"
                   placeholder="Enter your 10-digit phone number"
-                  className="w-full p-3 rounded-lg bg-gray-200 text-black focus:ring-2 focus:ring-yellow-400 focus:outline-none"
+                  className="w-full bg-[#111111]/80 border border-zinc-800 focus:border-[#FF6B00]/60 focus:ring-4 focus:ring-[#FF6B00]/10 rounded-2xl px-5 py-4 outline-none transition-all duration-300 text-white placeholder:text-zinc-500"
                   value={phone}
                   onChange={handlePhoneChange}
                   maxLength={10}
                 />
+
                 {phone && phone.length < 10 && (
-                  <p className="text-red-400 text-xs mt-1">
+                  <p className="text-red-400 text-sm mt-2">
                     Phone number must be 10 digits ({phone.length}/10)
                   </p>
                 )}
               </div>
             </div>
 
-            {/* Current Order Items */}
-            {products.map((item) => (
-              <div
-                key={item.id}
-                className="bg-[#1e1e1e] rounded-xl mb-6 p-3 flex flex-row gap-3 shadow-lg"
-              >
-                <div className="w-28 h-28 sm:w-40 sm:h-40 flex-shrink-0">
-                  <Image
-                    src={
-                      item.images[0]?.url?.startsWith("/")
-                        ? item.images[0].url
-                        : `/${item.images[0]?.url}` || "/fallback.jpg"
-                    }
-                    alt={item.name}
-                    width={208}
-                    height={208}
-                    className="rounded-lg object-cover w-full h-full"
-                  />
-                </div>
+            {/* Product Cards */}
+            <div className="space-y-6">
+              {products.map((item) => (
+                <div
+                  key={item.id}
+                  className="group relative overflow-hidden rounded-3xl border border-zinc-800 bg-gradient-to-br from-[#111111] to-[#18181B] p-4 sm:p-6 shadow-[0_0_40px_rgba(0,0,0,0.4)] hover:border-[#FF6B00]/40 transition-all duration-500"
+                >
+                  <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition duration-500 bg-gradient-to-r from-[#FF6B00]/5 to-[#E11D48]/5"></div>
 
-                <div className="flex-1 space-y-1">
-                  <h2 className="text-base sm:text-lg md:text-2xl font-semibold">
-                    {item.name}
-                  </h2>
-                  <p className="hidden sm:block text-gray-400 text-sm italic truncate max-w-[240px]">
-                    {item.description || "No description available."}
-                  </p>
-                  <p className="text-gray-300 text-xs sm:text-sm">
-                    Price: ₹{cleanPrice(item.price)}
-                  </p>
-                  <p className="text-gray-300 text-xs sm:text-sm">
-                    Quantity: {item.quantity}
-                  </p>
-                  <p className="text-gray-300 text-xs sm:text-sm">
-                    Size: {item.size}
-                  </p>
-                  <p className="text-white font-semibold text-sm sm:text-base">
-                    Subtotal: ₹{cleanPrice(item.price) * item.quantity}
-                  </p>
+                  <div className="relative flex flex-col sm:flex-row gap-5">
+                    <div className="relative w-full sm:w-44 h-72 sm:h-44 overflow-hidden rounded-2xl border border-zinc-800">
+                      <Image
+                        src={
+                          item.images[0]?.url?.startsWith("/")
+                            ? item.images[0].url
+                            : `/${item.images[0]?.url}` || "/fallback.jpg"
+                        }
+                        alt={item.name}
+                        fill
+                        className="object-cover group-hover:scale-105 transition-transform duration-700"
+                      />
+                    </div>
+
+                    <div className="flex-1 flex flex-col justify-between">
+                      <div>
+                        <h2 className="text-2xl font-bold mb-2">
+                          {item.name}
+                        </h2>
+
+                        <p className="text-zinc-400 leading-relaxed mb-4">
+                          {item.description}
+                        </p>
+
+                        <div className="flex flex-wrap gap-3 text-sm">
+                          <span className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
+                            Qty: {item.quantity}
+                          </span>
+
+                          <span className="px-3 py-1 rounded-full bg-zinc-900 border border-zinc-800">
+                            Size: {item.size}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="mt-6 flex items-center justify-between">
+                        <p className="text-zinc-400">
+                          ₹{cleanPrice(item.price)} each
+                        </p>
+
+                        <p className="text-2xl font-black bg-gradient-to-r from-[#FF6B00] to-[#E11D48] bg-clip-text text-transparent">
+                          ₹{cleanPrice(item.price) * item.quantity}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-              </div>
-            ))}
+              ))}
+            </div>
 
             {/* Totals */}
-            <div className="bg-[#1e1e1e] mt-6 p-4 rounded-xl space-y-2">
+            <div className="mt-10 rounded-3xl border border-zinc-800 bg-[#111111]/90 backdrop-blur-xl p-6 sm:p-8 shadow-[0_0_50px_rgba(0,0,0,0.45)]">
               {bundleMessage && (
-                <p className="text-green-400 font-semibold text-center mb-2 animate-pulse">
+                <div className="mb-6 rounded-2xl border border-[#FF6B00]/20 bg-[#FF6B00]/10 p-4 text-center text-[#FFB067] font-semibold">
                   {bundleMessage}
-                </p>
-              )}
-              <div className="flex justify-between items-center">
-                <span className="text-lg font-medium">Subtotal:</span>
-                <span className="text-lg">₹{subtotal}</span>
-              </div>
-
-              {discount > 0 && (
-                <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium text-green-400">
-                    Discount:
-                  </span>
-                  <span className="text-lg text-green-400">-₹{discount}</span>
                 </div>
               )}
 
-              <div className="border-t border-gray-600 pt-2">
+              <div className="space-y-5">
+                <div className="flex justify-between text-zinc-300 text-lg">
+                  <span>Subtotal</span>
+                  <span>₹{subtotal}</span>
+                </div>
+
+                {discount > 0 && (
+                  <div className="flex justify-between text-green-400 text-lg">
+                    <span>Discount</span>
+                    <span>-₹{discount}</span>
+                  </div>
+                )}
+
+                <div className="h-px bg-gradient-to-r from-transparent via-zinc-700 to-transparent"></div>
+
                 <div className="flex justify-between items-center">
-                  <h3 className="text-lg sm:text-2xl font-bold">Total:</h3>
-                  <span className="text-lg sm:text-2xl font-bold text-yellow-400">
+                  <h2 className="text-2xl sm:text-4xl font-black">
+                    Final Total
+                  </h2>
+
+                  <span className="text-3xl sm:text-5xl font-black bg-gradient-to-r from-[#FF6B00] to-[#E11D48] bg-clip-text text-transparent">
                     ₹{total}
                   </span>
                 </div>
               </div>
-            </div>
 
-            <div className="flex justify-center mt-6">
               <button
                 onClick={handleProceedToCheckout}
                 disabled={!address.trim() || phone.length !== 10}
-                className="bg-yellow-400 text-black font-bold px-8 py-3 rounded-xl hover:bg-yellow-500 disabled:bg-gray-400 disabled:cursor-not-allowed transition"
+                className="w-full mt-8 relative overflow-hidden rounded-2xl bg-gradient-to-r from-[#FF6B00] to-[#E11D48] py-4 text-lg font-bold uppercase tracking-wide transition-all duration-500 hover:scale-[1.02] hover:shadow-[0_0_35px_rgba(255,107,0,0.45)] disabled:opacity-50 disabled:hover:scale-100"
               >
-                Payment
+                Proceed To Payment
               </button>
             </div>
           </>
         )}
 
-        {/* Order History Section */}
-        <div className="mt-10">
-          <h2 className="text-xl font-semibold mb-4">Order History</h2>
+        {/* Order History */}
+        <div className="mt-20">
+          <div className="flex items-center gap-4 mb-8">
+            <div className="h-px flex-1 bg-zinc-800"></div>
+
+            <h2 className="text-3xl font-black uppercase tracking-wider">
+              Order History
+            </h2>
+
+            <div className="h-px flex-1 bg-zinc-800"></div>
+          </div>
 
           {loadingHistory ? (
-            <p className="text-gray-400">Loading...</p>
+            <p className="text-zinc-500">Loading...</p>
           ) : orders.length === 0 ? (
-            <p className="text-gray-500">No past orders yet.</p>
+            <div className="rounded-3xl border border-zinc-800 bg-[#111111]/70 p-10 text-center">
+              <p className="text-zinc-400">
+                No past orders found.
+              </p>
+            </div>
           ) : (
-            <div className="space-y-4">
+            <div className="space-y-6">
               {orders.map((order, idx) => (
-                <div key={idx} className="bg-[#1e1e1e] rounded-xl p-4 shadow-md">
-                  <div className="flex gap-4">
+                <div
+                  key={idx}
+                  className="rounded-3xl border border-zinc-800 bg-gradient-to-br from-[#111111] to-[#18181B] p-5 hover:border-[#FF6B00]/30 transition-all duration-500"
+                >
+                  <div className="flex gap-5">
                     {order.cart.items[0]?.images?.[0]?.url && (
-                      <div className="w-16 h-16 flex-shrink-0">
+                      <div className="relative w-20 h-20 rounded-2xl overflow-hidden border border-zinc-800">
                         <Image
                           src={
                             order.cart.items[0].images[0].url.startsWith("/")
                               ? order.cart.items[0].images[0].url
                               : `/${order.cart.items[0].images[0].url}`
                           }
-                          alt={order.cart.items[0].name || "Product"}
-                          width={64}
-                          height={64}
-                          className="rounded-lg object-cover w-full h-full"
+                          alt={order.cart.items[0].name}
+                          fill
+                          className="object-cover"
                         />
                       </div>
                     )}
 
                     <div className="flex-1">
-                      <p className="text-yellow-400 font-semibold">
+                      <p className="text-[#FF6B00] font-semibold mb-2">
                         Payment ID: {order.payment_id}
                       </p>
 
-                      {order.cart.items.length > 0 ? (
-                        order.cart.items.map((item, i) => (
-                          <p key={i} className="text-white font-medium">
-                            {item.name || "Product"}
-                            {item.size && ` (Size: ${item.size})`}
-                            {item.quantity && `, Qty: ${item.quantity}`}
-                          </p>
-                        ))
-                      ) : (
-                        <p className="text-gray-400">
-                          Order details not available
+                      {order.cart.items.map((item, i) => (
+                        <p
+                          key={i}
+                          className="text-white font-medium mb-1"
+                        >
+                          {item.name}
+                          {item.size && ` • Size ${item.size}`}
+                          {item.quantity && ` • Qty ${item.quantity}`}
                         </p>
-                      )}
+                      ))}
 
-                      <p className="text-gray-300">
-                        Status: {order.payment_status}
-                      </p>
-                      <p className="text-gray-300">
-                        Paid At: {new Date(order.verified_at).toLocaleString()}
-                      </p>
-                      <p className="text-green-400 font-semibold">
-                        Total: ₹{order.amount}
-                      </p>
+                      <div className="mt-4 flex flex-wrap gap-4 text-sm">
+                        <span className="text-zinc-400">
+                          {new Date(order.verified_at).toLocaleString()}
+                        </span>
+
+                        <span className="text-green-400 font-semibold">
+                          ₹{order.amount}
+                        </span>
+
+                        <span className="text-zinc-300 uppercase tracking-wide">
+                          {order.payment_status}
+                        </span>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -464,17 +518,26 @@ export default function OrderSummary() {
 
         {/* Empty State */}
         {products.length === 0 && orders.length === 0 && (
-          <div className="flex flex-col items-center text-center mt-16">
-            <Image
-              src="/videos/emptycart.gif"
-              alt="Empty Cart"
-              width={160}
-              height={160}
-              className="rounded-xl shadow-xl object-contain"
-            />
-            <h1 className="text-2xl font-bold mt-6">No Orders</h1>
-            <p className="text-gray-400 text-base mt-2 max-w-sm">
-              No current orders or order history found.
+          <div className="flex flex-col items-center text-center mt-24">
+            <div className="relative">
+              <div className="absolute inset-0 bg-[#FF6B00]/20 blur-3xl rounded-full"></div>
+
+              <Image
+                src="/videos/emptycart.gif"
+                alt="Empty Cart"
+                width={220}
+                height={220}
+                className="relative rounded-3xl"
+              />
+            </div>
+
+            <h1 className="text-4xl font-black mt-10">
+              No Orders Yet
+            </h1>
+
+            <p className="text-zinc-400 mt-4 max-w-md leading-relaxed">
+              Your anime collection journey starts here.
+              Explore premium drops from Kazuha Closet.
             </p>
           </div>
         )}
