@@ -38,16 +38,12 @@ interface User {
   avatar?: string;
 }
 
+// ✅ FIX 1: proper fallback for old/bad avatar paths
 const normalizeAvatarPath = (path?: string): string => {
-  if (!path) return "/default-avatar.png";
-
+  if (!path) return "/Profile/pfp1.jpg";
   if (path.startsWith("http")) return path;
-
-  if (path.startsWith("//")) path = path.replace(/^\/+/, "");
-
-  if (path.startsWith("/")) return path;
-
-  return `${process.env.NEXT_PUBLIC_API_URL || ""}/${path}`;
+  if (path.startsWith("/Profile/")) return path;
+  return "/Profile/pfp1.jpg";
 };
 
 export default function Navbar() {
@@ -62,21 +58,23 @@ export default function Navbar() {
 
   const avatarUrl = normalizeAvatarPath(userData?.avatar);
 
-  useEffect(() => {
+  // ✅ FIX 2: re-fetch user when tab comes back into focus
+  const fetchUser = useCallback(async () => {
     const token = localStorage.getItem("token");
-
     if (!token) return;
-
-    (async () => {
-      try {
-        const user = await getUser();
-
-        setUserData(user);
-      } catch (err) {
-        console.error(err);
-      }
-    })();
+    try {
+      const user = await getUser();
+      setUserData(user);
+    } catch (err) {
+      console.error(err);
+    }
   }, []);
+
+  useEffect(() => {
+    fetchUser();
+    window.addEventListener("focus", fetchUser);
+    return () => window.removeEventListener("focus", fetchUser);
+  }, [fetchUser]);
 
   useEffect(() => {
     const handleClickOutside = (e: MouseEvent) => {
