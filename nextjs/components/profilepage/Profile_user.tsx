@@ -65,10 +65,10 @@ const ProfileSection = () => {
   }, [token]);
 
   const avatarOptions = [
-    "/Birthdaycard/6.jpg",
-    "/Birthdaycard/1.jpg",
-    "/Birthdaycard/2.jpg",
-    "/Birthdaycard/3.jpg",
+    "/Profile/pfp1.jpg",
+    "/Profile/pfp2.jpg",
+    "/Profile/pfp3.jpg",
+    "/Profile/pfp4.jpg",
   ];
 
   // ✅ Update avatar

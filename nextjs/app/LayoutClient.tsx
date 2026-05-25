@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from 'react';
 import { usePathname } from 'next/navigation';
-import Image from 'next/image';
 
 import Loader from '@/components/common/Loader';
 import Footer from '@/components/common/Footer';
@@ -22,28 +21,18 @@ export default function LayoutClient({
   // ROUTES WHERE FOOTER SHOULD BE HIDDEN
   const hideLayoutRoutes = ['/login', '/register'];
 
-  const shouldHideLayout =
-    hideLayoutRoutes.includes(pathname);
+  const shouldHideLayout = hideLayoutRoutes.includes(pathname);
 
   // Initial page load
   useEffect(() => {
-    const timer = setTimeout(
-      () => setLoading(false),
-      1800
-    );
-
+    const timer = setTimeout(() => setLoading(false), 1800);
     return () => clearTimeout(timer);
   }, []);
 
   // Show loader on route change
   useEffect(() => {
     setLoading(true);
-
-    const timer = setTimeout(
-      () => setLoading(false),
-      800
-    );
-
+    const timer = setTimeout(() => setLoading(false), 800);
     return () => clearTimeout(timer);
   }, [pathname]);
 
@@ -73,7 +62,6 @@ export default function LayoutClient({
             style={{
               backgroundImage:
                 'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
-
               backgroundSize: '60px 60px',
             }}
           />
@@ -101,52 +89,38 @@ export default function LayoutClient({
           position="top-right"
           toastOptions={{
             duration: 3500,
-
             className: 'custom-toast',
-
             style: {
               borderRadius: '14px',
-
               padding: '14px 18px',
-
               minWidth: '300px',
-
-              border:
-                '1px solid rgba(255,255,255,0.08)',
-
+              border: '1px solid rgba(255,255,255,0.08)',
               backdropFilter: 'blur(18px)',
-
               background:
                 'linear-gradient(135deg, rgba(10,10,10,0.96), rgba(25,25,25,0.92))',
-
               color: '#ffffff',
-
-              boxShadow:
-                '0 0 35px rgba(255,107,0,0.18)',
-
+              boxShadow: '0 0 35px rgba(255,107,0,0.18)',
               fontWeight: 500,
             },
-
             success: {
               icon: (
-                <Image
+                <img
                   src="/pass.png"
                   alt="Success"
                   width={38}
                   height={38}
-                  className="rounded-full object-cover"
+                  style={{ borderRadius: '50%', objectFit: 'cover' }}
                 />
               ),
             },
-
             error: {
               icon: (
-                <Image
+                <img
                   src="/fail.png"
                   alt="Error"
                   width={38}
                   height={38}
-                  className="rounded-full object-cover"
+                  style={{ borderRadius: '50%', objectFit: 'cover' }}
                 />
               ),
             },
