@@ -15,12 +15,9 @@ export default function LayoutClient({
   children: React.ReactNode;
 }) {
   const [loading, setLoading] = useState(true);
-
   const pathname = usePathname();
 
-  // ROUTES WHERE FOOTER SHOULD BE HIDDEN
   const hideLayoutRoutes = ['/login', '/register'];
-
   const shouldHideLayout = hideLayoutRoutes.includes(pathname);
 
   // Initial page load
@@ -36,6 +33,21 @@ export default function LayoutClient({
     return () => clearTimeout(timer);
   }, [pathname]);
 
+  const toastStyle = {
+    borderRadius: '16px',
+    padding: '14px 18px',
+    minWidth: '300px',
+    border: '1px solid rgba(255,255,255,0.08)',
+    background: 'linear-gradient(135deg, #000000, #151515, #252525)',
+    color: '#ffffff',
+    boxShadow: '0 4px 20px rgba(0,0,0,0.45), 0 0 25px rgba(255,107,0,0.08)',
+    fontWeight: '500',
+    fontSize: '14px',
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+  };
+
   return (
     <WishlistProvider>
       <main
@@ -50,13 +62,8 @@ export default function LayoutClient({
       >
         {/* GLOBAL CINEMATIC BACKGROUND */}
         <div className="pointer-events-none fixed inset-0 -z-50 overflow-hidden">
-          {/* ORANGE GLOW */}
           <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#ff6b00]/10 blur-[140px]" />
-
-          {/* RED GLOW */}
           <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#E11D48]/10 blur-[140px]" />
-
-          {/* GRID */}
           <div
             className="absolute inset-0 opacity-[0.03]"
             style={{
@@ -65,8 +72,6 @@ export default function LayoutClient({
               backgroundSize: '60px 60px',
             }}
           />
-
-          {/* RADIAL OVERLAY */}
           <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,107,0,0.08),transparent_40%)]" />
         </div>
 
@@ -74,12 +79,9 @@ export default function LayoutClient({
           <Loader />
         ) : (
           <>
-            {/* PAGE CONTENT */}
             <div className="relative z-10 flex-grow">
               {children}
             </div>
-
-            {/* FOOTER */}
             {!shouldHideLayout && <Footer />}
           </>
         )}
@@ -89,38 +91,44 @@ export default function LayoutClient({
           position="top-right"
           toastOptions={{
             duration: 3500,
-            className: 'custom-toast',
-            style: {
-              borderRadius: '14px',
-              padding: '14px 18px',
-              minWidth: '300px',
-              border: '1px solid rgba(255,255,255,0.08)',
-              backdropFilter: 'blur(18px)',
-              background:
-                'linear-gradient(135deg, rgba(10,10,10,0.96), rgba(25,25,25,0.92))',
-              color: '#ffffff',
-              boxShadow: '0 0 35px rgba(255,107,0,0.18)',
-              fontWeight: 500,
-            },
+            style: toastStyle,
             success: {
+              style: {
+                ...toastStyle,
+                borderLeft: '3px solid #ff6b00',
+              },
               icon: (
                 <img
                   src="/pass.png"
                   alt="Success"
                   width={38}
                   height={38}
-                  style={{ borderRadius: '50%', objectFit: 'cover' }}
+                  style={{
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                    border: '2px solid rgba(255,255,255,0.08)',
+                  }}
                 />
               ),
             },
             error: {
+              style: {
+                ...toastStyle,
+                borderLeft: '3px solid #e11d48',
+              },
               icon: (
                 <img
                   src="/fail.png"
                   alt="Error"
                   width={38}
                   height={38}
-                  style={{ borderRadius: '50%', objectFit: 'cover' }}
+                  style={{
+                    borderRadius: '50%',
+                    objectFit: 'cover',
+                    flexShrink: 0,
+                    border: '2px solid rgba(255,255,255,0.08)',
+                  }}
                 />
               ),
             },
