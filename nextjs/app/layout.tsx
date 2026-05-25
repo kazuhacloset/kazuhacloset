@@ -1,140 +1,193 @@
-import "./globals.css";
-import "aos/dist/aos.css";
+'use client';
 
-import { Poppins } from "next/font/google";
-import LayoutClient from "./LayoutClient";
+import Link from 'next/link';
+import { motion } from 'framer-motion';
+import {
+  MessageCircle,
+  ShoppingBag,
+  Sparkles,
+} from 'lucide-react';
 
-import type { Metadata } from "next";
-
-const poppins = Poppins({
-  subsets: ["latin"],
-  weight: ["300", "400", "500", "600", "700"],
-  display: "swap",
-});
-
-export const metadata: Metadata = {
-  metadataBase: new URL("https://www.kazuhacloset.com"),
-
-  title: {
-    default: "Kazuhacloset | Anime Streetwear",
-    template: "%s | Kazuhacloset",
-  },
-
-  description:
-    "Premium anime streetwear inspired by Tokyo underground culture. Explore oversized anime apparel, cinematic fashion aesthetics, and exclusive drops.",
-
-  keywords: [
-    "anime clothing",
-    "anime streetwear",
-    "Tokyo fashion",
-    "oversized anime tshirts",
-    "anime outfits",
-    "Kazuhacloset",
-    "anime apparel",
-    "street fashion",
-    "anime merch",
-  ],
-
-  alternates: {
-    canonical: "https://www.kazuhacloset.com",
-  },
-
-  openGraph: {
-    title: "Kazuhacloset | Anime Streetwear",
-
-    description:
-      "Premium anime streetwear inspired by Tokyo underground culture.",
-
-    url: "https://www.kazuhacloset.com/",
-
-    siteName: "Kazuhacloset",
-
-    images: [
-      {
-        url: "/opengraph-image.png",
-        width: 1200,
-        height: 630,
-        alt: "Kazuhacloset Anime Streetwear Banner",
-      },
-    ],
-
-    locale: "en_US",
-    type: "website",
-  },
-
-  twitter: {
-    card: "summary_large_image",
-
-    title: "Kazuhacloset | Anime Streetwear",
-
-    description:
-      "Explore premium anime streetwear and cinematic fashion aesthetics.",
-
-    images: ["/opengraph-image.png"],
-  },
-
-  icons: {
-    icon: "/favicon.ico",
-    shortcut: "/favicon.ico",
-    apple: "/apple-touch-icon.png",
-  },
-};
-
-export default function RootLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default function FloatingLauncher() {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <head>
-        {/* THEME COLOR */}
-        <meta name="theme-color" content="#050505" />
+    <div className="fixed bottom-5 right-5 z-[9999] flex flex-col items-end gap-3">
 
-        {/* SCHEMA */}
-        <script
-          type="application/ld+json"
-          dangerouslySetInnerHTML={{
-            __html: JSON.stringify({
-              "@context": "https://schema.org",
+      {/* HOOK SHOWCASE CARD */}
+      <motion.div
+        initial={{
+          opacity: 0,
+          y: 20,
+          scale: 0.9,
+        }}
+        animate={{
+          opacity: 1,
+          y: 0,
+          scale: 1,
+        }}
+        transition={{
+          duration: 0.6,
+        }}
+        className="
+          relative overflow-hidden
 
-              "@type": "Organization",
+          rounded-2xl
+          border border-white/10
 
-              name: "Kazuhacloset",
+          bg-black/70
+          backdrop-blur-2xl
 
-              url: "https://www.kazuhacloset.com",
+          px-5 py-4
 
-              logo: "https://www.kazuhacloset.com/logo.png",
-            }),
-          }}
-        />
-      </head>
+          shadow-[0_0_40px_rgba(255,107,0,0.15)]
 
-      <body
-        className={`${poppins.className} bg-[#050505] text-white overflow-x-hidden antialiased`}
+          max-w-[280px]
+        "
       >
-        {/* GLOBAL ATMOSPHERIC BACKGROUND */}
-        <div className="fixed inset-0 -z-50 pointer-events-none overflow-hidden">
-          {/* LEFT ORANGE GLOW */}
-          <div className="absolute top-[10%] left-[-10%] w-[500px] h-[500px] bg-[#ff6b00]/10 blur-[140px]" />
+        {/* GLOW */}
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,107,0,0.18),transparent_70%)]" />
 
-          {/* RIGHT RED GLOW */}
-          <div className="absolute top-[20%] right-[-10%] w-[450px] h-[450px] bg-[#E11D48]/10 blur-[140px]" />
+        {/* TOP LINE */}
+        <div className="absolute top-0 left-0 h-px w-full bg-gradient-to-r from-transparent via-orange-500/50 to-transparent" />
 
-          {/* GRID */}
-          <div
-            className="absolute inset-0 opacity-[0.03]"
-            style={{
-              backgroundImage:
-                "linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px)",
+        <div className="relative z-10">
+          {/* LABEL */}
+          <div className="flex items-center gap-2 mb-2">
+            <Sparkles
+              size={14}
+              className="text-[#ff6b00]"
+            />
 
-              backgroundSize: "60px 60px",
-            }}
-          />
+            <p className="text-[10px] uppercase tracking-[0.25em] text-orange-400">
+              New Anime Drop
+            </p>
+          </div>
+
+          {/* TITLE */}
+          <h3 className="text-white font-bold text-lg leading-tight">
+            Premium Anime Streetwear
+          </h3>
+
+          {/* SUBTEXT */}
+          <p className="mt-2 text-sm text-zinc-400 leading-relaxed">
+            Explore oversized anime apparel inspired by Tokyo underground fashion culture.
+          </p>
+
+          {/* BUTTON */}
+          <Link href="/allproducts">
+            <motion.button
+              whileHover={{
+                scale: 1.03,
+              }}
+              whileTap={{
+                scale: 0.97,
+              }}
+              className="
+                mt-4
+
+                w-full
+
+                rounded-xl
+
+                bg-gradient-to-r
+                from-[#ff6b00]
+                to-[#E11D48]
+
+                px-4 py-3
+
+                text-xs
+                font-semibold
+                uppercase
+                tracking-[0.2em]
+
+                text-white
+
+                shadow-[0_0_25px_rgba(255,107,0,0.35)]
+              "
+            >
+              Shop Collection
+            </motion.button>
+          </Link>
         </div>
+      </motion.div>
 
-        <LayoutClient>{children}</LayoutClient>
-      </body>
-    </html>
+      {/* FLOATING WHATSAPP BUTTON */}
+      <Link
+        href="https://wa.me/919336159782"
+        target="_blank"
+      >
+        <motion.button
+          whileHover={{
+            scale: 1.08,
+          }}
+          whileTap={{
+            scale: 0.95,
+          }}
+          className="
+            group
+
+            relative
+
+            flex items-center justify-center
+
+            w-16 h-16
+
+            rounded-full
+
+            bg-gradient-to-br
+            from-[#ff6b00]
+            to-[#E11D48]
+
+            text-white
+
+            shadow-[0_0_45px_rgba(255,107,0,0.45)]
+          "
+        >
+          {/* PULSE */}
+          <div className="absolute inset-0 rounded-full bg-orange-500/40 animate-ping" />
+
+          <div className="relative z-10 flex items-center justify-center">
+            <MessageCircle size={26} />
+          </div>
+        </motion.button>
+      </Link>
+
+      {/* MINI CART SHORTCUT */}
+      <Link href="/allproducts">
+        <motion.button
+          whileHover={{
+            scale: 1.05,
+          }}
+          className="
+            flex items-center gap-2
+
+            rounded-full
+
+            border border-white/10
+
+            bg-black/70
+            backdrop-blur-xl
+
+            px-4 py-3
+
+            text-xs
+            uppercase
+            tracking-[0.18em]
+
+            text-white
+
+            hover:border-orange-500/40
+
+            transition-all duration-500
+          "
+        >
+          <ShoppingBag
+            size={14}
+            className="text-orange-400"
+          />
+
+          Explore
+        </motion.button>
+      </Link>
+    </div>
   );
 }

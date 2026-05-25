@@ -5,7 +5,6 @@ import { usePathname } from 'next/navigation';
 import Image from 'next/image';
 
 import Loader from '@/components/common/Loader';
-import FloatingLauncher from '@/components/Landingpage/FloatingLauncher';
 import Footer from '@/components/common/Footer';
 
 import { Toaster } from 'react-hot-toast';
@@ -20,14 +19,18 @@ export default function LayoutClient({
 
   const pathname = usePathname();
 
-  // ROUTES WHERE FOOTER/FLOATING UI SHOULD BE HIDDEN
+  // ROUTES WHERE FOOTER SHOULD BE HIDDEN
   const hideLayoutRoutes = ['/login', '/register'];
 
-  const shouldHideLayout = hideLayoutRoutes.includes(pathname);
+  const shouldHideLayout =
+    hideLayoutRoutes.includes(pathname);
 
   // Initial page load
   useEffect(() => {
-    const timer = setTimeout(() => setLoading(false), 2000);
+    const timer = setTimeout(
+      () => setLoading(false),
+      1800
+    );
 
     return () => clearTimeout(timer);
   }, []);
@@ -36,30 +39,60 @@ export default function LayoutClient({
   useEffect(() => {
     setLoading(true);
 
-    const timer = setTimeout(() => setLoading(false), 1200);
+    const timer = setTimeout(
+      () => setLoading(false),
+      800
+    );
 
     return () => clearTimeout(timer);
   }, [pathname]);
 
   return (
     <WishlistProvider>
-      <main className="relative bg-gradient-to-bl from-black via-zinc-800 to-zinc-300 min-h-screen scroll-smooth overflow-x-hidden flex flex-col">
+      <main
+        className="
+          relative
+          min-h-screen
+          overflow-x-hidden
+          scroll-smooth
+          flex flex-col
+          bg-[#050505]
+        "
+      >
+        {/* GLOBAL CINEMATIC BACKGROUND */}
+        <div className="pointer-events-none fixed inset-0 -z-50 overflow-hidden">
+          {/* ORANGE GLOW */}
+          <div className="absolute top-[-10%] left-[-10%] w-[500px] h-[500px] bg-[#ff6b00]/10 blur-[140px]" />
+
+          {/* RED GLOW */}
+          <div className="absolute bottom-[-10%] right-[-10%] w-[500px] h-[500px] bg-[#E11D48]/10 blur-[140px]" />
+
+          {/* GRID */}
+          <div
+            className="absolute inset-0 opacity-[0.03]"
+            style={{
+              backgroundImage:
+                'linear-gradient(rgba(255,255,255,0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.05) 1px, transparent 1px)',
+
+              backgroundSize: '60px 60px',
+            }}
+          />
+
+          {/* RADIAL OVERLAY */}
+          <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,107,0,0.08),transparent_40%)]" />
+        </div>
+
         {loading ? (
           <Loader />
         ) : (
           <>
             {/* PAGE CONTENT */}
-            <div className="flex-grow">
+            <div className="relative z-10 flex-grow">
               {children}
             </div>
 
-            {/* HIDE FOOTER + FLOATING BUTTONS ON AUTH PAGES */}
-            {!shouldHideLayout && (
-              <>
-                <FloatingLauncher />
-                <Footer />
-              </>
-            )}
+            {/* FOOTER */}
+            {!shouldHideLayout && <Footer />}
           </>
         )}
 
@@ -72,31 +105,26 @@ export default function LayoutClient({
             className: 'custom-toast',
 
             style: {
-              borderRadius: '8px',
-              padding: '12px 18px',
-              minWidth: '280px',
+              borderRadius: '14px',
 
-              boxShadow: '0 4px 12px rgba(0, 0, 0, 0.3)',
+              padding: '14px 18px',
 
-              display: 'flex',
-              alignItems: 'center',
+              minWidth: '300px',
 
-              fontWeight: 600,
+              border:
+                '1px solid rgba(255,255,255,0.08)',
 
-              // PREMIUM GRADIENT GLOW
+              backdropFilter: 'blur(18px)',
+
               background:
-                'linear-gradient(to bottom left, #000000, #1c1c21, #7f7f7f)',
+                'linear-gradient(135deg, rgba(10,10,10,0.96), rgba(25,25,25,0.92))',
 
-              color: 'transparent',
+              color: '#ffffff',
 
-              backgroundClip: 'text',
-              WebkitBackgroundClip: 'text',
+              boxShadow:
+                '0 0 35px rgba(255,107,0,0.18)',
 
-              backgroundImage:
-                'linear-gradient(90deg, #ca8a04, #eab308, #f59e0b)',
-
-              textShadow:
-                '0 0 4px rgba(202, 138, 4, 0.7), 0 0 8px rgba(234, 179, 8, 0.5)',
+              fontWeight: 500,
             },
 
             success: {
@@ -104,8 +132,8 @@ export default function LayoutClient({
                 <Image
                   src="/pass.png"
                   alt="Success"
-                  width={36}
-                  height={36}
+                  width={38}
+                  height={38}
                   className="rounded-full object-cover"
                 />
               ),
@@ -116,8 +144,8 @@ export default function LayoutClient({
                 <Image
                   src="/fail.png"
                   alt="Error"
-                  width={36}
-                  height={36}
+                  width={38}
+                  height={38}
                   className="rounded-full object-cover"
                 />
               ),
