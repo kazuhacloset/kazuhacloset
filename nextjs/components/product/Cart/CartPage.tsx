@@ -126,65 +126,19 @@ export default function CartPage() {
 
         let bundleMessage = "";
 
-        if (totalQuantity >= 3) {
-          let freeCount = 0;
-
-          if (
-            totalQuantity >= 3 &&
-            totalQuantity <= 5
-          )
-            freeCount = 1;
-          else if (
-            totalQuantity >= 6 &&
-            totalQuantity <= 8
-          )
-            freeCount = 2;
-          else if (
-            totalQuantity >= 9 &&
-            totalQuantity <= 11
-          )
-            freeCount = 3;
-          else if (
-            totalQuantity >= 12 &&
-            totalQuantity <= 14
-          )
-            freeCount = 4;
-          else if (totalQuantity >= 15)
-            freeCount = Math.floor(
-              totalQuantity / 3
-            );
-
-          const allPrices: number[] = [];
-
-          products.forEach((item) => {
-            const price = cleanPrice(
-              item.price
-            );
-
-            for (
-              let i = 0;
-              i < item.quantity;
-              i++
-            ) {
-              allPrices.push(price);
-            }
-          });
-
-          allPrices.sort((a, b) => a - b);
-
-          const freeItems = allPrices.slice(
-            0,
-            freeCount
-          );
-
-          discount = freeItems.reduce(
-            (sum, val) => sum + val,
-            0
-          );
+        // DISCOUNT RULES
+        if (totalQuantity >= 2) {
+          if (totalQuantity === 2) {
+            discount = 50;
+          } else if (totalQuantity === 3) {
+            discount = 100;
+          } else if (totalQuantity >= 4) {
+            discount = 200;
+          }
 
           total = subtotal - discount;
 
-          bundleMessage = `🎉 Offer Applied: Buy ${totalQuantity} Get ${freeCount} Free — Total ₹${subtotal.toFixed(
+          bundleMessage = `🎉 Bundle Offer Applied: ₹${discount} OFF on ${totalQuantity} T-Shirts — Total ₹${subtotal.toFixed(
             2
           )} - ₹${discount.toFixed(
             2
@@ -233,12 +187,10 @@ export default function CartPage() {
 
   return (
     <main className="relative min-h-screen overflow-hidden bg-[#050505] text-white">
-
       <Navbar />
 
       {/* CINEMATIC BACKGROUND */}
       <div className="absolute inset-0 overflow-hidden pointer-events-none">
-
         {/* ORANGE GLOW */}
         <div className="absolute top-[-140px] left-[-100px] w-[380px] h-[380px] rounded-full bg-[#FF6B00]/20 blur-[140px]" />
 
@@ -258,11 +210,9 @@ export default function CartPage() {
       </div>
 
       <div className="relative z-10 max-w-6xl mx-auto px-4 sm:px-6 pt-28 pb-16">
-
         {/* HEADER */}
         {!loading && cartProducts.length > 0 && (
           <div className="text-center mb-14">
-
             <div className="inline-flex items-center gap-2 px-4 py-1 rounded-full border border-[#FF6B00]/20 bg-[#111111]/70 backdrop-blur-xl mb-6">
               <div className="w-2 h-2 rounded-full bg-[#FF6B00]" />
 
@@ -281,7 +231,6 @@ export default function CartPage() {
         {/* LOADING */}
         {loading ? (
           <div className="flex flex-col items-center justify-center pt-28">
-
             <div className="w-14 h-14 rounded-full border-2 border-[#FF6B00]/20 border-t-[#FF6B00] animate-spin mb-6" />
 
             <h2 className="text-2xl font-bold mb-2">
@@ -311,12 +260,10 @@ export default function CartPage() {
             {/* OFFER MESSAGE */}
             {bundleData.bundleMessage && (
               <div className="relative mt-10 overflow-hidden rounded-3xl border border-emerald-500/20 bg-emerald-500/[0.06] backdrop-blur-2xl shadow-[0_0_40px_rgba(16,185,129,0.08)] p-6">
-
                 {/* GLOW */}
                 <div className="absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(16,185,129,0.12),transparent_60%)]" />
 
                 <div className="relative z-10 flex flex-col items-center text-center">
-
                   <div className="mb-3 px-4 py-1 rounded-full border border-emerald-400/20 bg-emerald-400/10 text-[10px] uppercase tracking-[0.3em] text-emerald-300">
                     Reward Unlocked
                   </div>
