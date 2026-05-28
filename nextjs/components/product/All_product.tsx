@@ -338,6 +338,22 @@ export const products: Product[] = [
     isSale: true,
     tags: ["anime", "naruto", "itachi", "uchiha", "cotton"],
   },
+  {
+    id: "luffy-tee-001",
+    name: "Luffy Tee",
+    price: "₹399",
+    originalPrice: "₹499",
+    type: "image",
+    video: "",
+    thumbnail: "/Productimage/LUFFY/back.png",
+    description: "Monkey D. Luffy T-shirt inspired by One Piece. Clean design with pirate king energy and bold anime vibes.",
+    category: "One Piece",
+    rating: 4.8,
+    reviews: 165,
+    inStock: true,
+    isSale: true,
+    tags: ["anime", "onepiece", "luffy", "pirate", "cotton"]
+  },
 ];
 
 // ✅ FIX: categories match exact product.category strings
