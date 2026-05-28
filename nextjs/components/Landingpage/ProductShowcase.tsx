@@ -7,11 +7,11 @@ import { motion } from "framer-motion";
 
 const products = [
   {
-    id: "itachi",
-    name: "ITACHI UCHIHA",
+    id: "luffy",
+    name: "MONKEY D. LUFFY",
     subtitle: "OVERSIZED T-SHIRT",
     price: "₹399",
-    image: "/Productimage/ITACHI/front.png",
+    image: "/Productimage/LUFFY/front.png",
     badge: "BEST SELLER",
     badgeColor: "bg-gradient-to-r from-[#ff7b00] to-[#ff4d00]",
   },
